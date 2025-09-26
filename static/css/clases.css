@@ -1,0 +1,197 @@
+    /* --- Estilos Generales --- */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Contenedor Principal --- */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            gap: 20px;
+            margin-top: 70px; /* Espacio para la navbar */
+        }
+
+        /* --- Barra de Navegación Superior --- */
+        .navbar {
+            background-color: #566a93;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+        }
+
+        .menu-icon {
+            cursor: pointer;
+            z-index: 1002;
+        }
+
+        .menu-icon span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 5px 0;
+            transition: 0.4s;
+        }
+        
+        .navbar h1 {
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .profile {
+            width: 40px;
+            height: 40px;
+            background-color: #f4f6f8;
+            border-radius: 50%;
+        }
+
+        /* --- Estilos de Botones --- */
+        .btn {
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        .btn1 { background-color: #3498db; } /* Azul */
+        .btn2 { background-color: #f1c40f; } /* Amarillo */
+        .btn3 { background-color: #7f8c8d; } /* Gris */
+
+        /* --- FOOTER --- */
+        .main-footer {
+          background-color: #566a93;
+          color: white;
+          padding: 20px 0;
+          text-align: center;
+          margin-top: auto;
+        }
+
+        .footer-content {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+
+        .footer-content p {
+          margin: 0;
+          font-size: 0.9em;
+        }
+
+        /* --- Social Icons --- */
+        .social-login-icons {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+        }
+        .social-login-icons svg {
+          width: 30px;
+        }
+        .social-login-icons a {
+            text-decoration: none;
+        }
+
+        .social-icon-2,
+        .social-icon-2-2,
+        .social-icon-3,
+        .social-icon-3-3,
+        .social-icon-5,
+        .social-icon-5-5,
+        .social-icon-6,
+        .social-icon-6-6 {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50px;
+          margin: 0;
+        }
+
+        .icon svg {
+          fill: #111;
+        }
+
+        .socialcontainer {
+          height: 40px;
+          overflow: hidden;
+        }
+        
+        .social-icon-2 svg,
+        .social-icon-3 svg,
+        .social-icon-5 svg,
+        .social-icon-6 svg {
+          opacity: 0;
+          transition-duration: 0.5s;
+          transition-delay: 0.2s;
+        }
+        .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+          transition-duration: 0.4s;
+          background-color: rgba(0, 0, 0, 0);
+        }
+        .socialcontainer:hover .social-icon-2,
+        .socialcontainer:hover .social-icon-3,
+        .socialcontainer:hover .social-icon-5,
+        .socialcontainer:hover .social-icon-6 {
+          transform: translateY(-40px);
+        }
+        .socialcontainer:hover svg {
+          opacity: 1;
+        }
+        .social-icon-2 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: linear-gradient(
+            72.44deg,
+            #ff7a00 11.92%,
+            #ff0169 51.56%,
+            #d300c5 85.69%
+          );
+        }
+        .social-icon-3 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #316ff6;
+        }
+         .social-icon-5 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #000000;
+        }
+         .social-icon-6 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #25D366;
+        }

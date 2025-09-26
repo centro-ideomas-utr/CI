@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro</title>
+  <meta name="description" content="Formulario de Registro con CSS animado">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="formulario.css">
+  <link rel="icon" href="CI.png">
+
+  <link href="prueba.js">
+</head>
+<body class="your_css_selector_here">
+  <section class="fondo fondo--registro">
+    <div class="capa-fondo">
+      <main class="contenedor">
+        <div class="contenido">
+          <h1>Registrate</h1>
+          <form class="formulario-registro">
+
+            <div class="campoIzq nombre">
+              <input class="registro_field nombre-field" type="text" placeholder="Correo ELectronico" id="email" required>
+            </div>
+
+            <div class="campoDer apellido">
+              <input class="registro_field apellido-field" type="text" placeholder="Nombre" id="name" required>
+            </div>
+
+            <div class="campoIzq email1">
+              <input class="registro_field email-field" type="email" placeholder="Apellido Paterno" id="lastname" required>
+            </div>
+
+            <div class="campoDer email2">
+              <input class="registro_field email-field" type="email" placeholder="Apellido Materno" id="lastname" required>
+            </div>
+
+            <div class="campoIzq contraseña1">
+              <input class="registro_field contraseña-field" type="password" placeholder="Idioma" id="password" required>
+            </div>
+
+            <div class="campoDer contraseña2">
+              <input class="registro_field contraseña-field" type="password" placeholder="Horario" id="password2" required>
+            </div>
+
+            <div class="campoIzq documento1">
+                <button id="button"></button>
+            </div>
+
+            <div class="campoDer documento2">
+                <button id="button"></button>
+            </div>
+
+            <div class="campoDer boton1">
+                <input type="submit" value="Crear Cuenta" class="boton boton--primario">
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </section>
+  <script src="prueba.js"></script>
+</body>
+</html>

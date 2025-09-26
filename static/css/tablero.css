@@ -1,0 +1,250 @@
+ /* --- Estilos Generales --- */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8; /* Color de fondo gris claro */
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh; /* Asegura que el body ocupe al menos toda la altura de la pantalla */
+    }
+
+    main {
+      flex: 1; /* Permite que el contenido principal crezca y empuje el footer hacia abajo */
+    }
+
+    /* --- Encabezado y Navegación --- */
+    header {
+      background-color: #566a93; /* Azul/gris oscuro del encabezado */
+      color: white;
+      padding: 10px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-size: 1.6em;
+      font-weight: bold;
+    }
+
+    header nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap; /* Permite que los botones se envuelvan */
+      justify-content: center; /* Centra los botones si se envuelven */
+    }
+
+    /* --- Estilos y Animación de Botones --- */
+    header nav a {
+      width: 150px; /* Ancho fijo para los botones */
+      height: 50px; /* Alto fijo para los botones */
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid #566a93; /* Borde inicial sutil */
+      outline: none;
+      transition: 1s ease-in-out;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    header nav a svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      fill: none;
+      stroke: #fff;
+      stroke-dasharray: 150 480;
+      stroke-dashoffset: 150;
+      transition: 1s ease-in-out;
+    }
+
+    header nav a:hover {
+      transition: 1s ease-in-out;
+      background: #f4f6f8;
+      border-color: #f4f6f8;
+    }
+    header nav a:hover span {
+      color: #566a93; /* Cambia el color del texto al hacer hover */
+    }
+    header nav a:hover svg {
+      stroke-dashoffset: -480;
+    }
+
+    header nav a span {
+      color: #f4f6f8;
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    /* --- Títulos de Sección (h2) --- */
+    h2 {
+      text-align: center;
+      font-family: "Georgia", "Times New Roman", serif; /* Fuente con serifa para el título */
+      font-size: 2.8em;
+      font-weight: normal;
+      color: #444;
+      margin-top: 50px;
+      margin-bottom: 30px;
+    }
+
+    /* --- Contenedor del Calendario --- */
+    #calendar {
+      width: 90%;
+      max-width: 1100px;
+      margin: 0 auto 50px auto;
+      padding: 25px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    /* --- Estilos para la Lista de Tareas --- */
+    .tareas {
+      width: 90%;
+      max-width: 1100px;
+      margin: 0 auto 50px auto;
+      padding: 25px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08); /* Fixed shadow color */
+      list-style: none; /* Quita los puntos de la lista */
+    }
+
+    .tareas li {
+      padding: 15px;
+      border-bottom: 1px solid #e9ecef; /* Línea divisoria entre tareas */
+    }
+
+    .tareas li:last-child {
+      border-bottom: none; /* La última tarea no necesita línea divisoria */
+    }
+
+    /* --- (Opcional) Estilos para que FullCalendar coincida con el tema --- */
+    .fc .fc-button-primary {
+      background-color: #9c94b8;
+      border-color: #9c94b8;
+    }
+
+    .fc .fc-button-primary:hover {
+      background-color: #8a81a8; /* Darker shade on hover */
+      border-color: #8a81a8;
+    }
+
+    .fc .fc-toolbar-title {
+      color: #566a93;
+    }
+
+    .fc .fc-day-today {
+      background-color: rgba(39, 22, 100, 0.15) !important; /* Un fondo sutil para el día actual */
+    }
+    
+    /* --- FOOTER --- */
+    .main-footer {
+      background-color: #566a93; /* Mismo color que el header para consistencia */
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      margin-top: auto; /* Empuja el footer al final si el contenido es corto */
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-content p {
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    /* --- Social Icons --- */
+    .social-login-icons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+    }
+    .social-login-icons svg {
+      width: 30px;
+    }
+    .social-login-icons a {
+        text-decoration: none;
+    }
+
+    .social-icon-2,
+    .social-icon-2-2,
+    .social-icon-3,
+    .social-icon-3-3,
+    .social-icon-5,
+    .social-icon-5-5,
+    .social-icon-6,
+    .social-icon-6-6 {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50px;
+      margin: 0;
+    }
+
+    .icon svg {
+      fill: #111;
+    }
+
+    .socialcontainer {
+      height: 40px; /* Adjusted height */
+      overflow: hidden;
+    }
+    
+    .social-icon-2 svg,
+    .social-icon-3 svg,
+    .social-icon-5 svg,
+    .social-icon-6 svg {
+      opacity: 0;
+      transition-duration: 0.5s;
+      transition-delay: 0.2s;
+    }
+    .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+      transition-duration: 0.4s;
+      background-color: rgba(0, 0, 0, 0);
+    }
+    .socialcontainer:hover .social-icon-2,
+    .socialcontainer:hover .social-icon-3,
+    .socialcontainer:hover .social-icon-5,
+    .socialcontainer:hover .social-icon-6 {
+      transform: translateY(-40px);
+    }
+    .socialcontainer:hover svg {
+      opacity: 1;
+    }
+    .social-icon-2 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: linear-gradient(
+        72.44deg,
+        #ff7a00 11.92%,
+        #ff0169 51.56%,
+        #d300c5 85.69%
+      );
+    }
+    .social-icon-3 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: #316ff6;
+    }
+     .social-icon-5 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: #000000;
+    }
+     .social-icon-6 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: #25D366;
+    }

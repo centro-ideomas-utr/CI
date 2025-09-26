@@ -1,0 +1,243 @@
+/* --- Variables de Color y Estilos Globales --- */
+:root {
+    --color-primary: #9c94b8;      /* Azul/gris oscuro del tema */
+    --color-secondary: #9c94b8;     /* Tono secundario del tema */
+    --color-accent: #9c94b8;       /* Morado del tema como color de acento */
+    --color-light: #f4f6f8;        /* Color de fondo gris claro del tema */
+    --color-white: #FFFFFF;
+    --color-text: #333333;         /* Color de texto principal oscuro */
+    --shadow: 0 4px 12px rgba(86, 106, 147, 0.15); /* Sombra sutil del tema */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: var(--color-light);
+    color: var(--color-text);
+    padding: 20px;
+}
+
+/* --- Barra de Navegación / Encabezado --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    color: var(--color-white);
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}
+
+.navbar h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+}
+
+.navbar .left,
+.navbar .right {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* --- Contenedor Principal --- */
+.content {
+    background: var(--color-white);
+    color: var(--color-text);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.info p {
+    margin: 4px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+h2 {
+    margin: 20px 0 15px 0;
+    color: var(--color-primary);
+    font-family: 'Playfair Display', serif;
+}
+
+/* --- Tablas --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+thead th {
+    background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    border: 1px solid var(--color-secondary);
+    padding: 12px 8px;
+    text-align: center;
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+tbody td {
+    border: 1px solid #e9ecef;
+    padding: 10px 8px;
+    text-align: center;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9fc;
+}
+
+/* --- Clases Específicas --- */
+.desc {
+    text-align: left;
+    font-style: italic;
+    background: rgba(156, 148, 184, 0.1); /* Fondo sutil con color acento */
+    color: var(--color-secondary);
+}
+
+.impuestos td, .impuestos th {
+    text-align: center;
+}
+
+/* --- Sección de Totales --- */
+.totales {
+    text-align: right;
+    font-size: 15px;
+    color: #444;
+}
+
+.totales p {
+    margin: 6px 0;
+}
+
+.total {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-top: 10px;
+    color: var(--color-primary);
+    padding-top: 10px;
+    border-top: 2px solid var(--color-accent);
+}
+        /* --- FOOTER --- */
+        .main-footer {
+          background-color: #566a93;
+          color: white;
+          padding: 20px 0;
+          text-align: center;
+          margin-top: auto;
+        }
+
+        .footer-content {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+
+        .footer-content p {
+          margin: 0;
+          font-size: 0.9em;
+        }
+
+        /* --- Social Icons --- */
+        .social-login-icons {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+        }
+        .social-login-icons svg {
+          width: 30px;
+        }
+        .social-login-icons a {
+            text-decoration: none;
+        }
+
+        .social-icon-2,
+        .social-icon-2-2,
+        .social-icon-3,
+        .social-icon-3-3,
+        .social-icon-5,
+        .social-icon-5-5,
+        .social-icon-6,
+        .social-icon-6-6 {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50px;
+          margin: 0;
+        }
+
+        .icon svg {
+          fill: #111;
+        }
+
+        .socialcontainer {
+          height: 40px;
+          overflow: hidden;
+        }
+        
+        .social-icon-2 svg,
+        .social-icon-3 svg,
+        .social-icon-5 svg,
+        .social-icon-6 svg {
+          opacity: 0;
+          transition-duration: 0.5s;
+          transition-delay: 0.2s;
+        }
+        .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+          transition-duration: 0.4s;
+          background-color: rgba(0, 0, 0, 0);
+        }
+        .socialcontainer:hover .social-icon-2,
+        .socialcontainer:hover .social-icon-3,
+        .socialcontainer:hover .social-icon-5,
+        .socialcontainer:hover .social-icon-6 {
+          transform: translateY(-40px);
+        }
+        .socialcontainer:hover svg {
+          opacity: 1;
+        }
+        .social-icon-2 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: linear-gradient(
+            72.44deg,
+            #ff7a00 11.92%,
+            #ff0169 51.56%,
+            #d300c5 85.69%
+          );
+        }
+        .social-icon-3 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #316ff6;
+        }
+         .social-icon-5 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #000000;
+        }
+         .social-icon-6 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #25D366;
+        }
