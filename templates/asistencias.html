@@ -4,35 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Asistencias</title>
+  
+  <!-- ENLACE CORRECTO AL ARCHIVO CSS EXTERNO -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/asistencias.css') }}">
-  <img src="{{ url_for('static', filename='imagen/ci.png') }}" alt="El logo de mi proyecto">
+  
 </head>
 <body>
   <header>
+    <img src="{{ url_for('static', filename='imagen/ci.png') }}" alt="Logo del Centro de Idiomas" class="header-logo">
     <span>Centro de Idiomas</span>
     <nav class="nav-derecha">
-      <a href="../menu/menu.html">
+      <!-- ENLACES CORREGIDOS USANDO url_for() CON EL NOMBRE DE LA FUNCIÓN DE PYTHON -->
+      <a href="{{ url_for('mostrar_menu') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
         </svg>
         <span>Menú</span>
       </a>
-      <a href="../calificacion/calificaciones.html">
+      <a href="{{ url_for('mostrar_calificaciones') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
         </svg>
         <span>Calificaciones</span>
       </a> 
-      <a href="../tablero/tablero.html">
+      <a href="{{ url_for('mostrar_tablero') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
         </svg>
         <span>Calendario</span>
       </a>
-      <a href="../curso/cursos.html">
+      <a href="{{ url_for('mostrar_cursos') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
@@ -56,7 +60,6 @@
       </tr>
     </table>
   </main>
-
   <footer class="main-footer">
     <div class="footer-content">
       <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
