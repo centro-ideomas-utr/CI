@@ -3,11 +3,11 @@ import mysql.connector
 
 app = Flask(__name__)
 
-# --- Configuración de tu base de datos ---
+# --- Configuración de la base de datos ---
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "Fake2020*", # Recuerda usar tu contraseña real
+    "password": "Uli0514122324#",  # tu contraseña real
     "database": "prueba"
 }
 
@@ -18,7 +18,21 @@ def formulario():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # Obtener valores para el menú de Tipo de Inscripción
+        # --- Obtener valores ENUM de genero ---
+        cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'genero'")
+        genero_row = cursor.fetchone()
+        if genero_row and "Type" in genero_row:
+            genero_enum = genero_row["Type"]
+            genero = (
+                genero_enum.replace("enum(", "")
+                .replace(")", "")
+                .replace("'", "")
+                .split(",")
+            )
+        else:
+            genero = []
+
+        # --- Obtener valores ENUM de tipo_i ---
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'tipo_i'")
         tipo_row = cursor.fetchone()
         if tipo_row and "Type" in tipo_row:
@@ -32,7 +46,7 @@ def formulario():
         else:
             tipodeinscripcion = []
 
-        # Obtener valores para el menú de Horario
+        # --- Obtener valores ENUM de horario ---
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'horario'")
         horario_row = cursor.fetchone()
         if horario_row and "Type" in horario_row:
@@ -46,10 +60,16 @@ def formulario():
         else:
             horarios = []
 
+        # --- Obtener cursos (idioma + nivel) ---
+        cursor.execute("SELECT id_curso, idioma, nivel FROM cursos")
+        cursos = cursor.fetchall()
+
     except mysql.connector.Error as err:
         print(f"Error de base de datos: {err}")
+        genero = []
         tipodeinscripcion = []
         horarios = []
+        cursos = []
     finally:
         if 'conn' in locals() and conn.is_connected():
             cursor.close()
@@ -57,40 +77,57 @@ def formulario():
 
     return render_template(
         "registro.html",
+        genero=genero,
         tipodeinscripcion=tipodeinscripcion,
-        horarios=horarios
+        horarios=horarios,
+        cursos=cursos  # enviamos cursos al template
     )
 
 # --- Ruta que recibe y guarda los datos del formulario ---
 @app.route("/guardar", methods=["POST"])
 def guardar():
     try:
-        # Obtener datos de texto del formulario
+        # Datos de texto del formulario
         correo = request.form["correo_electronico"]
         nombre = request.form["nombre"]
         apellido_P = request.form["apellido_P"]
         apellido_M = request.form["apellido_M"]
+        telefono = request.form["telefono"]
+        fecha_n = request.form["fecha_n"]
+        domicilio = request.form["domicilio"]
+        genero = request.form["genero"]
         tipodeinscripcion = request.form["tipodeinscripcion"]
         horario = request.form["horario"]
+        id_curso = request.form.get("id_curso")  # obtenemos id_curso del formulario
 
-        # Obtener los archivos subidos
+        # Archivos subidos
         acta = request.files["acta_n"].read()
         identificacion = request.files["identificacion"].read()
 
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        sql = """
-        INSERT INTO alumnos 
-        (correo_electronico, nombre, apellido_P, apellido_M, tipo_i, horario, acta_n, identificacion)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        # Los campos BLOB esperan datos binarios, que es lo que .read() proporciona
-        values = (correo, nombre, apellido_P, apellido_M, tipodeinscripcion, horario, acta, identificacion)
+        #Insertar primero expediente (archivos)
+        cursor.execute(
+            """
+            INSERT INTO expediente_alumnos (ruta_acta_n, ruta_identificacion, ruta_comprobante_pago)
+            VALUES (%s, %s, %s)
+            """,
+            (acta, identificacion, None)  # si no tienes comprobante aún
+        )
+        id_exp = cursor.lastrowid  # obtener el id del expediente creado
 
-        cursor.execute(sql, values)
+        # Insertar alumno y enlazar expediente
+        cursor.execute(
+            """
+            INSERT INTO alumnos 
+            (matricula, nombre, apellido_P, apellido_M, correo_electronico, telefono, fechar_n, domicilio, genero, id_curso, tipo_i, horario, id_exp_alumn)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (None, nombre, apellido_P, apellido_M, correo, telefono, fecha_n, domicilio, genero, id_curso, tipodeinscripcion, horario, id_exp)
+        )
+
         conn.commit()
-
         mensaje = "¡Registro exitoso!"
 
     except mysql.connector.Error as err:
@@ -102,29 +139,7 @@ def guardar():
             cursor.close()
             conn.close()
 
-    # Idealmente, aquí rediriges a una página de éxito
     return f"<h1>{mensaje}</h1><a href='/'>Volver al registro</a>"
-
-
-# --- Rutas de ejemplo para otras páginas ---
-# (Asegúrate de tener los archivos HTML correspondientes en la carpeta 'templates')
-@app.route("/menu")
-def mostrar_menu():
-    return "<h1>Página del Menú</h1>" # return render_template("menu.html")
-
-@app.route("/calificaciones")
-def mostrar_calificaciones():
-    return "<h1>Página de Calificaciones</h1>" # return render_template("calificaciones.html")
-
-@app.route("/tablero")
-def mostrar_tablero():
-    return "<h1>Página del Tablero</h1>" # return render_template("tablero.html")
-
-@app.route("/cursos")
-def mostrar_cursos():
-    return "<h1>Página de Cursos</h1>" # return render_template("cursos.html")
-
 
 if __name__ == "__main__":
     app.run(debug=True)
-

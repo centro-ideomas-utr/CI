@@ -28,22 +28,52 @@
       <form class="formulario-registro" action="{{ url_for('guardar') }}" method="POST" enctype="multipart/form-data">
 
         <div class="campo nombre">
-          <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
-        </div>
-
-        <div class="campo apellido">
           <input class="registro_field" type="text" id="nombre" name="nombre" placeholder="Nombre(s)" required>
         </div>
 
-        <div class="campo email1">
-          <input class="registro_field" type="text" id="apellido_P" name="apellido_P" placeholder="Apellido Paterno" required>
+        <div class="campo apellido_p">
+          <input class="registro_field" type="text" id="apellido_p" name="apellido_P" placeholder="Apellido Paterno" required>
         </div>
 
-        <div class="campo email2">
-          <input class="registro_field" type="text" id="apellido_M" name="apellido_M" placeholder="Apellido Materno" required>
+        <div class="campo apellido_m">
+          <input class="registro_field" type="text" id="apellido_m" name="apellido_m" placeholder="Apellido Materno" required>
+        </div>
+        
+        <div class="campo correo_electronico">
+          <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
         </div>
 
-        <div class="campo contraseña1">
+        <div class="campo telefono">
+          <input class="registro_field" type="text" id="telefono" name="telefono" placeholder="Telefono" required>
+        </div>
+
+        <div class="campo fecha_n">
+          <input class="registro_field" type="date" id="fecha_n" name="fecha_n" placeholder="Fecha de Nacimiento" required>
+        </div>
+
+        <div class="campo domicilio">
+          <input class="registro_field" type="text" id="domicilio" name="domicilio" placeholder="Domicilio" required>
+        </div>
+
+      <div class="campo curso">
+        <select class="registro_field" id="curso" name="curso" required>
+          <option value="" disabled selected>-- Selecciona el curso --</option>
+          {% for curso in cursos %}
+            <option value="{{ curso.id_curso }}">{{ curso.idioma }} - Nivel {{ curso.nivel }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="campo genero">
+        <select class="registro_field" name="genero" id="genero" required>
+          <option value="" disabled selected>-- Selecciona género --</option>
+          {% for g in genero %}
+          <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+        <div class="campo tipodeinscripcion">
           <select class="registro_field" id="tipodeinscripcion" name="tipodeinscripcion" required>
             <option value="" disabled selected>-- Tipo de Inscripción --</option>
             {% for tipo in tipodeinscripcion %}
@@ -52,7 +82,7 @@
           </select>
         </div>
 
-        <div class="campo contraseña2">
+        <div class="campo horario">
           <select class="registro_field" id="horario" name="horario" required>
             <option value="" disabled selected>-- Elige un horario --</option>
             {% for h in horarios %}
@@ -81,4 +111,3 @@
   <script src="{{ url_for('static', filename='js/prueba.js') }}"></script>
 </body>
 </html>
-

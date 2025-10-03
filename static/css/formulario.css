@@ -44,20 +44,27 @@ body, html {
     grid-template-columns: repeat(2, 1fr);
     gap: 2rem 4rem;
     grid-template-areas:
-        'nombre apellido'
-        'email1 email2'
-        'contrasena1 contrasena2'
-        'documento1 documento2'
-        'boton1 boton1';
+        'nombre apellido_p'
+        'apellido_m correo_electronico'
+        'telefono fecha_n'
+        'domicilio genero'
+        'curso tipodeinscripcion'
+        'horario documento1'
+        'documento2 boton1';
 }
 
 /* Áreas */
 .nombre { grid-area: nombre; }
-.apellido { grid-area: apellido; }
-.email1 { grid-area: email1; }
-.email2 { grid-area: email2; }
-.contraseña1 { grid-area: contrasena1; }
-.contraseña2 { grid-area: contrasena2; }
+.apellido_p { grid-area: apellido_p; }
+.apellido_m { grid-area: apellido_m; }
+.email2 { grid-area: correo_electronico; }
+.telefono { grid-area: telefono; }
+.fecha_n { grid-area: fecha_n; }
+.domicilio { grid-area: domicilio; }
+.genero { grid-area: genero; }
+.curso { grid-area: curso; }
+.tipodeinscripcion { grid-area: tipodeinscripcion; }
+.horario { grid-area: horario; }
 .documento1 { grid-area: documento1; }
 .documento2 { grid-area: documento2; }
 .boton1 { 
