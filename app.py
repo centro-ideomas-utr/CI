@@ -157,6 +157,7 @@ def guardar():
             conn.close()
 
     return f"<h1>{mensaje}</h1><a href='/'>Volver</a>"
+<<<<<<< HEAD
 
 
     app.run(debug=True)
@@ -234,6 +235,8 @@ def tablero():
 
 
 
+=======
+>>>>>>> 6b0b667c3601bb81376d059abe103db0772a2733
 
 if __name__ == "__main__":
     app.run(debug=True)
