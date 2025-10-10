@@ -4,81 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pantalla Tabla</title>
-    <link rel="stylesheet" href="listas.css">
-    <link rel="icon" href="CI.png">
+  <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/listas.css') }}">
+
+
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 </head>
 <body>
 
     <div class="navbar">
-        <div class="menu-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
+        <div class="menu-icon"><span></span><span></span><span></span></div>
         <h1>E-J-B2</h1>
     </div>
 
     <div class="table-container">
         <table>
-           <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th>Observaciones</th>                     <th>Enero</th>
-                    <th>Febrero</th>
-                    <th>Marzo</th>
-                    <th>Abril</th>
-                    <th>ABS</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>2024-001</td>
-                    <td>Juan Pérez</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-001"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-001">Añadir</button>
-                    </td>                     <td>P</td>
-                    <td>P</td>
-                    <td>F</td>
-                    <td>P</td>
-                    <td>1</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>2024-002</td>
-                    <td>Maria García</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-002"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-002"> Añadir</button>
-                    </td>                     <td>P</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>2024-003</td>
-                    <td>Carlos López</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-003">Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-003"> Añadir</button>
-                    </td>                     <td>F</td>
-                    <td>F</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>2</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Observaciones</th> <th>Enero</th>
+                    <th>Febrero</th>
+                    <th>Marzo</th>
+                    <th>Abril</th>
+                    <th>ABS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>2024-001</td>
+                    <td>Juan Pérez</td>
+                    <td>
+                        <button class="btn-obs ver-obs" data-matricula="2024-001"> Ver</button>
+                        <button class="btn-obs anadir-obs" data-matricula="2024-001"> Añadir</button>
+                    </td>
+                    <td>P</td><td>P</td><td>F</td><td>P</td><td>1</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>2024-002</td>
+                    <td>Maria García</td>
+                    <td>
+                        <button class="btn-obs ver-obs" data-matricula="2024-002"> Ver</button>
+                        <button class="btn-obs anadir-obs" data-matricula="2024-002"> Añadir</button>
+                    </td>
+                    <td>P</td><td>P</td><td>P</td><td>P</td><td>0</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>2024-003</td>
+                    <td>Carlos López</td>
+                    <td>
+                        <button class="btn-obs ver-obs" data-matricula="2024-003"> Ver</button>
+                        <button class="btn-obs anadir-obs" data-matricula="2024-003"> Añadir</button>
+                    </td>
+                    <td>F</td><td>F</td><td>P</td><td>P</td><td>2</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <div class="buttons">
         <button class="btn">Regresar</button>
         <button class="btn" id="print-btn">Imprimir</button>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+          <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
+          <div class="social-login-icons">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+              <div class="socialcontainer"><div class="icon social-icon-2-2"><svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path></svg></div><div class="social-icon-2"><svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path></svg></div></div>
+            </a>
+            </div>
+        </div>
+    </footer>
+    
+    <div id="observation-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modal-title">Observaciones</h2>
+            
+            <div id="observation-history" class="history-section">
+                <h3 class="section-title">Historial (Comentarios de Maestros)</h3>
+                <div id="history-list">
+                    <p class="no-data-msg">No hay observaciones registradas aún.</p>
+                </div>
+            </div>
+            
+            <div class="add-section">
+                <h3 class="section-title">Añadir Nueva Observación</h3>
+                <textarea id="new-observation-text" placeholder="Escribe tu observación... (máx. 250 caracteres)" maxlength="250"></textarea>
+                <button id="save-observation-btn" class="btn btn-save">Guardar Comentario</button>
+            </div>
+        </div>
     </div>
 
     <footer class="main-footer">
@@ -128,6 +150,8 @@
           </div>
         </div>
     </footer>
+  <script src="{{ url_for('static', filename='js/listas.js') }}"></script>
+
 </body>
 </html>
 
