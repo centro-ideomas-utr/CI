@@ -195,3 +195,34 @@
           transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
           background: #25D366;
         }
+        /* --- Estilos del Sidebar --- */
+      .sidebar {
+          height: 100%;
+          width: 250px; /* Ancho del menú */
+          position: fixed; /* Fijo en la pantalla */
+          top: 0;
+          left: 0;
+          background-color: #333; /* Color de fondo oscuro */
+          padding-top: 60px; /* Espacio para el navbar de arriba */
+          transform: translateX(-100%); /* Empieza oculto a la izquierda */
+          transition: transform 0.3s ease-in-out; /* Animación suave */
+          z-index: 10;
+      }
+
+      /* Estilo que se aplica cuando el sidebar está visible */
+      .sidebar.active {
+          transform: translateX(0); /* Lo mueve a su posición visible */
+      }
+
+      .sidebar a {
+          padding: 10px 15px;
+          text-decoration: none;
+          font-size: 18px;
+          color: white;
+          display: block;
+          transition: 0.2s;
+      }
+
+      .sidebar a:hover {
+          background-color: #575757;
+      }

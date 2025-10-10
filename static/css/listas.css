@@ -237,3 +237,47 @@
                 padding: 8px;
             }
         }
+        /* --- Estilos para los botones de Observaciones --- */
+.btn-obs {
+    border: 1px solid #ccc; /* Borde sutil */
+    color: #333;
+    padding: 5px 10px;
+    font-size: 0.85em; /* Un poco más pequeño */
+    font-weight: normal;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #e9ecef; /* Fondo claro */
+    transition: background-color 0.2s ease;
+    margin: 2px; /* Pequeño espacio entre botones */
+    display: inline-block; /* Para que estén uno al lado del otro */
+    text-align: center;
+}
+
+.btn-obs:hover {
+    background-color: #dee2e6;
+}
+
+/* Color específico para "Ver" */
+.ver-obs {
+    background-color: #9c94b8;
+    color: white;
+}
+
+.ver-obs:hover {
+    background-color: #837a9e;
+}
+
+/* Color específico para "Añadir" */
+.anadir-obs {
+    background-color: #5cb85c; /* Un color de éxito o acción */
+    color: white;
+}
+
+.anadir-obs:hover {
+    background-color: #4cae4c;
+}
+
+/* Asegura que la celda de la tabla no tenga un espacio en blanco excesivo si es necesario */
+td:has(.btn-obs) {
+    text-align: center;
+}

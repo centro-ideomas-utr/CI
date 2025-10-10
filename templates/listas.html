@@ -20,52 +20,61 @@
 
     <div class="table-container">
         <table>
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th>Enero</th>
-                    <th>Febrero</th>
-                    <th>Marzo</th>
-                    <th>Abril</th>
-                    <th>ABS</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>2024-001</td>
-                    <td>Juan Pérez</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>F</td>
-                    <td>P</td>
-                    <td>1</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>2024-002</td>
-                    <td>Maria García</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>2024-003</td>
-                    <td>Carlos López</td>
-                    <td>F</td>
-                    <td>F</td>
-                    <td>P</td>
-                    <td>P</td>
-                    <td>2</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+           <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Observaciones</th>                     <th>Enero</th>
+                    <th>Febrero</th>
+                    <th>Marzo</th>
+                    <th>Abril</th>
+                    <th>ABS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>2024-001</td>
+                    <td>Juan Pérez</td>
+                    <td>
+                        <button class="btn-obs ver-obs" data-matricula="2024-001"> Ver</button>
+                        <button class="btn-obs anadir-obs" data-matricula="2024-001">Añadir</button>
+                    </td>                     <td>P</td>
+                    <td>P</td>
+                    <td>F</td>
+                    <td>P</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>2024-002</td>
+                    <td>Maria García</td>
+                    <td>
+                        <button class="btn-obs ver-obs" data-matricula="2024-002"> Ver</button>
+                        <button class="btn-obs anadir-obs" data-matricula="2024-002"> Añadir</button>
+                    </td>                     <td>P</td>
+                    <td>P</td>
+                    <td>P</td>
+                    <td>P</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>2024-003</td>
+                    <td>Carlos López</td>
+                    <td>
+                        <button class="btn-obs ver-obs" data-matricula="2024-003">Ver</button>
+                        <button class="btn-obs anadir-obs" data-matricula="2024-003"> Añadir</button>
+                    </td>                     <td>F</td>
+                    <td>F</td>
+                    <td>P</td>
+                    <td>P</td>
+                    <td>2</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <div class="buttons">
         <button class="btn">Regresar</button>

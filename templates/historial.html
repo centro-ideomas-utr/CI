@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial</title>
+  <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/evidencias.css') }}">
+
+
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 </head>
 <body>
 
@@ -19,13 +25,15 @@
     
     <div class="sidebar" id="sidebar">
         <div>
-            <ul>
-                <li><a href="#">Inicio</a></li>
-                <li><a href="#">Inscripciones</a></li>
-                <li><a href="#">Historial</a></li>
-                <li><a href="#">Avisos</a></li>
-                <li><a href="#">Listas de Clase</a></li>
-            </ul>
+  <ul>
+    <li><a href="{{ url_for('formulario') }}">Inicio</a></li>
+    <li><a href="{{ url_for('reinscripciones') }}">Inscripciones</a></li>
+    <li><a href="{{ url_for('historial') }}">Historial</a></li>
+    <li><a href="{{ url_for('grupos') }}">Grupo</a></li>
+    <li><a href="{{ url_for('salon') }}">Salones</a></li>
+    <li><a href="{{ url_for('nomina') }}">Nómina</a></li>
+    <li><a href="{{ url_for('evidencias') }}">Evidencias</a></li>
+</ul>
         </div>
         <div>
             <ul>
@@ -94,6 +102,9 @@
             </div>
         </div>
     </footer>
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/historial.js') }}"></script>
+
 
 </body>
 </html>

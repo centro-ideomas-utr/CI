@@ -7,7 +7,7 @@ app = Flask(__name__)
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "Uli0514122324#",  # tu contraseña real
+    "password": "Fake2020*",  # cambia si es necesario
     "database": "prueba"
 }
 
@@ -80,14 +80,14 @@ def formulario():
         genero=genero,
         tipodeinscripcion=tipodeinscripcion,
         horarios=horarios,
-        cursos=cursos  # enviamos cursos al template
+        cursos=cursos
     )
 
 # --- Ruta que recibe y guarda los datos del formulario ---
 @app.route("/guardar", methods=["POST"])
 def guardar():
     try:
-        # Datos de texto del formulario
+        # Datos del formulario
         correo = request.form["correo_electronico"]
         nombre = request.form["nombre"]
         apellido_P = request.form["apellido_P"]
@@ -98,7 +98,7 @@ def guardar():
         genero = request.form["genero"]
         tipodeinscripcion = request.form["tipodeinscripcion"]
         horario = request.form["horario"]
-        id_curso = request.form.get("id_curso")  # obtenemos id_curso del formulario
+        id_curso = request.form.get("id_curso")
 
         # Archivos subidos
         acta = request.files["acta_n"].read()
@@ -107,17 +107,17 @@ def guardar():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        #Insertar primero expediente (archivos)
+        # Insertar expediente
         cursor.execute(
             """
             INSERT INTO expediente_alumnos (ruta_acta_n, ruta_identificacion, ruta_comprobante_pago)
             VALUES (%s, %s, %s)
             """,
-            (acta, identificacion, None)  # si no tienes comprobante aún
+            (acta, identificacion, None)
         )
-        id_exp = cursor.lastrowid  # obtener el id del expediente creado
+        id_exp = cursor.lastrowid
 
-        # Insertar alumno y enlazar expediente
+        # Insertar alumno
         cursor.execute(
             """
             INSERT INTO alumnos 
@@ -140,6 +140,83 @@ def guardar():
             conn.close()
 
     return f"<h1>{mensaje}</h1><a href='/'>Volver al registro</a>"
+
+
+# --- Otras rutas para tus páginas HTML (CORREGIDO) ---
+@app.route("/asistencias")
+def asistencias():
+    return render_template("asistencias.html")
+
+@app.route("/avisos")
+def avisos():
+    return render_template("avisos.html")
+
+@app.route("/calificaciones")
+def calificaciones():
+    return render_template("calificaciones.html")
+
+@app.route("/clases")
+def clases():
+    return render_template("clases.html")
+
+@app.route("/cursos")
+def cursos():
+    return render_template("cursos.html")
+
+@app.route("/evidencias")
+def evidencias():
+    return render_template("evidencias.html")
+
+@app.route("/grupos")
+def grupos():
+    return render_template("grupos.html")
+
+@app.route("/historial")
+def historial():
+    return render_template("historial.html")
+
+@app.route("/listadodemaestros")
+def listadodemaestros():
+    return render_template("listadodemaestros.html")
+
+@app.route("/listadomaestrosss")
+def listadomaestrosss():
+    return render_template("listadomaestrosss.html")
+
+@app.route("/listas")
+def listas():
+    return render_template("listas.html")
+
+@app.route("/maestroinfo")
+def maestroinfo():
+    return render_template("maestroinfo.html")
+
+@app.route("/menu")
+def menu():
+    return render_template("menu.html")
+
+@app.route("/nomina")
+def nomina():
+    return render_template("nomina.html")
+
+@app.route("/reinscripciones")
+def reinscripciones():
+    return render_template("reinscripciones.html")
+
+@app.route("/salon")
+def salon():
+    return render_template("salon.html")
+
+@app.route("/teachers")
+def teachers():
+    return render_template("teachers.html")
+    
+@app.route("/tablero")
+def tablero():
+    return render_template("tablero.html")
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
