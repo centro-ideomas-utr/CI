@@ -34,8 +34,13 @@ def parse_enum(row):
         return []
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
 
-# --- Formulario principal ---
+# --- NUEVA RUTA INICIAL (index.html) ---
 @app.route("/")
+def inicio():
+    return render_template("index.html")
+
+# --- Formulario de registro (antes era la raíz) ---
+@app.route("/registro")
 def formulario():
     try:
         conn = mysql.connector.connect(**db_config)
@@ -82,7 +87,6 @@ def guardar():
             "horario": request.form["horario"]
         }
 
-        # --- Guardar archivos ---
         documentos = {}
         for field in ["acta_n", "identificacion"]:
             file = request.files[field]
@@ -90,19 +94,16 @@ def guardar():
                 filename = f"{secure_filename(datos['correo'])}_{field}_{datetime.utcnow().timestamp()}.pdf"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 file.save(filepath)
-                documentos[field] = filepath  # Guardamos ruta completa o relativa
+                documentos[field] = filepath
             else:
                 documentos[field] = None
 
-        # --- Conexión MySQL ---
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        # Matrícula automática
         cursor.execute("SELECT COALESCE(MAX(matricula),1000)+1 FROM alumnos")
         matricula = cursor.fetchone()[0]
 
-        # Insertar alumno
         cursor.execute("""
             INSERT INTO alumnos 
             (matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono,
@@ -116,7 +117,6 @@ def guardar():
 
         id_alumno = cursor.lastrowid
 
-        # --- Crear expediente en MongoDB ---
         expediente_doc = {
             "tipo": "alumno",
             "id_relacional": id_alumno,
@@ -128,7 +128,6 @@ def guardar():
         }
         mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
 
-        # --- Vincular expediente ---
         cursor.execute(
             "UPDATE alumnos SET id_expediente_mongo = %s WHERE id_alumno = %s",
             (str(mongo_id), id_alumno)
@@ -136,7 +135,6 @@ def guardar():
 
         conn.commit()
 
-        # --- Log ---
         logs_col.insert_one({
             "tipo_entidad": "alumno",
             "id_entidad": id_alumno,
@@ -158,8 +156,19 @@ def guardar():
 
     return f"<h1>{mensaje}</h1><a href='/'>Volver</a>"
 
+# --- Demás rutas existentes ---
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-    app.run(debug=True)
+@app.route("/login")
+def login():
+    return render_template("login.html")
+
+@app.route("/registro")
+def registro():
+    return render_template("registro.html")
+
 @app.route("/asistencias")
 def asistencias():
     return render_template("asistencias.html")
