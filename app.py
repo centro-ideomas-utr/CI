@@ -227,7 +227,62 @@ def nomina():
 
 @app.route("/reinscripciones")
 def reinscripciones():
-    return render_template("reinscripciones.html")
+    filtro = request.args.get("tipo", None)
+    alumnos = []
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        query = """
+            SELECT 
+                a.id_alumno,
+                a.matricula,
+                a.nombre,
+                a.apellido_p,
+                a.apellido_m,
+                a.correo_electronico,
+                a.telefono,
+                TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, CURDATE()) AS edad,
+                a.fecha_nacimiento,
+                a.domicilio,
+                a.genero,
+                a.tipo_inscripcion,
+                a.horario,
+                g.grupo AS nombre_grupo,
+                CONCAT(p.nombre, ' ', p.apellido_p) AS maestro
+            FROM alumnos a
+            LEFT JOIN grupos g ON a.id_grupo = g.id_grupo
+            LEFT JOIN profesores p ON g.id_profesor = p.id_profesor
+        """
+
+        if filtro:
+            query += " WHERE a.tipo_inscripcion = %s"
+            cursor.execute(query, (filtro,))
+        else:
+            cursor.execute(query)
+
+        alumnos = cursor.fetchall()
+
+        # Vincular con MongoDB
+        for alumno in alumnos:
+            if alumno.get("id_expediente_mongo"):
+                expediente = expedientes_col.find_one({"_id": ObjectId(alumno["id_expediente_mongo"])})
+                alumno["documentos"] = expediente.get("documentos", {}) if expediente else {}
+            else:
+                alumno["documentos"] = {}
+
+            if alumno["fecha_nacimiento"]:
+                alumno["fecha_nacimiento"] = alumno["fecha_nacimiento"].strftime("%d/%m/%Y")
+
+    except Exception as e:
+        print("Error:", e)
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template("reinscripciones.html", alumnos=alumnos, filtro=filtro)
 
 @app.route("/salon")
 def salon():

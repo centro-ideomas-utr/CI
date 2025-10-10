@@ -29,79 +29,82 @@
     </ul>
   </div>
 
-  <div class="buttons-container">
-    <button class="btn blue">REINSCRIPCIÓN ADULTO REGULAR</button>
-    <button class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</button>
-    <button class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</button>
-    <button class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</button>
-    <button class="btn green">REINSCRIPCIÓN MENORES REGULAR</button>
-    <button class="btn purple">INSCRIPCIÓN MENORES REGULAR</button>
-    <button class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</button>
-    <button class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</button>
-  </div>
+<div class="buttons-container">
+  <a href="{{ url_for('reinscripciones', tipo='Reinscripción adulto regular') }}"><button class="btn blue">REINSCRIPCIÓN ADULTO REGULAR</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Inscripción adulto regular') }}"><button class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Reinscripción adultos con descuento') }}"><button class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Inscripción adultos con descuento') }}"><button class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Reinscripción menores regular') }}"><button class="btn green">REINSCRIPCIÓN MENORES REGULAR</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Inscripción menores regular') }}"><button class="btn purple">INSCRIPCIÓN MENORES REGULAR</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Reinscripción menores con descuento') }}"><button class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</button></a>
+  <a href="{{ url_for('reinscripciones', tipo='Inscripción menores con descuento') }}"><button class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</button></a>
+</div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>No.</th>
-          <th>Matrícula</th>
-          <th>Nombre</th>
-          <th>Apellido</th>
-          <th>Correo Electrónico</th>
-          <th>Teléfono</th>
-          <th>Edad</th>
-          <th>Fecha de Nac.</th>
-          <th>Domicilio</th>
-          <th>Expediente</th>
-          <th>Género</th>
-          <th>Nivel</th>
-          <th>Horario</th>
-          <th>Grupo</th>
-          <th>Maestro Actual</th>
-          <th>Maestro Anterior</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="green">13871</td>
-          <td class="purple">PAGADO</td>
-          <td>Guadalupe Monster</td>
-          <td>Martínez López</td>
-          <td>monsterliz69@gmail.com</td>
-          <td>4491017229</td>
-          <td>30</td>
-          <td>31/8/1993</td>
-          <td>Benedicto XVI #206 int. 59</td>
-          <td>San Gerardo</td>
-          <td>Femenino</td>
-          <td class="blue">English I</td>
-          <td class="lightblue">Sábado 8:00 - 11:00</td>
-          <td class="lightred">1A</td>
-          <td></td>
-          <td class="lila"></td>
-        </tr>
-        <tr>
-          <td class="green">13917</td>
-          <td class="purple">PAGADO</td>
-          <td>María Itzel</td>
-          <td>Moreira Chavez</td>
-          <td>chavezmariamorena@gmail.com</td>
-          <td>5582214422</td>
-          <td>21</td>
-          <td>27/1/2002</td>
-          <td>Frac. Parras #207</td>
-          <td>---</td>
-          <td>Femenino</td>
-          <td class="blue">English I</td>
-          <td class="lightblue">Sábado 8:00 - 11:00</td>
-          <td class="lightred">1A</td>
-          <td></td>
-          <td class="lila"></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>Matrícula</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Correo Electrónico</th>
+        <th>Teléfono</th>
+        <th>Edad</th>
+        <th>Fecha de Nac.</th>
+        <th>Domicilio</th>
+        <th>Expediente</th>
+        <th>Género</th>
+        <th>Tipo de Inscripión</th>
+        <th>Nivel</th>
+        <th>Horario</th>
+        <th>Grupo</th>
+        <th>Maestro Actual</th>
+        <th>Maestro Anterior</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for alumno in alumnos %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ alumno.matricula }}</td>
+        <td>{{ alumno.nombre }}</td>
+        <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
+        <td>{{ alumno.correo_electronico }}</td>
+        <td>{{ alumno.telefono }}</td>
+        <td>{{ alumno.edad }}</td>
+        <td>{{ alumno.fecha_nacimiento }}</td>
+        <td>{{ alumno.domicilio }}</td>
+        
+        <!-- Expediente -->
+        <td>
+          {% if alumno.documentos.acta_nacimiento %}
+            <a href="{{ alumno.documentos.acta_nacimiento }}" target="_blank">Acta</a><br>
+          {% endif %}
+          {% if alumno.documentos.identificacion %}
+            <a href="{{ alumno.documentos.identificacion }}" target="_blank">INE</a><br>
+          {% endif %}
+          {% if alumno.documentos.comprobante_pago %}
+            <a href="{{ alumno.documentos.comprobante_pago }}" target="_blank">Pago</a>
+          {% endif %}
+          {% if not alumno.documentos %}
+            ---
+          {% endif %}
+        </td>
+
+        <td>{{ alumno.genero }}</td>
+        <td>{{ alumno.tipo_inscripcion }}</td>
+        <td>{{ alumno.horario }}</td>
+        <td>{{ alumno.nombre_grupo or '---' }}</td>
+        <td>{{ alumno.maestro or '---' }}</td>
+        <td>---</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="16" style="text-align:center;">No hay alumnos registrados para este tipo de inscripción.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
       <footer class="main-footer">
         <div class="footer-content">
@@ -150,7 +153,5 @@
           </div>
         </div>
     </footer>
-
-
 </body>
 </html>
