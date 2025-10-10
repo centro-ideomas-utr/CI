@@ -9,9 +9,10 @@
 body, html {
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--fuenteHeadings);
 }
 
+/* Contenedor centrado */
 .contenedor {
     height: 100vh;
     width: min(90%, 120rem);
@@ -21,24 +22,27 @@ body, html {
     align-items: center;
 }
 
+/* Caja del formulario */
 .contenido {
-    background-color: rgba(173, 171, 201, .1);
+    background-color: rgba(255, 255, 255, 0.08);
     padding: 3rem 6rem;
     border-radius: 2rem;
     text-align: center;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 25px rgba(255,255,255,0.1);
 }
 
+/* Título */
 .contenido h1 {
-    font-family: var(--fuenteHeadings);
-    font-weight: 700;
+    font-family: var(--fuenteTitulo);
     font-size: 3rem;
     text-transform: uppercase;
     color: var(--blanco);
     margin-bottom: 3rem;
+    letter-spacing: 2px;
 }
 
-/* GRID FORMULARIO */
+/* Grid del formulario */
 .formulario-registro {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -48,96 +52,95 @@ body, html {
         'apellido_m correo_electronico'
         'telefono fecha_n'
         'domicilio genero'
-        'curso tipodeinscripcion'
-        'horario documento1'
-        'documento2 boton1';
+        'tipodeinscripcion horario'
+        'documento1 documento2'
+        'boton1 boton1';
 }
 
 /* Áreas */
 .nombre { grid-area: nombre; }
 .apellido_p { grid-area: apellido_p; }
 .apellido_m { grid-area: apellido_m; }
-.email2 { grid-area: correo_electronico; }
+.correo_electronico { grid-area: correo_electronico; }
 .telefono { grid-area: telefono; }
 .fecha_n { grid-area: fecha_n; }
 .domicilio { grid-area: domicilio; }
 .genero { grid-area: genero; }
-.curso { grid-area: curso; }
 .tipodeinscripcion { grid-area: tipodeinscripcion; }
 .horario { grid-area: horario; }
 .documento1 { grid-area: documento1; }
 .documento2 { grid-area: documento2; }
-.boton1 { 
-    grid-area: boton1; 
+.boton1 {
+    grid-area: boton1;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
 /* Campos */
 .campo {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
 }
 
 .registro_field {
     border: none;
-    border-bottom: .2rem solid var(--blanco);
+    border-bottom: 2px solid var(--blanco);
     padding: 1rem;
     color: var(--blanco);
-    background-color: transparent;
+    background: transparent;
     width: 100%;
-    font-size: 1.4rem;
-    box-sizing: border-box;
+    font-size: 1.3rem;
+    transition: all 0.3s ease;
+}
+
+.registro_field:focus {
+    outline: none;
+    border-bottom-color: #4a90e2;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
 }
 
 .registro_field::placeholder {
-    color: var(--blanco);
+    color: rgba(255,255,255,0.7);
     text-transform: uppercase;
 }
 
-/* --- CORRECCIÓN DE COLOR AQUÍ --- */
-/* Estilo para las opciones de los menús desplegables */
+/* Opciones del select */
 .registro_field option {
-    background-color: #4a5b7e; /* Azul oscuro para el fondo */
-    color: white;             /* Texto blanco */
+    background-color: #1f2a44;
+    color: white;
 }
 
-
-/* Labels para los input file */
+/* Archivos */
 .file-label {
     color: white;
     margin-bottom: 10px;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     text-transform: uppercase;
 }
+
 input[type="file"] {
     color: white;
 }
 
-
-/* Botón */
+/* Botones */
 .boton {
-    display: block;
-    font-family: var(--fuenteHeadings);
-    text-align: center;
     font-weight: 700;
-    text-transform: uppercase;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     padding: 1rem 2rem;
     border-radius: 2rem;
+    border: 2px solid #fff;
+    background: transparent;
+    color: #fff;
+    text-transform: uppercase;
     transition: all 0.3s ease;
-    border: 2px solid #ffffff;
-    color: #ffffff;
-    background-color: transparent;
 }
 
 .boton:hover {
-    cursor: pointer;
-    background-color: #ffffff;
+    background: #fff;
     color: #000;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px rgba(255,255,255,0.4);
 }
 
 .boton--primario {
@@ -221,4 +224,3 @@ input[type="file"] {
     animation: hero-gradient-animation 15s linear infinite alternate-reverse;
     background-blend-mode: normal, normal, normal, normal, normal, normal, normal, normal, normal, normal;
 }
-
