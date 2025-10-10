@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Idiomas - UTR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='imagen/paises.png') }}" alt="Mapa de Europa" class="background">
+
+        <div class="content">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='imagen/CI.png') }}" alt="Logo del Centro de Idiomas">
+
+        </div>
+
+        <nav class="menu">
+            <!-- Botones funcionales -->
+            <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
+            <div class="divider"></div>
+            <a href="https://www.facebook.com/CDIUTR" target="_blank">CONÓCENOS</a>
+            <div class="divider"></div>
+            <a href="{{ url_for('registro') }}">REGISTRARSE</a>
+            </nav>
+        </div>
+    </div>
+    </body>
+</html>

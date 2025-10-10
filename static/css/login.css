@@ -6,13 +6,14 @@
     --fuenteTitulo: 'Jersey 10 Charted', cursive;
 }
 
+/* --- GENERALES --- */
 body, html {
     margin: 0;
     padding: 0;
     font-family: var(--fuenteHeadings);
 }
 
-/* Contenedor centrado */
+/* --- CONTENEDOR CENTRAL --- */
 .contenedor {
     height: 100vh;
     width: min(90%, 120rem);
@@ -22,17 +23,17 @@ body, html {
     align-items: center;
 }
 
-/* Caja del formulario */
+/* --- CAJA DEL FORMULARIO --- */
 .contenido {
     background-color: rgba(255, 255, 255, 0.08);
-    padding: 3rem 6rem;
+    padding: 3rem 5rem;
     border-radius: 2rem;
     text-align: center;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
     box-shadow: 0 0 25px rgba(255,255,255,0.1);
 }
 
-/* Título */
+/* --- TÍTULO --- */
 .contenido h1 {
     color: #ffffff;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.7),
@@ -42,42 +43,14 @@ body, html {
     text-transform: uppercase;
 }
 
-/* Grid del formulario */
-.formulario-registro {
+/* --- FORMULARIO LOGIN --- */
+.formulario-login {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem 4rem;
-    grid-template-areas:
-        'nombre apellido_p'
-        'apellido_m correo_electronico'
-        'telefono fecha_n'
-        'domicilio genero'
-        'tipodeinscripcion horario'
-        'documento1 documento2'
-        'boton1 boton1';
+    grid-template-columns: 1fr;
+    gap: 2rem;
 }
 
-/* Áreas */
-.nombre { grid-area: nombre; }
-.apellido_p { grid-area: apellido_p; }
-.apellido_m { grid-area: apellido_m; }
-.correo_electronico { grid-area: correo_electronico; }
-.telefono { grid-area: telefono; }
-.fecha_n { grid-area: fecha_n; }
-.domicilio { grid-area: domicilio; }
-.genero { grid-area: genero; }
-.tipodeinscripcion { grid-area: tipodeinscripcion; }
-.horario { grid-area: horario; }
-.documento1 { grid-area: documento1; }
-.documento2 { grid-area: documento2; }
-.boton1 {
-    grid-area: boton1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Campos */
+/* --- CAMPOS --- */
 .campo {
     display: flex;
     flex-direction: column;
@@ -106,25 +79,13 @@ body, html {
     text-transform: uppercase;
 }
 
-/* Opciones del select */
-.registro_field option {
-    background-color: #1f2a44;
-    color: white;
+/* --- BOTÓN --- */
+.campo-boton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Archivos */
-.file-label {
-    color: white;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-}
-
-input[type="file"] {
-    color: white;
-}
-
-/* Botones */
 .boton {
     font-weight: 700;
     font-size: 1.4rem;
@@ -152,7 +113,6 @@ input[type="file"] {
     background-color: #ddd;
     color: #000;
 }
-
 
 /* ANIMACIÓN DE FONDO */
 @keyframes hero-gradient-animation {
