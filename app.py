@@ -296,5 +296,9 @@ def teachers():
 def tablero():
     return render_template("tablero.html")
 
+@app.route("/registromaestro")
+def registrmaestro():
+    return render_template("registromaestro.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
