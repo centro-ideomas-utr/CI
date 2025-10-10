@@ -1,75 +1,58 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import mysql.connector
+from pymongo import MongoClient
+from bson import ObjectId
+from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# --- Configuración de la base de datos ---
+# --- Configuración de MySQL ---
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "Uli0514122324#",  # tu contraseña real
-    "database": "prueba"
+    "password": "Uli0514122324#",
+    "database": "ci_prueba"
 }
 
-# --- Ruta principal que muestra el formulario de registro ---
+# --- Configuración de MongoDB ---
+MONGO_URI = "mongodb+srv://alucard:Uli0514122324@ci.4v4asta.mongodb.net/?retryWrites=true&w=majority"
+
+mongo_client = MongoClient(MONGO_URI)
+mongo_db = mongo_client["ci_prueba"]
+expedientes_col = mongo_db["expedientes"]
+logs_col = mongo_db["logs"]
+
+# --- Carpeta de uploads ---
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# --- Función para extraer ENUMs ---
+def parse_enum(row):
+    if not row or "Type" not in row:
+        return []
+    return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
+
+# --- Formulario principal ---
 @app.route("/")
 def formulario():
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # --- Obtener valores ENUM de genero ---
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'genero'")
-        genero_row = cursor.fetchone()
-        if genero_row and "Type" in genero_row:
-            genero_enum = genero_row["Type"]
-            genero = (
-                genero_enum.replace("enum(", "")
-                .replace(")", "")
-                .replace("'", "")
-                .split(",")
-            )
-        else:
-            genero = []
+        genero = parse_enum(cursor.fetchone())
 
-        # --- Obtener valores ENUM de tipo_i ---
-        cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'tipo_i'")
-        tipo_row = cursor.fetchone()
-        if tipo_row and "Type" in tipo_row:
-            tipo_enum = tipo_row["Type"]
-            tipodeinscripcion = (
-                tipo_enum.replace("enum(", "")
-                .replace(")", "")
-                .replace("'", "")
-                .split(",")
-            )
-        else:
-            tipodeinscripcion = []
+        cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'tipo_inscripcion'")
+        tipodeinscripcion = parse_enum(cursor.fetchone())
 
-        # --- Obtener valores ENUM de horario ---
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'horario'")
-        horario_row = cursor.fetchone()
-        if horario_row and "Type" in horario_row:
-            horario_enum = horario_row["Type"]
-            horarios = (
-                horario_enum.replace("enum(", "")
-                .replace(")", "")
-                .replace("'", "")
-                .split(",")
-            )
-        else:
-            horarios = []
-
-        # --- Obtener cursos (idioma + nivel) ---
-        cursor.execute("SELECT id_curso, idioma, nivel FROM cursos")
-        cursos = cursor.fetchall()
+        horarios = parse_enum(cursor.fetchone())
 
     except mysql.connector.Error as err:
-        print(f"Error de base de datos: {err}")
-        genero = []
-        tipodeinscripcion = []
-        horarios = []
-        cursos = []
+        print("Error:", err)
+        genero, tipodeinscripcion, horarios = [], [], []
     finally:
         if 'conn' in locals() and conn.is_connected():
             cursor.close()
@@ -79,67 +62,101 @@ def formulario():
         "registro.html",
         genero=genero,
         tipodeinscripcion=tipodeinscripcion,
-        horarios=horarios,
-        cursos=cursos  # enviamos cursos al template
+        horarios=horarios
     )
 
-# --- Ruta que recibe y guarda los datos del formulario ---
+# --- Guardar alumno ---
 @app.route("/guardar", methods=["POST"])
 def guardar():
     try:
-        # Datos de texto del formulario
-        correo = request.form["correo_electronico"]
-        nombre = request.form["nombre"]
-        apellido_P = request.form["apellido_P"]
-        apellido_M = request.form["apellido_M"]
-        telefono = request.form["telefono"]
-        fecha_n = request.form["fecha_n"]
-        domicilio = request.form["domicilio"]
-        genero = request.form["genero"]
-        tipodeinscripcion = request.form["tipodeinscripcion"]
-        horario = request.form["horario"]
-        id_curso = request.form.get("id_curso")  # obtenemos id_curso del formulario
+        datos = {
+            "correo": request.form["correo_electronico"],
+            "nombre": request.form["nombre"],
+            "apellido_p": request.form["apellido_p"],
+            "apellido_m": request.form["apellido_m"],
+            "telefono": request.form["telefono"],
+            "fecha_nacimiento": datetime.strptime(request.form["fecha_n"], "%Y-%m-%d"),
+            "domicilio": request.form["domicilio"],
+            "genero": request.form["genero"],
+            "tipo_inscripcion": request.form["tipodeinscripcion"],
+            "horario": request.form["horario"]
+        }
 
-        # Archivos subidos
-        acta = request.files["acta_n"].read()
-        identificacion = request.files["identificacion"].read()
+        # --- Guardar archivos ---
+        documentos = {}
+        for field in ["acta_n", "identificacion"]:
+            file = request.files[field]
+            if file:
+                filename = f"{secure_filename(datos['correo'])}_{field}_{datetime.utcnow().timestamp()}.pdf"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                documentos[field] = filepath  # Guardamos ruta completa o relativa
+            else:
+                documentos[field] = None
 
+        # --- Conexión MySQL ---
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        #Insertar primero expediente (archivos)
-        cursor.execute(
-            """
-            INSERT INTO expediente_alumnos (ruta_acta_n, ruta_identificacion, ruta_comprobante_pago)
-            VALUES (%s, %s, %s)
-            """,
-            (acta, identificacion, None)  # si no tienes comprobante aún
-        )
-        id_exp = cursor.lastrowid  # obtener el id del expediente creado
+        # Matrícula automática
+        cursor.execute("SELECT COALESCE(MAX(matricula),1000)+1 FROM alumnos")
+        matricula = cursor.fetchone()[0]
 
-        # Insertar alumno y enlazar expediente
-        cursor.execute(
-            """
+        # Insertar alumno
+        cursor.execute("""
             INSERT INTO alumnos 
-            (matricula, nombre, apellido_P, apellido_M, correo_electronico, telefono, fechar_n, domicilio, genero, id_curso, tipo_i, horario, id_exp_alumn)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (None, nombre, apellido_P, apellido_M, correo, telefono, fecha_n, domicilio, genero, id_curso, tipodeinscripcion, horario, id_exp)
+            (matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono,
+             fecha_nacimiento, domicilio, genero, tipo_inscripcion, horario)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            matricula, datos["nombre"], datos["apellido_p"], datos["apellido_m"], datos["correo"],
+            datos["telefono"], datos["fecha_nacimiento"], datos["domicilio"], datos["genero"],
+            datos["tipo_inscripcion"], datos["horario"]
+        ))
+
+        id_alumno = cursor.lastrowid
+
+        # --- Crear expediente en MongoDB ---
+        expediente_doc = {
+            "tipo": "alumno",
+            "id_relacional": id_alumno,
+            "documentos": documentos,
+            "metadata": {
+                "fecha_subida": datetime.utcnow(),
+                "actualizado_por": "sistema_auto"
+            }
+        }
+        mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
+
+        # --- Vincular expediente ---
+        cursor.execute(
+            "UPDATE alumnos SET id_expediente_mongo = %s WHERE id_alumno = %s",
+            (str(mongo_id), id_alumno)
         )
 
         conn.commit()
-        mensaje = "¡Registro exitoso!"
 
-    except mysql.connector.Error as err:
-        mensaje = f"Error al guardar en la base de datos: {err}"
+        # --- Log ---
+        logs_col.insert_one({
+            "tipo_entidad": "alumno",
+            "id_entidad": id_alumno,
+            "accion": "registro",
+            "detalle": "Alumno registrado y expediente creado.",
+            "usuario": datos["correo"],
+            "fecha": datetime.utcnow()
+        })
+
+        mensaje = f"Registro exitoso. Matrícula: {matricula}"
+
     except Exception as e:
-        mensaje = f"Ocurrió un error inesperado: {e}"
+        mensaje = f"Error: {e}"
+        print(e)
     finally:
         if 'conn' in locals() and conn.is_connected():
             cursor.close()
             conn.close()
 
-    return f"<h1>{mensaje}</h1><a href='/'>Volver al registro</a>"
+    return f"<h1>{mensaje}</h1><a href='/'>Volver</a>"
 
 if __name__ == "__main__":
     app.run(debug=True)

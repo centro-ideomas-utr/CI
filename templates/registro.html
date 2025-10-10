@@ -17,7 +17,6 @@
   <!-- Ícono de la pestaña del navegador -->
   <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
 </head>
-<!-- CORRECCIÓN: Se añadió la clase para la animación de fondo -->
 <body class="your_css_selector_here"> 
   <main class="contenedor">
     <div class="contenido">
@@ -32,7 +31,7 @@
         </div>
 
         <div class="campo apellido_p">
-          <input class="registro_field" type="text" id="apellido_p" name="apellido_P" placeholder="Apellido Paterno" required>
+          <input class="registro_field" type="text" id="apellido_p" name="apellido_p" placeholder="Apellido Paterno" required>
         </div>
 
         <div class="campo apellido_m">
@@ -54,15 +53,6 @@
         <div class="campo domicilio">
           <input class="registro_field" type="text" id="domicilio" name="domicilio" placeholder="Domicilio" required>
         </div>
-
-      <div class="campo curso">
-        <select class="registro_field" id="curso" name="curso" required>
-          <option value="" disabled selected>-- Selecciona el curso --</option>
-          {% for curso in cursos %}
-            <option value="{{ curso.id_curso }}">{{ curso.idioma }} - Nivel {{ curso.nivel }}</option>
-          {% endfor %}
-        </select>
-      </div>
 
       <div class="campo genero">
         <select class="registro_field" name="genero" id="genero" required>
@@ -107,7 +97,5 @@
       </form>
     </div>
   </main>
-  
-  <script src="{{ url_for('static', filename='js/prueba.js') }}"></script>
 </body>
 </html>
