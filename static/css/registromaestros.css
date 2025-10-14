@@ -1,0 +1,266 @@
+    /* --- Estilos Generales --- */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    main {
+      flex: 1;
+    }
+
+    /* --- Barra Superior --- */
+    .navbar {
+      background-color: #566a93;
+      color: white;
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1001;
+    }
+
+    .navbar h1 {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .menu-icon {
+      cursor: pointer;
+    }
+
+    .menu-icon span {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background-color: white;
+      margin: 5px 0;
+      transition: 0.4s;
+    }
+
+    .profile {
+      width: 40px;
+      height: 40px;
+      background-color: white;
+      border-radius: 50%;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      height: 100%;
+      width: 250px;
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: -250px;
+      background-color: #566a93;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* --- Animación SVG en botones --- */
+    .sidebar ul li a {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 1em;
+      overflow: hidden;
+      transition: 0.4s ease;
+    }
+
+    .sidebar ul li a span {
+      z-index: 2;
+      color: #fff;
+      transition: 0.4s ease;
+    }
+
+    .sidebar ul li a svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+      stroke-dasharray: 150 480;
+      stroke-dashoffset: 150;
+      transition: 1s ease-in-out;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar ul li a:hover {
+      background: #f4f6f8;
+    }
+
+    .sidebar ul li a:hover span {
+      color: #566a93;
+    }
+
+    .sidebar ul li a:hover svg {
+      stroke-dashoffset: -480;
+      stroke: #566a93;
+    }
+
+    .logout-btn {
+      background-color: #566a93;
+      border-top: 1px solid #8a81a8;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .logout-btn:hover {
+      background-color: #f35b04 !important;
+    }
+
+    /* --- Contenido Principal --- */
+    .page-content {
+      flex: 1;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 25px;
+    }
+
+    h2 {
+      text-align: center;
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 2em;
+      font-weight: normal;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .teacher-card {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      padding: 25px;
+      width: 100%;
+      max-width: 600px;
+      transition: transform 0.2s ease;
+    }
+
+    .teacher-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-weight: bold;
+      color: #555;
+      font-size: 1em;
+    }
+
+    .styled-select,
+    .styled-input {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background-color: #f9f9f9;
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .days-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .days-group label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    /* --- Botones --- */
+    .btn {
+      padding: 12px 25px;
+      font-size: 1em;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      width: 100%;
+      margin-top: 10px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      background-color: #9c94b8;
+      color: white;
+    }
+
+    .btn:hover {
+      background-color: #8a81a8;
+      transform: translateY(-2px);
+    }
+
+    /* --- FOOTER (Estilos originales) --- */
+        .main-footer {
+          background-color: #566a93;
+          color: white;
+          padding: 20px 0;
+          text-align: center;
+          margin-top: auto;
+        }
+        .footer-content {
+          display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+        .footer-content p { margin: 0; font-size: 0.9em; }
+        /* Simplificación de iconos sociales */
+        .social-login-icons { display: flex; align-items: center; gap: 10px; }
+        .social-icon-2 { background: linear-gradient(72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69%); }
+        .social-icon-3 { background: #316ff6; }
+        .social-icon-5 { background: #000000; }
+        .social-icon-6 { background: #25D366; }
+        .social-icon-2, .social-icon-3, .social-icon-5, .social-icon-6, .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50px; margin: 0; }
+        .socialcontainer { height: 40px; overflow: hidden; }
+        .socialcontainer:hover .social-icon-2, .socialcontainer:hover .social-icon-3, .socialcontainer:hover .social-icon-5, .socialcontainer:hover .social-icon-6 { transform: translateY(-40px); }
+        .social-icon-2 svg, .social-icon-3 svg, .social-icon-5 svg, .social-icon-6 svg { opacity: 0; transition-duration: 0.5s; transition-delay: 0.2s; }
+        .socialcontainer:hover svg { opacity: 1; }
+        .icon svg { fill: #fff; } /* Asegurar que los íconos originales sean blancos */

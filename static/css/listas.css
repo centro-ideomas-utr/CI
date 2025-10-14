@@ -1,4 +1,3 @@
-     /* --- Estilos Generales --- */
         body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -23,28 +22,15 @@
             z-index: 1001;
         }
 
-        .menu-icon {
-            cursor: pointer;
-        }
-
-        .menu-icon span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background-color: white;
-            margin: 5px 0;
-        }
-        
-        .navbar h1 {
-            font-size: 1.5em;
-            margin: 0;
-        }
+        .menu-icon { cursor: pointer; }
+        .menu-icon span { display: block; width: 25px; height: 3px; background-color: white; margin: 5px 0; }
+        .navbar h1 { font-size: 1.5em; margin: 0; }
 
         /* --- Contenedor de la Tabla --- */
         .table-container {
             padding: 20px;
             overflow-x: auto;
-            flex: 1; /* Ocupa el espacio disponible */
+            flex: 1;
         }
 
         table {
@@ -68,15 +54,10 @@
             white-space: nowrap;
         }
         
-        tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-        
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
+        tbody tr:hover { background-color: #f1f1f1; }
+        tbody tr:last-child td { border-bottom: none; }
 
-        /* --- Contenedor de Botones --- */
+        /* --- Botones principales (Regresar/Imprimir) --- */
         .buttons {
             display: flex;
             justify-content: center;
@@ -96,11 +77,9 @@
             transition: background-color 0.3s ease;
         }
         
-        .btn:hover {
-            background-color: #48597a;
-        }
-        
-        /* --- FOOTER --- */
+        .btn:hover { background-color: #48597a; }
+
+        /* --- FOOTER (Estilos originales) --- */
         .main-footer {
           background-color: #566a93;
           color: white;
@@ -108,176 +87,142 @@
           text-align: center;
           margin-top: auto;
         }
-
         .footer-content {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 20px;
+          display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+        .footer-content p { margin: 0; font-size: 0.9em; }
+        /* Simplificación de iconos sociales */
+        .social-login-icons { display: flex; align-items: center; gap: 10px; }
+        .social-icon-2 { background: linear-gradient(72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69%); }
+        .social-icon-3 { background: #316ff6; }
+        .social-icon-5 { background: #000000; }
+        .social-icon-6 { background: #25D366; }
+        .social-icon-2, .social-icon-3, .social-icon-5, .social-icon-6, .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50px; margin: 0; }
+        .socialcontainer { height: 40px; overflow: hidden; }
+        .socialcontainer:hover .social-icon-2, .socialcontainer:hover .social-icon-3, .socialcontainer:hover .social-icon-5, .socialcontainer:hover .social-icon-6 { transform: translateY(-40px); }
+        .social-icon-2 svg, .social-icon-3 svg, .social-icon-5 svg, .social-icon-6 svg { opacity: 0; transition-duration: 0.5s; transition-delay: 0.2s; }
+        .socialcontainer:hover svg { opacity: 1; }
+        .icon svg { fill: #fff; } /* Asegurar que los íconos originales sean blancos */
+
+
+
+        /* --- Botones de la tabla (Ver/Añadir) --- */
+        .btn-obs {
+            border: 1px solid #ccc;
+            color: #333;
+            padding: 5px 10px;
+            font-size: 0.85em;
+            font-weight: normal;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin: 2px;
+            display: inline-block;
+            white-space: nowrap;
         }
 
-        .footer-content p {
-          margin: 0;
-          font-size: 0.9em;
+        td:has(.btn-obs) { text-align: center; }
+
+        .ver-obs {
+            background-color: #9c94b8;
+            color: white;
+            border-color: #9c94b8;
         }
 
-        /* --- Social Icons --- */
-        .social-login-icons {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
-        }
-        .social-login-icons svg {
-          width: 30px;
-        }
-        .social-login-icons a {
-            text-decoration: none;
+        .ver-obs:hover { background-color: #837a9e; }
+
+        .anadir-obs {
+            background-color: #5cb85c;
+            color: white;
+            border-color: #5cb85c;
         }
 
-        .social-icon-2,
-        .social-icon-2-2,
-        .social-icon-3,
-        .social-icon-3-3,
-        .social-icon-5,
-        .social-icon-5-5,
-        .social-icon-6,
-        .social-icon-6-6 {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50px;
-          margin: 0;
+        .anadir-obs:hover { background-color: #4cae4c; }
+
+        /* --- Estilos para el MODAL (Ventana Emergente) --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6); 
+            padding-top: 50px;
         }
 
-        .icon svg {
-          fill: #111;
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation-name: animatetop;
+            animation-duration: 0.4s
         }
 
-        .socialcontainer {
-          height: 40px;
-          overflow: hidden;
+        @keyframes animatetop {
+            from {top: -300px; opacity: 0}
+            to {top: 0; opacity: 1}
         }
-        
-        .social-icon-2 svg,
-        .social-icon-3 svg,
-        .social-icon-5 svg,
-        .social-icon-6 svg {
-          opacity: 0;
-          transition-duration: 0.5s;
-          transition-delay: 0.2s;
+
+        .close-btn {
+            color: #aaa; float: right; font-size: 28px; font-weight: bold; transition: color 0.3s;
         }
-        .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-          transition-duration: 0.4s;
-          background-color: rgba(0, 0, 0, 0);
+        .close-btn:hover, .close-btn:focus { color: #333; text-decoration: none; cursor: pointer; }
+
+        /* Estilos internos del modal */
+        #modal-title {
+            color: #566a93; border-bottom: 2px solid #9c94b8; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.6em;
         }
-        .socialcontainer:hover .social-icon-2,
-        .socialcontainer:hover .social-icon-3,
-        .socialcontainer:hover .social-icon-5,
-        .socialcontainer:hover .social-icon-6 {
-          transform: translateY(-40px);
+
+        .section-title {
+            color: #48597a; font-size: 1.2em; margin-top: 15px; margin-bottom: 10px;
         }
-        .socialcontainer:hover svg {
-          opacity: 1;
+
+        /* Historial */
+        .history-section {
+            max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;
         }
-        .social-icon-2 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: linear-gradient(
-            72.44deg,
-            #ff7a00 11.92%,
-            #ff0169 51.56%,
-            #d300c5 85.69%
-          );
+
+        .no-data-msg { text-align: center; color: #999; font-style: italic; padding: 20px 0; }
+
+        .observation-entry {
+            padding: 10px; margin-bottom: 8px; border-left: 4px solid #9c94b8; background-color: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .social-icon-3 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #316ff6;
+
+        .obs-text { margin: 0; font-size: 1em; }
+        .obs-meta { margin: 5px 0 0; font-size: 0.8em; color: #777; text-align: right; }
+
+        /* Añadir */
+        #new-observation-text {
+            width: 100%; min-height: 80px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; resize: vertical; margin-top: 10px; font-family: inherit;
         }
-         .social-icon-5 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #000000;
+
+        .btn-save {
+            background-color: #5cb85c; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-top: 10px; width: 100%; cursor: pointer; transition: background-color 0.3s;
         }
-         .social-icon-6 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #25D366;
-        }
+        .btn-save:hover { background-color: #4cae4c; }
+
+        /* Control de visualización */
+        .modal-content.view-only .add-section { display: none; }
+        .modal-content.add-only .history-section { display: none; }
 
         /* --- Estilos de Impresión --- */
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            .table-container, .table-container * {
-                visibility: visible;
-            }
+            body * { visibility: hidden; }
+            .table-container, .table-container * { visibility: visible; }
             .table-container {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 0;
-                margin: 0;
+                position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0;
             }
-            .navbar, .buttons, .main-footer {
+            .navbar, .buttons, .main-footer, .btn-obs, .modal { /* Ocultar modal y botones de interacción */
                 display: none;
             }
-            table {
-                box-shadow: none;
-                border: 1px solid #ccc;
-                font-size: 10pt;
-            }
-            th, td {
-                padding: 8px;
-            }
+            table { box-shadow: none; border: 1px solid #ccc; font-size: 10pt; }
+            th, td { padding: 8px; }
         }
-        /* --- Estilos para los botones de Observaciones --- */
-.btn-obs {
-    border: 1px solid #ccc; /* Borde sutil */
-    color: #333;
-    padding: 5px 10px;
-    font-size: 0.85em; /* Un poco más pequeño */
-    font-weight: normal;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #e9ecef; /* Fondo claro */
-    transition: background-color 0.2s ease;
-    margin: 2px; /* Pequeño espacio entre botones */
-    display: inline-block; /* Para que estén uno al lado del otro */
-    text-align: center;
-}
-
-.btn-obs:hover {
-    background-color: #dee2e6;
-}
-
-/* Color específico para "Ver" */
-.ver-obs {
-    background-color: #9c94b8;
-    color: white;
-}
-
-.ver-obs:hover {
-    background-color: #837a9e;
-}
-
-/* Color específico para "Añadir" */
-.anadir-obs {
-    background-color: #5cb85c; /* Un color de éxito o acción */
-    color: white;
-}
-
-.anadir-obs:hover {
-    background-color: #4cae4c;
-}
-
-/* Asegura que la celda de la tabla no tenga un espacio en blanco excesivo si es necesario */
-td:has(.btn-obs) {
-    text-align: center;
-}
