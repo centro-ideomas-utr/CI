@@ -1,0 +1,32 @@
+{
+  _id: ObjectId("..."),
+  tipo: "alumno" | "profesor" | "staff",
+  id_relacional: 12,  // ID correspondiente de MySQL
+  documentos: {
+    acta_nacimiento: "acta.pdf",
+    identificacion: "ine.pdf",
+    comprobante_pago: "pago.pdf",
+    estado_de_cuenta: "cuenta.pdf",
+    cv: "cv.pdf",
+    comprobante_domicilio: "domicilio.pdf",
+    carta_recomendacion1: "carta1.pdf",
+    carta_recomendacion2: "carta2.pdf",
+    titulo: "titulo.pdf",
+    cedula: "cedula.pdf",
+    constancia_situacion_fiscal: "fiscal.pdf"
+  },
+  metadata: {
+    fecha_subida: ISODate("2025-10-09T15:00:00Z"),
+    actualizado_por: "id_staff_1"
+  }
+}
+
+{
+  _id: ObjectId("..."),
+  tipo_entidad: "alumno",
+  id_entidad: 44,
+  accion: "modificación expediente",
+  detalle: "Se actualizó el acta de nacimiento.",
+  usuario: "admin@correo.com",
+  fecha: ISODate("2025-10-09T15:20:00Z")
+}
