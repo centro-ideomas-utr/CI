@@ -291,7 +291,7 @@ def teachers():
     
 @app.route("/tablero")
 def tablero():
-    return render_template("tablero.html")
+    return render_template("tableroestudiantes.html")
 
 @app.route("/registromaestro")
 def registrmaestro():

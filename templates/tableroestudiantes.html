@@ -16,12 +16,12 @@
 
   <header>Centro de Idiomas
     <nav>
-      <a href="{{ url_for('menu') }}">
+      <a href="{{ url_for('cursos') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
         </svg>
-        <span>Menú</span>
+        <span>Cursos</span>
       </a>
       <a href="{{ url_for('asistencias') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
@@ -37,13 +37,13 @@
         </svg>
         <span>Calificaciones</span>
       </a>
-      <a href="{{ url_for('cursos') }}">
-        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-        </svg>
-        <span>Cursos</span>
-      </a>
+          <a href="{{ url_for('cerrar') }}" id="logout-btn">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>cerrar</span>
+          </a>
     </nav>
   </header>
   
