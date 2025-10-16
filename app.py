@@ -172,7 +172,7 @@ def registro():
 
 @app.route("/asistencias")
 def asistencias():
-    return render_template("asistencias.html")
+    return render_template("asistenciasestudiantes.html")
 
 @app.route("/avisos")
 def avisos():
@@ -180,7 +180,7 @@ def avisos():
 
 @app.route("/calificaciones")
 def calificaciones():
-    return render_template("calificaciones.html")
+    return render_template("calificacionesestudiantes.html")
 
 @app.route("/clases")
 def clases():
