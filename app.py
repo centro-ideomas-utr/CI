@@ -165,6 +165,7 @@ def index():
 def login():
     return render_template("login.html")
 
+
 @app.route("/registro")
 def registro():
     return render_template("registro.html")
@@ -216,10 +217,6 @@ def listas():
 @app.route("/maestroinfo")
 def maestroinfo():
     return render_template("maestroinfo.html")
-
-@app.route("/menu")
-def menu():
-    return render_template("menu.html")
 
 @app.route("/nomina")
 def nomina():
@@ -300,5 +297,9 @@ def tablero():
 def registrmaestro():
     return render_template("registromaestro.html")
 
+@app.route("/Cerrar")
+def cerrar():
+    return render_template("salir.html")
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True)	

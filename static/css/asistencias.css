@@ -1,48 +1,43 @@
- /* --- Estilos Generales --- */
+/* --- Estilos Generales --- */
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #f4f6f8; /* Color de fondo gris claro */
+      background-color: #f4f6f8;
       color: #333;
       display: flex;
       flex-direction: column;
-      min-height: 100vh; /* Asegura que el body ocupe al menos toda la altura de la pantalla */
+      min-height: 100vh;
     }
 
     main {
-      flex: 1; /* Permite que el contenido principal crezca y empuje el footer hacia abajo */
+      flex: 1;
     }
 
     /* --- Encabezado y Navegación --- */
     header {
-      background-color: #566a93; /* Azul/gris oscuro del encabezado */
+      background-color: #566a93;
       color: white;
       padding: 10px 50px;
       display: flex;
-      justify-content: space-between;
+      /* [MODIFICADO] Esto alinea el contenido del header a la derecha */
+      justify-content: flex-end; 
       align-items: center;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    header > span {
-      font-size: 1.6em;
-      font-weight: bold;
-    }
-
-    nav.nav-derecha {
+    /* [NUEVO] Estilo para el contenedor de navegación */
+    header nav {
       display: flex;
-      gap: 15px;
-      flex-wrap: wrap; /* Permite que los botones se envuelvan */
-      justify-content: center; /* Centra los botones si se envuelven */
+      gap: 15px; /* Espacio entre los botones */
     }
 
     /* --- Estilos y Animación de Botones --- */
-    nav.nav-derecha a {
-      width: 150px; /* Ancho fijo para los botones */
-      height: 50px; /* Alto fijo para los botones */
+    header nav a {
+      width: 150px;
+      height: 50px;
       cursor: pointer;
       background: transparent;
-      border: 1px solid #566a93; /* Borde inicial sutil */
+      border: 1px solid #566a93;
       outline: none;
       transition: 1s ease-in-out;
       position: relative;
@@ -52,7 +47,7 @@
       text-decoration: none;
     }
 
-    nav.nav-derecha a svg {
+    header nav a svg {
       position: absolute;
       left: 0;
       top: 0;
@@ -63,19 +58,19 @@
       transition: 1s ease-in-out;
     }
 
-    nav.nav-derecha a:hover {
+    header nav a:hover {
       transition: 1s ease-in-out;
       background: #f4f6f8; 
       border-color: #f4f6f8;
     }
-    nav.nav-derecha a:hover span {
-      color: #566a93; /* Cambia el color del texto al hacer hover */
+    header nav a:hover span {
+      color: #566a93;
     }
-    nav.nav-derecha a:hover svg {
+    header nav a:hover svg {
       stroke-dashoffset: -480;
     }
 
-    nav.nav-derecha a span {
+    header nav a span {
       color: #f4f6f8;
       font-size: 16px;
       font-weight: 400;
@@ -84,7 +79,7 @@
     /* --- Título Principal --- */
     h2 {
       text-align: center;
-      font-family: "Georgia", "Times New Roman", serif; /* Fuente con serifa para el título */
+      font-family: "Georgia", "Times New Roman", serif;
       font-size: 2.8em;
       font-weight: normal;
       color: #444;
@@ -96,12 +91,12 @@
     table {
       width: 75%;
       max-width: 800px;
-      margin: 0 auto 50px auto; /* Centra la tabla y añade margen inferior */
+      margin: 0 auto 50px auto;
       border-collapse: collapse;
       background-color: #ffffff;
-      border-radius: 12px; /* Esquinas redondeadas */
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Sombra suave */
-      overflow: hidden; /* Clave para que el border-radius afecte a las celdas */
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
     }
 
     th, td {
@@ -109,9 +104,8 @@
       text-align: left;
     }
 
-    /* Cabecera de la tabla */
     tr:first-child {
-      background-color: #9c94b8; /* Color morado de la cabecera */
+      background-color: #9c94b8;
       color: white;
       font-size: 0.9em;
       font-weight: bold;
@@ -119,15 +113,13 @@
       letter-spacing: 0.5px;
     }
 
-    /* Celdas de la cabecera y de datos */
     th:last-child,
     td:last-child {
-      text-align: right; /* Alinea la última columna a la derecha */
+      text-align: right;
     }
 
-    /* Filas de datos */
     tr:not(:first-child) {
-      border-bottom: 1px solid #e9ecef; /* Línea divisoria entre filas */
+      border-bottom: 1px solid #e9ecef;
       background-color: #fdfdfd;
     }
 
@@ -137,11 +129,11 @@
     
     /* --- FOOTER --- */
     .main-footer {
-      background-color: #566a93; /* Mismo color que el header para consistencia */
+      background-color: #566a93;
       color: white;
       padding: 20px 0;
       text-align: center;
-      margin-top: auto; /* Empuja el footer al final si el contenido es corto */
+      margin-top: auto;
     }
 
     .footer-content {
@@ -193,7 +185,7 @@
     }
 
     .socialcontainer {
-      height: 40px; /* Adjusted height */
+      height: 40px;
       overflow: hidden;
     }
     
@@ -242,4 +234,15 @@
       transition-duration: 0.4s;
       transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
       background: #25D366;
+    }
+
+    /* --- ESTILOS PARA EL BOTÓN DE CERRAR SESIÓN --- */
+    #logout-btn:hover {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+        transition: 1s ease-in-out;
+    }
+
+    #logout-btn:hover span {
+        color: #ffffff;
     }
