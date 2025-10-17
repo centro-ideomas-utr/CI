@@ -243,3 +243,13 @@
       transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
       background: #25D366;
     }
+       /* --- ESTILOS PARA EL BOTÓN DE CERRAR SESIÓN --- */
+    #logout-btn:hover {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+        transition: 1s ease-in-out;
+    }
+
+    #logout-btn:hover span {
+        color: #ffffff;
+    }

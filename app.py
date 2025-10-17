@@ -165,13 +165,14 @@ def index():
 def login():
     return render_template("login.html")
 
+
 @app.route("/registro")
 def registro():
     return render_template("registro.html")
 
 @app.route("/asistencias")
 def asistencias():
-    return render_template("asistencias.html")
+    return render_template("asistenciasestudiantes.html")
 
 @app.route("/avisos")
 def avisos():
@@ -179,7 +180,7 @@ def avisos():
 
 @app.route("/calificaciones")
 def calificaciones():
-    return render_template("calificaciones.html")
+    return render_template("calificacionesestudiantes.html")
 
 @app.route("/clases")
 def clases():
@@ -216,10 +217,6 @@ def listas():
 @app.route("/maestroinfo")
 def maestroinfo():
     return render_template("maestroinfo.html")
-
-@app.route("/menu")
-def menu():
-    return render_template("menu.html")
 
 @app.route("/nomina")
 def nomina():
@@ -294,11 +291,15 @@ def teachers():
     
 @app.route("/tablero")
 def tablero():
-    return render_template("tablero.html")
+    return render_template("tableroestudiantes.html")
 
 @app.route("/registromaestro")
 def registrmaestro():
     return render_template("registromaestro.html")
 
+@app.route("/Cerrar")
+def cerrar():
+    return render_template("salir.html")
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True)	

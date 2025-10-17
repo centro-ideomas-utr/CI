@@ -3,40 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menú Principal</title>
+  <title>Tablero</title>
+  
   <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tablero.css') }}">
 
 
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 </head>
 <body>
-<body>
-  <header>
-    <span>Centro de Idiomas</span>
-    <nav class="nav-derecha">
-      <a href="{{ url_for('menu') }}">
-        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-        </svg>
-        <span>Menú</span>
-      </a>
-      <a href="{{ url_for('calificaciones') }}">
-        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-        </svg>
-        <span>Calificaciones</span>
-      </a> 
-      <a href="{{ url_for('tablero') }}">
-        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-        </svg>
-        <span>Calendario</span>
-      </a>
+
+  <header>Centro de Idiomas
+    <nav>
       <a href="{{ url_for('cursos') }}">
         <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
           <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
@@ -44,22 +23,37 @@
         </svg>
         <span>Cursos</span>
       </a>
+      <a href="{{ url_for('asistencias') }}">
+        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+        </svg>
+        <span>Asistencias</span>
+      </a>
+      <a href="{{ url_for('calificaciones') }}">
+        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+        </svg>
+        <span>Calificaciones</span>
+      </a>
+          <a href="{{ url_for('cerrar') }}" id="logout-btn">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>cerrar</span>
+          </a>
     </nav>
   </header>
   
   <main>
-    <h2>Asistencias de la materia</h2>
-    
-    <table>
-      <tr>
-        <th>Nombre del curso</th>
-        <th>Faltas</th>
-      </tr>
-      <tr>
-        <td>Inglés (B1)</td>
-        <td>-</td>
-      </tr>
-    </table>
+    <h2>Calendario de Actividades</h2>
+    <div id="calendar"></div>
+    <h2>Tareas Pendientes</h2>
+    <ul class="tareas">
+      <li>No hay pendiente </li>
+    </ul>
   </main>
 
   <footer class="main-footer">
@@ -125,5 +119,6 @@
       </div>
     </div>
   </footer>
+  <script src="{{ url_for('static', filename='js/tablero.js') }}"></script>
 </body>
 </html>
