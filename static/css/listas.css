@@ -26,6 +26,68 @@
         .menu-icon span { display: block; width: 25px; height: 3px; background-color: white; margin: 5px 0; }
         .navbar h1 { font-size: 1.5em; margin: 0; }
 
+            /* --- Menú Lateral (Sidebar) --- */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: -250px; /* Oculto por defecto */
+            background-color: #48597a;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li a {
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #f4f6f8;
+            display: block;
+            transition: 0.2s;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #566a93;
+        }
+        
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+             background-color: #c0392b !important;
+        }
+
+        /* --- Contenedor Principal --- */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
         /* --- Contenedor de la Tabla --- */
         .table-container {
             padding: 20px;

@@ -10,12 +10,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
-
-  <!-- Enlace al CSS llamado 'formulario.css' -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario.css') }}">
-  
-  <!-- Ícono de la pestaña del navegador -->
-  <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/registromaestro.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="your_css_selector_here"> 
   <main class="contenedor">
@@ -23,7 +20,7 @@
       <h1>Regístrate</h1>
       <div id="error-message" class="error-message" style="display: none;"></div>
 
-      <!-- CORRECCIÓN: Se reestructuró el formulario para CSS Grid -->
+   
       <form class="formulario-registro" action="{{ url_for('guardar') }}" method="POST" enctype="multipart/form-data">
 
         <div class="campo nombre">

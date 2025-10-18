@@ -55,7 +55,6 @@ main {
     background-color: #f4f6f8;
     border-radius: 50%;
 }
-
 /* --- Barra Lateral (Sidebar) --- */
 .sidebar {
     height: 100%;
@@ -69,6 +68,22 @@ main {
     transition: 0.3s;
     padding-top: 80px; /* Espacio para la navbar */
 }
+    /* --- Menú Lateral (Sidebar) --- */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: -250px; /* Oculto por defecto */
+            background-color: #48597a;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
 .sidebar.active {
     left: 0;
@@ -92,6 +107,41 @@ main {
 .sidebar ul li a:hover {
     background-color: #566a93;
 }
+        .sidebar ul li a:hover {
+            background-color: #566a93;
+        }
+        
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+             background-color: #c0392b !important;
+        }
+
+        /* --- Contenedor Principal --- */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        /* --- Contenedor de Botones --- */
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 20px;
+            margin-top: 80px; /* Empujar debajo de la navbar */
+        }
 
 /* --- Contenedor de Botones de Filtro --- */
 .buttons-container {

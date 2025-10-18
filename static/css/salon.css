@@ -50,7 +50,7 @@
             border-radius: 50%;
         }
 
-        /* --- Menú Lateral (Sidebar) --- */
+       /* --- Menú Lateral (Sidebar) --- */
         .sidebar {
             height: 100%;
             width: 250px;
@@ -99,6 +99,17 @@
         
         .logout-btn:hover {
              background-color: #c0392b !important;
+        }
+
+        /* --- Contenedor Principal --- */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
         }
 
         /* --- Contenedor Principal --- */
