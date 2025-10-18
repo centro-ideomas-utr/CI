@@ -1,20 +1,16 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Selecciona el ícono del menú por su ID
+      
+    // --- Lógica para el menú lateral (Sidebar) ---
     const menuIcon = document.getElementById('menu-icon');
-    
-    // Selecciona el menú lateral (sidebar) por su ID
     const sidebar = document.getElementById('sidebar');
-
-    // Selecciona el contenido principal
     const pageContent = document.querySelector('.page-content');
 
-    // Verifica que los elementos existan antes de agregar el evento
-    if (menuIcon && sidebar) {
+    // Verifica que los elementos del menú existan antes de agregar el evento
+    if (menuIcon && sidebar && pageContent) {
         menuIcon.addEventListener('click', () => {
             // Agrega o quita la clase 'active' del sidebar para mostrarlo u ocultarlo
             sidebar.classList.toggle('active');
             
-            // Opcional: Empuja el contenido principal cuando el menú se abre
+            // Empuja el contenido principal cuando el menú se abre o cierra
             if (sidebar.classList.contains('active')) {
                 pageContent.style.marginLeft = '230px';
             } else {
@@ -22,4 +18,3 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});

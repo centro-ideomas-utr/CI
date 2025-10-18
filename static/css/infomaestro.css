@@ -37,10 +37,12 @@
             margin: 5px 0;
             transition: 0.4s;
         }
-
+        
         .navbar h1 {
             font-size: 1.5em;
             margin: 0;
+            flex-grow: 1;
+            text-align: center;
         }
 
         .profile {
@@ -49,6 +51,7 @@
             background-color: #f4f6f8;
             border-radius: 50%;
         }
+
     /* --- Menú Lateral (Sidebar) --- */
         .sidebar {
             height: 100%;
@@ -111,55 +114,83 @@
             gap: 15px;
         }
 
-        /* --- Contenedor Principal --- */
-        .page-content {
-            flex: 1;
-            padding: 20px;
+        .info {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        
-        .box {
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            text-align: center;
+
+        .info p {
+            margin: 4px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        h2 {
+            margin: 20px 0 15px 0;
+            color: #566a93;
+        }
+
+        /* --- Tablas --- */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+        }
+
+        table {
             width: 100%;
-            max-width: 700px;
-        }
-        
-        .no-data {
-            background-color: #bdc3c7;
-            color: white;
-            border: none;
-            padding: 15px 30px;
+            border-collapse: collapse;
+            font-size: 14px;
+            background-color: white;
             border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: not-allowed;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
-        .upload-btn {
-            background-color: #9c94b8;
+        thead th {
+            background-color: #566a93;
+            padding: 12px 10px;
+            text-align: center;
             color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            margin-top: 30px; /* Espacio entre el cuadro y el botón */
+            font-weight: 600;
         }
 
-        .upload-btn:hover {
-            transform: scale(1.1);
-            background-color: #8a81a8;
+        tbody td {
+            border: 1px solid #e9ecef;
+            padding: 10px 8px;
+            text-align: center;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9fc;
+        }
+
+        /* --- Sección de Totales --- */
+        .totales {
+            text-align: right;
+            font-size: 15px;
+            color: #444;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .totales p {
+            margin: 6px 0;
+        }
+
+        .total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #566a93;
+            padding-top: 10px;
+            border-top: 2px solid #566a93;
         }
 
         /* --- FOOTER --- */
