@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory, abort
 import mysql.connector
 from pymongo import MongoClient
 from bson import ObjectId
@@ -25,13 +25,52 @@ expedientes_col = mongo_db["expedientes"]
 logs_col = mongo_db["logs"]
 
 # --- Carpeta de uploads ---
+# La ruta se usa para guardar archivos y para servirlos localmente.
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# 🔔 RUTA QUE SIRVE LOS ARCHIVOS PASANDO POR MONGO (IMPLEMENTA LA VISTA PREVIA)
+@app.route('/expediente/ver/<string:mongo_id>/<string:tipo_doc>')
+def ver_documento_expediente(mongo_id, tipo_doc):
+    """
+    Ruta dinámica para servir documentos. Consulta Mongo para obtener la ruta del archivo
+    y luego sirve el archivo desde el sistema de archivos local (uploads).
+    """
+    try:
+        # 1. Consultar MongoDB para obtener la REFERENCIA (Ruta Completa guardada)
+        expediente = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
+        
+        if not expediente:
+            # Si el ID no corresponde a un documento de Mongo
+            abort(404, description="Expediente no encontrado en MongoDB.")
+
+        # 2. Obtener la RUTA COMPLETA guardada en tu MongoDB
+        full_filepath = expediente.get('documentos', {}).get(tipo_doc)
+        
+        if not full_filepath:
+            # Si el documento existe, pero no tiene el archivo solicitado
+            abort(404, description=f"Documento '{tipo_doc}' no encontrado en el expediente.")
+
+        # 3. CRÍTICO: EXTRAER SÓLO EL NOMBRE DEL ARCHIVO de la ruta completa (ej: quita 'C:\Users\...')
+        # Esto resuelve el conflicto de rutas absolutas que tenías.
+        filename = os.path.basename(full_filepath)
+        
+        # 4. Servir el archivo desde el disco (uploads), usando sólo el nombre
+        return send_from_directory(
+            UPLOAD_FOLDER, 
+            filename,
+            as_attachment=False # Muestra el archivo en el navegador para la vista previa
+        )
+
+    except Exception as e:
+        print(f"Error al servir documento: {e}")
+        abort(500, description="Error interno al acceder al documento.")
 
 # --- Función para extraer ENUMs ---
 def parse_enum(row):
     if not row or "Type" not in row:
         return []
+    # Maneja la doble definición si sucede, aunque no es ideal
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
 
 # --- NUEVA RUTA INICIAL (index.html) ---
@@ -70,7 +109,7 @@ def formulario():
         horarios=horarios
     )
 
-# --- Guardar alumno ---
+# --- Guardar alumno (ACTUALIZADO para manejar los 3 documentos) ---
 @app.route("/guardar", methods=["POST"])
 def guardar():
     try:
@@ -88,13 +127,17 @@ def guardar():
         }
 
         documentos = {}
-        for field in ["acta_n", "identificacion"]:
-            file = request.files[field]
-            if file:
-                filename = f"{secure_filename(datos['correo'])}_{field}_{datetime.utcnow().timestamp()}.pdf"
+        # 🔔 Bucle CORREGIDO: Incluye los 3 campos de documento
+        for field in ["acta_n", "identificacion", "comprobante_pago"]:
+            file = request.files.get(field) 
+            if file and file.filename:
+                # Genera un nombre de archivo seguro
+                filename = f"{secure_filename(datos['correo'])}_{field}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{secure_filename(file.filename.split('.')[-1])}"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 file.save(filepath)
-                documentos[field] = filepath
+                
+                # Guardamos la RUTA COMPLETA en Mongo para mantener tu estructura
+                documentos[field] = filepath 
             else:
                 documentos[field] = None
 
@@ -157,14 +200,9 @@ def guardar():
     return f"<h1>{mensaje}</h1><a href='/'>Volver</a>"
 
 # --- Demás rutas existentes ---
-@app.route("/")
-def index():
-    return render_template("index.html")
-
 @app.route("/login")
 def login():
     return render_template("login.html")
-
 
 @app.route("/registro")
 def registro():
@@ -228,7 +266,7 @@ def nomina():
 
 @app.route("/reinscripciones")
 def reinscripciones():
-    filtro = request.args.get("tipo", None)
+    filtro = request.args.get("tipo", None) 
     alumnos = []
 
     try:
@@ -250,6 +288,7 @@ def reinscripciones():
                 a.genero,
                 a.tipo_inscripcion,
                 a.horario,
+                a.id_expediente_mongo,
                 g.grupo AS nombre_grupo,
                 CONCAT(p.nombre, ' ', p.apellido_p) AS maestro
             FROM alumnos a
@@ -258,22 +297,30 @@ def reinscripciones():
         """
 
         if filtro:
-            query += " WHERE a.tipo_inscripcion = %s"
+            query += " WHERE a.tipo_inscripcion = %s" 
             cursor.execute(query, (filtro,))
         else:
-            cursor.execute(query)
+            cursor.execute(query) 
 
         alumnos = cursor.fetchall()
 
         # Vincular con MongoDB
         for alumno in alumnos:
             if alumno.get("id_expediente_mongo"):
-                expediente = expedientes_col.find_one({"_id": ObjectId(alumno["id_expediente_mongo"])})
-                alumno["documentos"] = expediente.get("documentos", {}) if expediente else {}
+                try:
+                    # Intenta buscar el documento de MongoDB
+                    expediente = expedientes_col.find_one({"_id": ObjectId(alumno["id_expediente_mongo"])})
+                    # Asigna los documentos o un diccionario vacío si no se encuentra
+                    alumno["documentos"] = expediente.get("documentos", {}) if expediente else {}
+                except Exception as e:
+                    # Maneja IDs de Mongo inválidos (no strings de 24 caracteres)
+                    print(f"Error en ObjectId para alumno {alumno['id_alumno']}: {e}")
+                    alumno["documentos"] = {}
             else:
+                # Si no hay ID de Mongo en MySQL
                 alumno["documentos"] = {}
 
-            if alumno["fecha_nacimiento"]:
+            if alumno.get("fecha_nacimiento"):
                 alumno["fecha_nacimiento"] = alumno["fecha_nacimiento"].strftime("%d/%m/%Y")
 
     except Exception as e:
@@ -306,4 +353,4 @@ def cerrar():
     return render_template("salir.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)	
+    app.run(debug=True)
