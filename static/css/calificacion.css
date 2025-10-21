@@ -1,15 +1,18 @@
         /* --- Estilos Generales --- */
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #f4f6f8;
             color: #333;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            transition: margin-left 0.3s;
         }
 
+        main {
+            flex: 1;
+            padding: 20px;
+        }
         /* --- Barra de Navegación Superior --- */
         .navbar {
             background-color: #566a93;
@@ -50,7 +53,7 @@
             border-radius: 50%;
         }
     /* --- Menú Lateral (Sidebar) --- */
-        .sidebar ul li a i {
+    .sidebar ul li a i {
     width: 30px; /* Da un ancho fijo al contenedor del icono */
     text-align: center; /* Centra el icono dentro de ese ancho */
     margin-right: 10px; /* Añade un espacio entre el icono y el texto */
@@ -115,59 +118,65 @@
             align-items: center;
             gap: 15px;
         }
-
-        /* --- Contenedor Principal --- */
-        .page-content {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
         
-        .box {
+        /* --- Tabla de Calificaciones --- */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
             background-color: white;
-            padding: 30px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            text-align: center;
-            width: 100%;
-            max-width: 700px;
+            overflow: hidden;
         }
         
-        .no-data {
-            background-color: #bdc3c7;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: not-allowed;
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
         }
 
-        .upload-btn {
+        thead th {
             background-color: #9c94b8;
             color: white;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tbody tr:hover {
+            background-color: #f9f9fc;
+        }
+
+        .student-name {
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .grade-input {
             width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            margin-top: 30px; /* Espacio entre el cuadro y el botón */
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1em;
+        }
+        
+        .final-grade {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #3D348B;
         }
 
-        .upload-btn:hover {
-            transform: scale(1.1);
-            background-color: #8a81a8;
-        }
-
-        /* --- FOOTER --- */
+       /* --- FOOTER --- */
         .main-footer {
           background-color: #566a93;
           color: white;

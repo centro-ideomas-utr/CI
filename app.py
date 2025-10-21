@@ -178,11 +178,15 @@ def asistencias():
 def avisos():
     return render_template("avisos.html")
 
+@app.route("/calificacion")
+def calificacion():
+    return render_template("calificacion.html")
+
 @app.route("/calificaciones")
 def calificaciones():
     return render_template("calificacionesestudiantes.html")
 
-@app.route("/clases")
+@app.route("/clases") #faltaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 def clases():
     return render_template("clases.html")
 
@@ -202,15 +206,15 @@ def grupos():
 def historial():
     return render_template("historial.html")
 
-@app.route("/listadodemaestros")
+@app.route("/Maestros") #los nombres de los maestros 
 def listadodemaestros():
     return render_template("listadodemaestros.html")
 
-@app.route("/listadomaestrosss")
+@app.route("/listadomaestrosss") # no funciona
 def listadomaestrosss():
     return render_template("listadomaestrosss.html")
 
-@app.route("/listas")
+@app.route("/asistencia")
 def listas():
     return render_template("listas.html")
 
@@ -285,7 +289,7 @@ def reinscripciones():
 def salon():
     return render_template("salon.html")
 
-@app.route("/teachers")
+@app.route("/teachers") # ???
 def teachers():
     return render_template("teachers.html")
     
@@ -293,7 +297,7 @@ def teachers():
 def tablero():
     return render_template("tableroestudiantes.html")
 
-@app.route("/registromaestro")
+@app.route("/Horario")
 def registrmaestro():
     return render_template("registromaestro.html")
 

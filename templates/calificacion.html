@@ -1,43 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cursos - Centro de Idiomas</title>
-  
-    <!-- Enlace al CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
-  
-  <!-- Ícono -->
-  <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Calificaciones</title>
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calificacion.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-
-  <header class="main-header">
-    <div class="header-content">
-      <h1>Centro de Idiomas</h1>
-    </div>
-  </header>
-
-  <main class="content-wrapper">
-    <h2>Nuestros Cursos</h2>
-    
-    <div class="cursos">
-      <a href="{{ url_for('tablero') }}" class="curso-card">
-        <h3 class="curso-titulo">Inglés</h3>
-        <div class="info-maestro">
-          <span class="maestro-nombre">Prof. Laura Martínez</span>
-          <span class="grupo">Grupo A - Intermedio</span>
+     <div class="navbar">
+        <div class="menu-icon" id="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
-        <div class="horario">
-          <span class="dias">Lunes y Miércoles</span>
-          <span class="hora">16:00 - 18:00 hrs</span>
-        </div>
-    </a>
+        <h1>Evidencias</h1>
+        <div class="profile"></div>
     </div>
-  </main>
 
-  <footer class="main-footer">
+<nav class="sidebar" id="sidebar">
+        <ul>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+            <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
+            <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
+            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+            <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+
+    </nav>
+
+
+    <main>
+        <div class="content-wrapper">
+            <h2>Registro de Calificaciones - Inglés B1</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Parcial 1</th>
+                            <th>Parcial 2</th>
+                            <th>Parcial 3</th>
+                            <th>Parcial 4</th>
+                            <th>Calificación Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="student-name">Guadalupe  Martínez</td>
+                            <td><input type="number" class="grade-input" data-student="1" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="1" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="1" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="1" min="0" max="10"></td>
+                            <td><span class="final-grade" data-final-for="1">-</span></td>
+                        </tr>
+                        <tr>
+                            <td class="student-name">María Itzel Moreira</td>
+                            <td><input type="number" class="grade-input" data-student="2" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="2" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="2" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="2" min="0" max="10"></td>
+                            <td><span class="final-grade" data-final-for="2">-</span></td>
+                        </tr>
+                        <tr>
+                            <td class="student-name">Carlos Sánchez</td>
+                            <td><input type="number" class="grade-input" data-student="3" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="3" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="3" min="0" max="10"></td>
+                            <td><input type="number" class="grade-input" data-student="3" min="0" max="10"></td>
+                            <td><span class="final-grade" data-final-for="3">-</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
     <div class="footer-content">
       <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
       <div class="social-login-icons">
@@ -83,7 +126,7 @@
               </div>
             </div>
         </a>
-            <a href="tel:4491197547" target="_blank" rel="noopener noreferrer">
+        <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer">
             <div class="socialcontainer">
               <div class="icon social-icon-6-6">
                 <svg fill="white" viewBox="0 0 16 16" height="1.4em">
@@ -100,6 +143,7 @@
       </div>
     </div>
   </footer>
+    <script src="{{ url_for('static', filename='js/calificacion.js') }}"></script>
+
 </body>
 </html>
-
