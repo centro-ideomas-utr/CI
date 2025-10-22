@@ -1,48 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<<<<<<< HEAD
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla Tabla</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
-    
-    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
-=======
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pantalla Tabla</title>
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
->>>>>>> 7ff5be8c568b287d2cc355095017731b93659c6a
 </head>
 <body>
 
     <div class="navbar">
-<<<<<<< HEAD
-        <div class="menu-icon" onclick="toggleMenu()">
-=======
         <div class="menu-icon" id="menu-icon">
->>>>>>> 7ff5be8c568b287d2cc355095017731b93659c6a
             <span></span>
             <span></span>
             <span></span>
         </div>
-<<<<<<< HEAD
-        <h1></h1>
-        <div class="profile"></div>
-    </div>
-
-    <div class="sidebar" id="sidebar">
-        <ul>
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#">Inscripciones</a></li>
-            <li><a href="#">Reportes</a></li>
-            <li><a href="#">Configuración</a></li>
-        </ul>
-    </div>
-=======
         <h1>reinscripciones</h1>
         <div class="profile"></div>
     </div>
@@ -60,7 +33,6 @@
             <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
     </nav>
->>>>>>> 7ff5be8c568b287d2cc355095017731b93659c6a
 
 <div class="buttons-container">
     <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}"><button class="btn blue">REINSCRIPCIÓN ADULTO REGULAR</button></a>
@@ -146,13 +118,6 @@
     </table>
 </div>
 
-<<<<<<< HEAD
-    <footer class="main-footer">
-        <div class="footer-content">
-            <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
-            </div>
-    </footer>
-=======
   <footer class="main-footer">
     <div class="footer-content">
       <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
@@ -218,6 +183,5 @@
   </footer>
     <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 
->>>>>>> 7ff5be8c568b287d2cc355095017731b93659c6a
 </body>
 </html>
