@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Asistencias</title>
+    
+    <style>
+        /* Estilos generales y tema oscuro */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a; /* Fondo negro oscuro */
+            color: #f0f0f0; /* Texto claro */
+            margin: 0;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+        }
+
+        /* Título */
+        .title-box {
+            text-align: center;
+            padding: 15px 0;
+            background-color: #333; /* Fondo para el encabezado de la tabla */
+            border: 1px solid #444;
+            border-bottom: none;
+            color: #f0f0f0;
+            font-size: 1.4em;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        /* Estilos de la tabla */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+        }
+
+        .data-table th, .data-table td {
+            padding: 15px 10px;
+            text-align: center;
+            border: 1px solid #444;
+            white-space: nowrap; /* Evita saltos de línea en celdas pequeñas */
+        }
+
+        .data-table th {
+            background-color: #2c2c2c; /* Encabezado de columna */
+            font-weight: 600;
+            color: #f0f0f0;
+            font-size: 1.1em;
+            text-transform: uppercase;
+        }
+        
+        .data-table td {
+            background-color: #1f1f1f;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background-color: #222;
+        }
+        
+        /* Estilo para el cuadro de asistencia (VERDE) */
+        .asistencia-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .square-green {
+            width: 25px;
+            height: 25px;
+            background-color: #4CAF50; /* Verde brillante */
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.8);
+            cursor: pointer; /* Simula que es interactivo */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="title-box">
+            REGISTRO DE ASISTENCIAS
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>NOMBRE</th>
+                    <th>IDIOMA</th>
+                    <th>HORA DE ENTRADA</th>
+                    <th>HORA DE SALIDA</th>
+                    <th>FECHA</th>
+                    <th>ASISTENCIA</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pedro</td>
+                    <td>Alemán</td>
+                    <td>8:00</td>
+                    <td>17:00</td>
+                    <td>13/09/25</td>
+                    <td>
+                        <div class="asistencia-box">
+                            <div class="square-green"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Pedro</td>
+                    <td>Alemán</td>
+                    <td>9:00</td>
+                    <td>16:00</td>
+                    <td>14/09/25</td>
+                    <td>
+                        <div class="asistencia-box">
+                            <div class="square-green" style="background-color: #FF9800;"></div> </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

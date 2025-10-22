@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Facturación UTR - Agilizado</title>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #004c99; /* Color institucional azul */
+            color: white;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .header h2 {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
+            color: #004c99;
+            font-size: 1.4em;
+        }
+
+        /* Estilos de la tabla de Horas */
+        .hours-summary table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .hours-summary th, .hours-summary td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .hours-summary th {
+            background-color: #f0f8ff; /* Azul muy claro */
+            font-weight: 600;
+            color: #004c99;
+        }
+
+        /* Estilos de Borrador de Factura */
+        .totals-grid {
+            display: grid;
+            grid-template-columns: 1fr max-content;
+            gap: 15px;
+            max-width: 400px;
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .totals-grid label {
+            font-weight: 500;
+        }
+
+        .totals-grid .value {
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .total-row {
+            border-top: 2px solid #004c99;
+            padding-top: 10px;
+        }
+
+        .total-row .total-amount {
+            font-size: 1.5em;
+            color: #1a73e8; /* Azul más vibrante */
+        }
+
+        .tax-retention {
+            color: #d93025; /* Rojo para retenciones */
+        }
+
+        /* Botones de Acción */
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #00a859; /* Verde para la acción principal */
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #008f4c;
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #ccc;
+        }
+
+        /* Notas y Estados */
+        .note {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 15px;
+            border-left: 3px solid #ffc107;
+            padding-left: 10px;
+        }
+
+        .status-ok {
+            color: #00a859;
+            font-weight: 600;
+        }
+
+        .final-step {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e6ffed;
+            color: #004c99;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            font-size: 0.8em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Centro de Idiomas UTR</h1>
+        <h2>Portal de Facturación del Maestro</h2>
+    </div>
+
+    <div class="container">
+        <div class="card maestro-data">
+            <h3>Datos Fiscales y Bancarios (Precargados)</h3>
+            <p><strong>Emisor:</strong> ADHARA BELEN LARA HERNANDEZ</p>
+            <p><strong>RFC:</strong> LAHA000914PZ8</p>
+            <p><strong>Régimen:</strong> Personas Morales con Fines no Lucrativos (RESICO Simplificado)</p>
+            <p><strong>Cuenta CLABE:</strong> 01401056914709508</p>
+            <p class="status-ok">Datos Verificados y Listos para la Facturación.</p>
+        </div>
+
+        <div class="card hours-summary">
+            <h3>Resumen de Horas Trabajadas (Carga Automática) 🗓️</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th>Horas Registradas</th>
+                        <th>Valor Unitario (MXN)</th>
+                        <th>Importe Bruto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>08 al 27 de Septiembre</td>
+                        <td>27</td>
+                        <td>$105.00</td>
+                        <td>$2,835.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="note">⚠️ Las horas son cargadas directamente del sistema académico. Revise antes de continuar.</p>
+        </div>
+
+        <div class="card invoice-draft">
+            <h3>Borrador de Factura (CFDI) - Cálculo Automático</h3>
+            <div class="totals-grid">
+                <div>
+                    <label>Subtotal:</label>
+                    <span class="value">$2,835.00</span>
+                </div>
+                <div>
+                    <label>IVA Trasladado (16.00%):</label>
+                    <span class="value">$453.60</span>
+                </div>
+                <div>
+                    <label>ISR Retenido (1.25% RESICO):</label>
+                    <span class="value tax-retention">-$35.44</span>
+                </div>
+                <div class="total-row">
+                    <label>Total a Recibir (NETO):</label>
+                    <span class="value total-amount">$3,253.16</span>
+                </div>
+            </div>
+            
+            <p class="note"><strong>Uso CFDI:</strong> G03 - Gastos en general | <strong>Método de Pago:</strong> PUE</p>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="alert('Factura (CFDI 4.0) generada y timbrada con éxito. Se envió copia a centrodeidiomas@utr.edu.mx.')">✅ Generar y Timbrar Factura</button>
+                <button class="btn btn-secondary">Ver Historial de Pagos</button>
+            </div>
+            <p class="final-step">La factura se enviará automáticamente al correo de la UTR con copia a Esperanza Parra. No necesita enviar correos.</p>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2025 Universidad Tecnológica El Retoño</p>
+    </div>
+</body>
+</html>
