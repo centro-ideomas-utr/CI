@@ -19,22 +19,16 @@
             min-height: 100vh;
         }
 
-        .container {
-            width: 90%;
-            max-width: 1000px;
-        }
-
         /* Título */
         .title-box {
             text-align: center;
             padding: 15px 0;
-            background-color: #333; /* Fondo para el encabezado de la tabla */
-            border: 1px solid #444;
+            border: 1px solid #1a1a1a; /* Fondo para el encabezado de la tabla */
             border-bottom: none;
             color: #f0f0f0;
             font-size: 1.4em;
             font-weight: 600;
-            letter-spacing: 2px;
+            letter-spacing: 2prgb(0, 0, 0)
         }
 
         /* Estilos de la tabla */
@@ -84,6 +78,15 @@
             cursor: pointer; /* Simula que es interactivo */
         }
 
+        .square-orange {
+            width: 25px;
+            height: 25px;
+            background-color: #FF9800; /* Verde brillante */
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(255, 159, 4, 0.8);
+            cursor: pointer; /* Simula que es interactivo */
+        }
+
     </style>
 </head>
 <body>
@@ -125,7 +128,7 @@
                     <td>14/09/25</td>
                     <td>
                         <div class="asistencia-box">
-                            <div class="square-green" style="background-color: #FF9800;"></div> </div>
+                            <div class="square-orange"></div> </div>
                     </td>
                 </tr>
             </tbody>
