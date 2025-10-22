@@ -127,7 +127,7 @@ def guardar():
         }
 
         documentos = {}
-        # 🔔 Bucle CORREGIDO: Incluye los 3 campos de documento
+        # Bucle CORREGIDO: Incluye los 3 campos de documento
         for field in ["acta_n", "identificacion", "comprobante_pago"]:
             file = request.files.get(field) 
             if file and file.filename:
@@ -208,7 +208,7 @@ def login():
 def registro():
     return render_template("registro.html")
 
-@app.route("/asistencias")
+@app.route("/listas_asistencias")
 def asistencias():
     return render_template("asistenciasestudiantes.html")
 
@@ -252,7 +252,7 @@ def listadodemaestros():
 def listadomaestrosss():
     return render_template("listadomaestrosss.html")
 
-@app.route("/asistencia")
+@app.route("/listas")
 def listas():
     return render_template("listas.html")
 
