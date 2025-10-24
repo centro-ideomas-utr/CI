@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, abort
+from flask import Flask, render_template, request, send_from_directory, abort, jsonify      
 import mysql.connector
 from pymongo import MongoClient
 from bson import ObjectId
