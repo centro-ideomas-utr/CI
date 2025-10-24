@@ -1,0 +1,82 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Contenedor principal */
+.container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Fondo */
+.background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(70%);
+}
+
+/* Contenido */
+.content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+}
+
+/* Logo y texto */
+.logo img {
+  width: 150px;
+  margin-bottom: 10px;
+}
+
+.logo h2 {
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+}
+
+.logo p {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-bottom: 40px;
+}
+
+/* Menú */
+.menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+}
+
+.menu a {
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.menu a:hover {
+  color: #00c8ff;
+  transform: scale(1.05);
+}
+
+/* Separadores */
+.divider {
+  width: 2px;
+  height: 25px;
+  background-color: rgb(255, 255, 255);
+}

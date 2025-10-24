@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <meta name="description" content="Login para el Centro de Idiomas">
+
+  <!-- Fuentes de Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
+
+  <!-- Enlace al CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
+  
+  <!-- Ícono -->
+  <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+</head>
+<body class="your_css_selector_here"> 
+  <main class="contenedor">
+    <div class="contenido">
+      <h1>Inicia Sesión</h1>
+      <div id="error-message" class="error-message" style="display: none;"></div>
+
+      <!-- Formulario -->
+      <form class="formulario-login" action="{{ url_for('login') }}" method="POST">
+
+        <div class="campo correo_electronico">
+          <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
+        </div>
+
+        <div class="campo contraseña">
+          <input class="registro_field" type="password" id="contraseña" name="contraseña" placeholder="Contraseña" required>
+        </div>
+
+        <div class="campo-boton">
+          <input type="submit" value="Ingresar" class="boton boton--primario">
+        </div>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

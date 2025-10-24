@@ -1,0 +1,247 @@
+  /* --- Estilos Generales --- */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: margin-left 0.3s;
+        }
+
+        /* --- Barra de Navegación Superior --- */
+        .navbar {
+            background-color: #566a93;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+
+        .menu-icon {
+            cursor: pointer;
+            z-index: 1002;
+        }
+
+        .menu-icon span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 5px 0;
+            transition: 0.4s;
+        }
+        
+        .navbar h1 {
+            font-size: 1.5em;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .profile {
+            width: 40px;
+            height: 40px;
+            background-color: #f4f6f8;
+            border-radius: 50%;
+        }
+
+        /* --- Menú Lateral (Sidebar) --- */
+        .sidebar {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: -250px; /* Oculto por defecto */
+            background-color: #48597a;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li a {
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #f4f6f8;
+            display: block;
+            transition: 0.2s;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #566a93;
+        }
+        
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+             background-color: #c0392b !important;
+        }
+
+        /* --- Contenedor Principal --- */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* --- Estilos de Botones de Maestro --- */
+        .teacher-btn {
+            border: none;
+            color: #333;
+            background-color: white;
+            padding: 20px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 500px;
+            text-align: left;
+            border-left: 5px solid #566a93;
+        }
+        
+        .teacher-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            border-left-color: #9b59b6;
+        }
+
+        /* --- FOOTER --- */
+        .main-footer {
+          background-color: #566a93;
+          color: white;
+          padding: 20px 0;
+          text-align: center;
+          margin-top: auto;
+        }
+
+        .footer-content {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+
+        .footer-content p {
+          margin: 0;
+          font-size: 0.9em;
+        }
+
+        /* --- Social Icons --- */
+        .social-login-icons {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+        }
+        .social-login-icons svg {
+          width: 30px;
+        }
+        .social-login-icons a {
+            text-decoration: none;
+        }
+
+        .social-icon-2,
+        .social-icon-2-2,
+        .social-icon-3,
+        .social-icon-3-3,
+        .social-icon-5,
+        .social-icon-5-5,
+        .social-icon-6,
+        .social-icon-6-6 {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50px;
+          margin: 0;
+        }
+
+        .icon svg {
+          fill: #111;
+        }
+
+        .socialcontainer {
+          height: 40px;
+          overflow: hidden;
+        }
+        
+        .social-icon-2 svg,
+        .social-icon-3 svg,
+        .social-icon-5 svg,
+        .social-icon-6 svg {
+          opacity: 0;
+          transition-duration: 0.5s;
+          transition-delay: 0.2s;
+        }
+        .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+          transition-duration: 0.4s;
+          background-color: rgba(0, 0, 0, 0);
+        }
+        .socialcontainer:hover .social-icon-2,
+        .socialcontainer:hover .social-icon-3,
+        .socialcontainer:hover .social-icon-5,
+        .socialcontainer:hover .social-icon-6 {
+          transform: translateY(-40px);
+        }
+        .socialcontainer:hover svg {
+          opacity: 1;
+        }
+        .social-icon-2 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: linear-gradient(
+            72.44deg,
+            #ff7a00 11.92%,
+            #ff0169 51.56%,
+            #d300c5 85.69%
+          );
+        }
+        .social-icon-3 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #316ff6;
+        }
+         .social-icon-5 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #000000;
+        }
+         .social-icon-6 {
+          transition-duration: 0.4s;
+          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+          background: #25D366;
+        }

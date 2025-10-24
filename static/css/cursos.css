@@ -1,0 +1,410 @@
+ /* --- Importación de Fuentes de Google --- */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+    /* --- Variables de Color y Estilos Globales (MODIFICADAS) --- */
+    :root {
+      --color-primary: #566a93; /* Azul/gris oscuro del primer diseño */
+      --color-secondary: #4a5b82; /* Tono secundario más oscuro para mantener gradientes */
+      --color-accent: #9c94b8; /* Morado de la cabecera de la tabla del primer diseño */
+      --color-light: #f4f6f8; /* Color de fondo gris claro del primer diseño */
+      --color-white: #FFFFFF;
+      --color-gray: #7f8c8d; /* Gris neutral para texto secundario */
+      --color-text: #333333; /* Color de texto principal oscuro */
+      --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.15);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--color-text);
+      background-color: var(--color-light);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- ENCABEZADO --- */
+    .main-header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+      color: var(--color-white);
+      padding: 2.5rem 0;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .header-content h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .header-content p {
+      font-style: italic;
+      opacity: 0.9;
+      font-size: 1.2rem;
+    }
+
+    /* --- CONTENEDOR PRINCIPAL --- */
+    .content-wrapper {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      flex-grow: 1;
+    }
+
+    /* --- TÍTULO --- */
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 2.5rem;
+      text-align: center;
+      position: relative;
+      padding-bottom: 1rem;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+
+    /* --- CONTENEDOR DE CURSOS --- */
+    .cursos {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* --- TARJETAS DE CURSOS COMO BOTONES --- */
+    .curso-card {
+      background-color: var(--color-white);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      transition: var(--transition);
+      border-left: 5px solid var(--color-accent);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      width: 100%;
+      min-height: 280px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .curso-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(156, 148, 184, 0.08) 0%, rgba(86, 106, 147, 0.08) 100%);
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .curso-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .curso-card:hover::after {
+      opacity: 1;
+    }
+
+    .curso-card:active {
+      transform: translateY(-2px);
+    }
+
+    /* --- ENCABEZADO DEL CURSO --- */
+    .curso-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .curso-titulo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: var(--color-primary);
+      margin: 0;
+    }
+
+    .nivel {
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
+      color: var(--color-white);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* --- INFORMACIÓN DEL MAESTRO Y GRUPO --- */
+    .info-maestro {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem;
+      background-color: rgba(236, 240, 241, 0.7);
+      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .maestro-nombre {
+      font-weight: 600;
+      color: var(--color-secondary);
+      font-size: 1.1rem;
+    }
+
+    .grupo {
+      color: var(--color-gray);
+      font-size: 0.9rem;
+    }
+
+    /* --- HORARIO --- */
+    .horario {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem;
+      background-color: rgba(156, 148, 184, 0.15); /* Tono suave del color acento */
+      border-radius: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dias, .hora {
+      font-size: 0.95rem;
+    }
+
+    .dias {
+      font-weight: 500;
+      color: var(--color-secondary);
+    }
+
+    .hora {
+      color: var(--color-gray);
+    }
+
+
+    .curso-descripcion p {
+      font-style: italic;
+      color: var(--color-secondary);
+      margin: 0;
+    }
+
+    /* --- FOOTER --- */
+    .main-footer {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+      color: var(--color-white);
+      padding: 2rem 0;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-content p {
+      margin: 0;
+      font-size: 0.9em;
+    }
+    
+    /* --- Social Icons --- */
+    .social-login-icons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+    }
+    .social-login-icons svg {
+      width: 30px;
+    }
+    .social-login-icons a {
+        text-decoration: none;
+    }
+
+    .social-icon-2,
+    .social-icon-2-2,
+    .social-icon-3,
+    .social-icon-3-3,
+    .social-icon-5,
+    .social-icon-5-5,
+    .social-icon-6,
+    .social-icon-6-6 {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50px;
+      margin: 0;
+    }
+
+    .icon svg {
+      fill: #111;
+    }
+
+    .socialcontainer {
+      height: 40px; /* Adjusted height */
+      overflow: hidden;
+    }
+    
+    .social-icon-2 svg,
+    .social-icon-3 svg,
+    .social-icon-5 svg,
+    .social-icon-6 svg {
+      opacity: 0;
+      transition-duration: 0.5s;
+      transition-delay: 0.2s;
+    }
+    .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+      transition-duration: 0.4s;
+      background-color: rgba(0, 0, 0, 0);
+    }
+    .socialcontainer:hover .social-icon-2,
+    .socialcontainer:hover .social-icon-3,
+    .socialcontainer:hover .social-icon-5,
+    .socialcontainer:hover .social-icon-6 {
+      transform: translateY(-40px);
+    }
+    .socialcontainer:hover svg {
+      opacity: 1;
+    }
+    .social-icon-2 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: linear-gradient(
+        72.44deg,
+        #ff7a00 11.92%,
+        #ff0169 51.56%,
+        #d300c5 85.69%
+      );
+    }
+    .social-icon-3 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: #316ff6;
+    }
+     .social-icon-5 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: #000000;
+    }
+     .social-icon-6 {
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      background: #25D366;
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 900px) {
+      .content-wrapper {
+        padding: 2rem 1.5rem;
+      }
+      
+      .header-content h1 {
+        font-size: 2.3rem;
+      }
+      
+      h2 {
+        font-size: 2.2rem;
+      }
+      
+      .info-maestro, .horario {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content h1 {
+        font-size: 2rem;
+      }
+      
+      .header-content p {
+        font-size: 1.1rem;
+      }
+      
+      h2 {
+        font-size: 1.9rem;
+      }
+      
+      .curso-card {
+        padding: 1.8rem;
+      }
+      
+      .curso-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+      }
+      .footer-content {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-header {
+        padding: 2rem 0;
+      }
+      
+      .header-content h1 {
+        font-size: 1.8rem;
+      }
+      
+      h2 {
+        font-size: 1.7rem;
+        margin-bottom: 2rem;
+      }
+      
+      .curso-card {
+        padding: 1.5rem;
+        min-height: 250px;
+      }
+      
+      .curso-titulo {
+        font-size: 1.6rem;
+      }
+      
+      .info-maestro, .horario {
+        padding: 0.8rem;
+      }
+    }
