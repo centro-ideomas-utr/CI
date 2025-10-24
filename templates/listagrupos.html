@@ -3,112 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla Tabla</title>
+    <title>Mis Clases</title>
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/listas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/listagrupos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<body>
-    <div class="navbar">
+    
+    </head>
+<body> <div class="navbar">
         <div class="menu-icon" id="menu-icon">
             <span></span>
             <span></span>
             <span></span>
         </div>
-        <h1>Asistencia</h1>
+        <h1>Mis Grupos Asignados</h1>
         <div class="profile"></div>
     </div>
-
-<nav class="sidebar" id="sidebar">
+    
+    <nav class="sidebar" id="sidebar">
         <ul>
-            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
-            <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
             <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
             <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
             <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
             <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
-</nav>
-
-<div class="page-content">
-
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th>Observaciones</th> <th>Enero</th>
-                    <th>Febrero</th>
-                    <th>Marzo</th>
-                    <th>Abril</th>
-                    <th>ABS</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>2024-001</td>
-                    <td>Juan Pérez</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-001"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-001"> Añadir</button>
-                    </td>
-                    <td>P</td><td>P</td><td>F</td><td>P</td><td>1</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>2024-002</td>
-                    <td>Maria García</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-002"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-002"> Añadir</button>
-                    </td>
-                    <td>P</td><td>P</td><td>P</td><td>P</td><td>0</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>2024-003</td>
-                    <td>Carlos López</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-003"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-003"> Añadir</button>
-                    </td>
-                    <td>F</td><td>F</td><td>P</td><td>P</td><td>2</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="buttons">
-        <button class="btn" id="print-btn">Imprimir</button>
-    </div>
-
- 
+    </nav>
     
-    <div id="observation-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 id="modal-title">Observaciones</h2>
-            
-            <div id="observation-history" class="history-section">
-                <h3 class="section-title">Historial (Comentarios de Maestros)</h3>
-                <div id="history-list">
-                    <p class="no-data-msg">No hay observaciones registradas aún.</p>
+    <div class="page-content">
+
+        <main>
+            <div class="content-wrapper">
+                <div class="clases-container">
+                    <a href="{{ url_for('calificacion') }}" class="clase-card">
+                        <h3>Inglés - B1</h3>
+                        </a>
+                    <a href="{{ url_for('calificacion') }}" class="clase-card">
+                        <h3>Inglés - A2</h3>
+                        </a>
+                    <a href="{{ url_for('calificacion') }}" class="clase-card">
+                        <h3>Francés - A1</h3>
+                        </a>
                 </div>
             </div>
-            
-            <div class="add-section">
-                <h3 class="section-title">Añadir Nueva Observación</h3>
-                <textarea id="new-observation-text" placeholder="Escribe tu observación... (máx. 250 caracteres)" maxlength="250"></textarea>
-                <button id="save-observation-btn" class="btn btn-save">Guardar Comentario</button>
-            </div>
-        </div>
-    </div>
-
- <footer class="main-footer">
+        </main>
+        
+  <footer class="main-footer">
     <div class="footer-content">
       <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
       <div class="social-login-icons">
@@ -171,8 +109,8 @@
       </div>
     </div>
   </footer>
-  <script src="{{ url_for('static', filename='js/listas.js') }}"></script>
+
+    </div> <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 
 </body>
 </html>
-

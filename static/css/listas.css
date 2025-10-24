@@ -1,4 +1,4 @@
-        body {
+body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: #f4f6f8;
@@ -22,18 +22,45 @@
             z-index: 1001;
         }
 
-        .menu-icon { cursor: pointer; }
-        .menu-icon span { display: block; width: 25px; height: 3px; background-color: white; margin: 5px 0; }
-        .navbar h1 { font-size: 1.5em; margin: 0; }
+        .menu-icon {
+            cursor: pointer;
+            z-index: 1002;
+        }
 
-            /* --- Menú Lateral (Sidebar) --- */
+        .menu-icon span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 5px 0;
+            transition: 0.4s;
+        }
+
+        .navbar h1 {
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .profile {
+            width: 40px;
+            height: 40px;
+            background-color: #f4f6f8;
+            border-radius: 50%;
+        }
+    /* --- Menú Lateral (Sidebar) --- */
+        .sidebar ul li a i {
+    width: 30px; 
+    text-align: center;
+    margin-right: 10px;
+} 
+        /* CAMBIO: Ajustado a 230px para coincidir con tu JS */
         .sidebar {
             height: 100%;
-            width: 250px;
+            width: 230px;
             position: fixed;
             z-index: 1000;
             top: 0;
-            left: -250px; /* Oculto por defecto */
+            left: -230px; /* Oculto por defecto */
             background-color: #48597a;
             overflow-x: hidden;
             transition: 0.3s;
@@ -77,22 +104,20 @@
              background-color: #c0392b !important;
         }
 
-        /* --- Contenedor Principal --- */
+        /* --- Contenedor Principal (Wrapper) --- */
+        /* ESTA ES LA REGLA CORRECTA */
         .page-content {
             flex: 1;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
+            transition: margin-left 0.3s;
         }
 
         /* --- Contenedor de la Tabla --- */
         .table-container {
             padding: 20px;
             overflow-x: auto;
-            flex: 1;
+            flex: 1; /* Esto hace que la tabla ocupe el espacio y empuje el footer hacia abajo */
         }
 
         table {
@@ -147,7 +172,7 @@
           color: white;
           padding: 20px 0;
           text-align: center;
-          margin-top: auto;
+          margin-top: auto; /* Esto es clave para que se pegue al fondo */
         }
         .footer-content {
           display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px;

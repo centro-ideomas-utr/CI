@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Clases</title>
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/claseprofe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+<div class="navbar">
+        <div class="menu-icon" id="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <h1>Grupos</h1>
+        <div class="profile"></div>
+    </div>
+
+<nav class="sidebar" id="sidebar">
+        <ul>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+            <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
+            <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
+            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+            <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+</nav>
+
+
+    <main>
+        <div class="content-wrapper">
+            <h2>Mis Grupos Asignados</h2>
+            <div class="clases-container">
+                <a href="{{ url_for('calificaciones') }}" class="clase-card">
+                    <h3>Inglés - B1</h3>
+                    <p><strong>Horario:</strong> Lunes y Miércoles, 16:00 - 18:00</p>
+                    <p><strong>Alumnos Inscritos:</strong> 8 / 10</p>
+                    <span class="action-link">Registrar Calificaciones →</span>
+                </a>
+                <a href="{{ url_for('calificaciones') }}" class="clase-card">
+                    <h3>Inglés - A2</h3>
+                    <p><strong>Horario:</strong> Martes y Jueves, 18:00 - 20:00</p>
+                    <p><strong>Alumnos Inscritos:</strong> 15 / 15</p>
+                     <span class="action-link">Registrar Calificaciones →</span>
+                </a>
+                 <a href="{{ url_for('calificaciones') }}" class="clase-card">
+                    <h3>Francés - A1</h3>
+                    <p><strong>Horario:</strong> Sábados, 09:00 - 13:00</p>
+                    <p><strong>Alumnos Inscritos:</strong> 12 / 20</p>
+                     <span class="action-link">Registrar Calificaciones →</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
+        </div>
+    </footer>
+</body>
+</html>

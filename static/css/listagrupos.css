@@ -1,7 +1,7 @@
-/* --- Estilos Generales --- */
+        /* --- Estilos Generales --- */
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #f4f6f8;
             color: #333;
             display: flex;
@@ -9,7 +9,12 @@
             min-height: 100vh;
         }
 
-        /* --- Barra de Navegación Superior --- */
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+         /* --- Barra de Navegación Superior --- */
         .navbar {
             background-color: #566a93;
             color: white;
@@ -106,7 +111,6 @@
         }
 
         /* --- Contenedor Principal (Wrapper) --- */
-        /* NUEVA REGLA: Este es el div que el JS empujará */
         .page-content {
             flex: 1;
             display: flex;
@@ -114,86 +118,73 @@
             transition: margin-left 0.3s;
         }
 
-        
+
         /* --- Contenido Principal --- */
-        /* CAMBIO: Se quitó 'flex: 1' y 'transition' */
-        .main-content {
-            padding: 30px 20px;
-            max-width: 900px;
-            margin: 0 auto;
+        .content-wrapper {
+            max-width: 12000px;
+            margin: 3rem auto;
             width: 100%;
-            box-sizing: border-box;
         }
 
-        .section {
-            margin-bottom: 30px;
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #566a93;
+            margin-bottom: 2rem;
+            text-align: center;
         }
-
-        .section-title {
-            font-size: 1.2em;
-            color: #7f8c8d;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ddd;
+        
+        /* --- Contenedor de Clases --- */
+        .clases-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
         }
-
-        .card {
+        
+        .clase-card {
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             padding: 20px;
-            margin-bottom: 15px;
-            border-left: 5px solid #566a93;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            border-left: 5px solid #9c94b8;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        .clase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
         }
-
-        .card-title {
-            margin: 0 0 10px 0;
-            font-size: 1.3em;
-            color: #333;
-        }
-
-        .card-content {
+        
+        .clase-card h3 {
             margin: 0 0 15px 0;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .card-date {
-            font-size: 0.8em;
-            color: #999;
-            text-align: right;
-            display: block;
+            font-size: 1.6em;
+            color: #3D348B;
+            font-family: 'Playfair Display', serif;
         }
         
-        /* --- Contenedor de Botones --- */
-        .buttons-container {
-            text-align: center;
-            padding: 20px;
+        .clase-card p {
+            margin: 5px 0;
+            color: #555;
         }
-
-        .btn {
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            font-size: 1em;
+        
+        .clase-card .action-link {
+            margin-top: auto;
+            padding-top: 15px;
+            text-align: right;
             font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #7f8c8d;
-            transition: background-color 0.3s ease;
+            color: #566a93;
+            text-decoration: none;
+        }
+        
+        .clase-card .action-link:hover {
+            color: #3D348B;
         }
 
-        .btn:hover {
-            background-color: #6c7a7b;
-        }
-
-        /* --- FOOTER --- */
+            /* --- FOOTER --- */
         .main-footer {
           background-color: #566a93;
           color: white;

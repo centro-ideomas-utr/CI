@@ -1,0 +1,455 @@
+/* --- Estilos Generales --- */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    padding: 20px;
+    /* La transición se aplica aquí para el empuje */
+    transition: margin-left 0.3s;
+}
+
+
+/* --- Barra de Navegación Superior --- */
+.navbar {
+    background-color: #566a93;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+}
+
+.menu-icon {
+    cursor: pointer;
+    z-index: 1002;
+}
+
+.menu-icon span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 5px 0;
+    transition: 0.4s;
+}
+
+.navbar h1 {
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.profile {
+    width: 40px;
+    height: 40px;
+    background-color: #f4f6f8;
+    border-radius: 50%;
+}
+
+/* --- Menú Lateral (Sidebar) --- */
+.sidebar ul li a i {
+    width: 30px; 
+    text-align: center;
+    margin-right: 10px;
+} 
+
+/* Ajustado a 230px para coincidir con el JS */
+.sidebar {
+    height: 100%;
+    width: 230px;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: -230px; /* Oculto por defecto */
+    background-color: #48597a;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li a {
+    padding: 15px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #f4f6f8;
+    display: block;
+    transition: 0.2s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #566a93;
+}
+
+.logout-btn {
+    background-color: #e74c3c;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b !important;
+}
+
+
+/* --- Contenido Principal --- */
+.content-wrapper {
+    max-width: 900px;
+    margin: 2rem auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* APLICADO a H2 general, se sobreescribe en el modal */
+h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #566a93;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* --- Barra de Acciones --- */
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn {
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-btn {
+    background-color: #2ecc71; /* Verde */
+}
+.add-btn:hover {
+    background-color: #27ae60;
+}
+
+/* --- Contenedor de Personal --- */
+.personal-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.personal-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid; /* Borde dinámico */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.personal-card.maestro {
+    border-color: #9c94b8; /* Púrpura para Maestros */
+}
+
+.personal-card.staff {
+    border-color: #3498db; /* Azul para Staff */
+}
+
+.personal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+}
+
+.personal-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.personal-name {
+    margin: 0;
+    font-size: 1.3em;
+    color: #3D348B;
+    font-weight: 600;
+}
+
+.personal-role {
+    margin: 4px 0 0 0;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.view-btn {
+    background-color: #3498db; /* Azul */
+    padding: 8px 20px;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.view-btn:hover {
+    background-color: #2980b9;
+}
+
+/* --- FOOTER --- */
+.main-footer {
+  background-color: #566a93;
+  color: white;
+  padding: 20px 0;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer-content p {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+/* --- Social Icons --- */
+.social-login-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+}
+.social-login-icons svg {
+  width: 30px;
+}
+.social-login-icons a {
+    text-decoration: none;
+}
+
+.social-icon-2,
+.social-icon-2-2,
+.social-icon-3,
+.social-icon-3-3,
+.social-icon-5,
+.social-icon-5-5,
+.social-icon-6,
+.social-icon-6-6 {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50px;
+  margin: 0;
+}
+
+.icon svg {
+  fill: #111;
+}
+
+.socialcontainer {
+  height: 40px;
+  overflow: hidden;
+}
+
+.social-icon-2 svg,
+.social-icon-3 svg,
+.social-icon-5 svg,
+.social-icon-6 svg {
+  opacity: 0;
+  transition-duration: 0.5s;
+  transition-delay: 0.2s;
+}
+.social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+  transition-duration: 0.4s;
+  background-color: rgba(0, 0, 0, 0);
+}
+.socialcontainer:hover .social-icon-2,
+.socialcontainer:hover .social-icon-3,
+.socialcontainer:hover .social-icon-5,
+.socialcontainer:hover .social-icon-6 {
+  transform: translateY(-40px);
+}
+.socialcontainer:hover svg {
+  opacity: 1;
+}
+.social-icon-2 {
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+  background: linear-gradient(
+    72.44deg,
+    #ff7a00 11.92%,
+    #ff0169 51.56%,
+    #d300c5 85.69%
+  );
+}
+.social-icon-3 {
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+  background: #316ff6;
+}
+ .social-icon-5 {
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+  background: #000000;
+}
+ .social-icon-6 {
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+  background: #25D366;
+}
+
+/* --- ESTILOS PARA EL BOTÓN DE CERRAR SESIÓN --- */
+#logout-btn:hover {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    transition: 1s ease-in-out;
+}
+
+#logout-btn:hover span {
+    color: #ffffff;
+}
+
+/*
+=====================================
+--- ESTILOS DEL MODAL (AÑADIDOS) ---
+=====================================
+*/
+
+/* El overlay (fondo semitransparente) */
+.modal-overlay {
+    display: none; /* Oculto por defecto (MUY IMPORTANTE) */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    
+    /* 'flex' es usado por el JS para centrar el modal */
+    justify-content: center;
+    align-items: center;
+}
+
+/* El contenedor del modal (la caja blanca) */
+.modal {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden; /* Para que el header no se salga */
+}
+
+/* --- Cabecera del Modal --- */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Ajuste para el H2 dentro del modal */
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+    text-align: left;
+    font-family: 'Inter', sans-serif; /* Usar la fuente principal */
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.modal-close-btn:hover {
+    color: #333;
+}
+
+/* --- Cuerpo del Modal (Formulario) --- */
+.modal-body {
+    padding: 20px 25px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group select,
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+    font-size: 1rem;
+}
+
+.form-group input[type="file"] {
+    padding: 5px; /* Ajuste para inputs de archivo */
+}
+
+/* --- Pie del Modal (Botones) --- */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 20px;
+    background-color: #f7f7f7;
+    border-top: 1px solid #e0e0e0;
+}
+
+.btn-save {
+    background-color: #2ecc71; /* Verde, como el botón de añadir */
+}
+.btn-save:hover {
+    background-color: #27ae60;
+}

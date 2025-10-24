@@ -1,0 +1,169 @@
+  /* --- Estilos Generales --- */
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        /* --- Encabezado y Navegación --- */
+        header {
+            background-color: #566a93;
+            color: white;
+            padding: 10px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header > span {
+            font-size: 1.6em;
+            font-weight: bold;
+        }
+
+        nav.nav-derecha {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        nav.nav-derecha a {
+            width: 150px;
+            height: 50px;
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid #566a93;
+            outline: none;
+            transition: 1s ease-in-out;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        nav.nav-derecha a svg {
+            position: absolute;
+            left: 0;
+            top: 0;
+            fill: none;
+            stroke: #fff;
+            stroke-dasharray: 150 480;
+            stroke-dashoffset: 150;
+            transition: 1s ease-in-out;
+        }
+
+        nav.nav-derecha a:hover {
+            transition: 1s ease-in-out;
+            background: #f4f6f8; 
+            border-color: #f4f6f8;
+        }
+        nav.nav-derecha a:hover span {
+            color: #566a93;
+        }
+        nav.nav-derecha a:hover svg {
+            stroke-dashoffset: -480;
+        }
+        
+        nav.nav-derecha a.logout-btn:hover {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        nav.nav-derecha a span {
+            color: #f4f6f8;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        /* --- Contenido Principal --- */
+        .content-wrapper {
+            max-width: 900px;
+            margin: 3rem auto;
+            width: 100%;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #566a93;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        /* --- Contenedor de Clases --- */
+        .clases-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .clase-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            border-left: 5px solid #9c94b8;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .clase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+        }
+        
+        .clase-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.6em;
+            color: #3D348B;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .clase-card p {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        .clase-card .action-link {
+            margin-top: auto;
+            padding-top: 15px;
+            text-align: right;
+            font-weight: bold;
+            color: #566a93;
+            text-decoration: none;
+        }
+        
+        .clase-card .action-link:hover {
+            color: #3D348B;
+        }
+
+        /* --- FOOTER --- */
+        .main-footer {
+            background-color: #566a93;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer-content {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
