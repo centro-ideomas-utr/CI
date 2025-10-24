@@ -35,7 +35,7 @@ def ver_documento_expediente(mongo_id, tipo_doc):
     """
     Ruta dinámica para servir documentos. Consulta Mongo para obtener la ruta del archivo
     y luego sirve el archivo desde el sistema de archivos local (uploads).
-    """
+    """#ayuda#
     try:
         # 1. Consultar MongoDB para obtener la REFERENCIA (Ruta Completa guardada)
         expediente = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
