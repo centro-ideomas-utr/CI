@@ -1,4 +1,4 @@
-
+      
     // --- Lógica para el menú lateral (Sidebar) ---
     const menuIcon = document.getElementById('menu-icon');
     const sidebar = document.getElementById('sidebar');

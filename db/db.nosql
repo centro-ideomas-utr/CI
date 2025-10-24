@@ -1,0 +1,67 @@
+//Expedientes
+{
+  _id: ObjectId("..."),
+  tipo: "alumno" | "profesor" | "staff",
+  id_relacional: 12,  // ID correspondiente de MySQL
+  documentos: {
+    acta_nacimiento: "acta.pdf",
+    identificacion: "ine.pdf",
+    comprobante_pago: "pago.pdf",
+    estado_de_cuenta: "cuenta.pdf",
+    cv: "cv.pdf",
+    comprobante_domicilio: "domicilio.pdf",
+    carta_recomendacion1: "carta1.pdf",
+    carta_recomendacion2: "carta2.pdf",
+    titulo: "titulo.pdf",
+    cedula: "cedula.pdf",
+    constancia_situacion_fiscal: "fiscal.pdf"
+  },
+  metadata: {
+    fecha_subida: ISODate("2025-10-09T15:00:00Z"),
+    actualizado_por: "id_staff_1"
+  }
+}
+
+//Logs
+{
+  _id: ObjectId("..."),
+  tipo_entidad: "alumno",
+  id_entidad: 44,
+  accion: "modificación expediente",
+  detalle: "Se actualizó el acta de nacimiento.",
+  usuario: "admin@correo.com",
+  fecha: ISODate("2025-10-09T15:20:00Z")
+}
+
+//Evidencias
+{
+  _id: ObjectId("..."),
+  id_relacional: 12,  // ID correspondiente de MySQL
+  documentos: {
+    evidencia_1: "evidencia_1.pdf",
+    evidencia_2: "evidencia_2.pdf",
+    evidencia_3: "evidencia_3.pdf",
+    evidencia_4: "evidencia_4.pdf",
+    evidencia_5: "evidencia_5.pdf",
+    evidencia_6: "evidencia_6.pdf",
+    evidencia_7: "evidencia_7.pdf",
+    evidencia_8: "evidencia_8.pdf",
+    evidencia_9: "evidencia_9.pdf",
+    evidencia_10: "evidencia_10.pdf"
+  },
+  metadata: {
+    fecha_subida: ISODate("2025-10-09T15:00:00Z"),
+    actualizado_por: "id_staff_1"
+  }
+}
+
+//Logs_evidencias
+{
+  _id: ObjectId("..."),
+  tipo_entidad: "profesor",
+  id_entidad: 44,
+  accion: "modificación de evidencia",
+  detalle: "Se actualizó la evidencia:",
+  usuario: "admin@correo.com",
+  fecha: ISODate("2025-10-09T15:20:00Z")
+}

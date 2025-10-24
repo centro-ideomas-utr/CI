@@ -25,7 +25,11 @@ expedientes_col = mongo_db["expedientes"]
 logs_col = mongo_db["logs"]
 
 # --- Carpeta de uploads ---
+<<<<<<< HEAD
 # La ruta se usa pacra guardar archivos y para servirlos localmente.
+=======
+# La ruta se usa para guardar archivos y para servirlos localmente.
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -35,7 +39,11 @@ def ver_documento_expediente(mongo_id, tipo_doc):
     """
     Ruta dinámica para servir documentos. Consulta Mongo para obtener la ruta del archivo
     y luego sirve el archivo desde el sistema de archivos local (uploads).
+<<<<<<< HEAD
     """#ayuda#
+=======
+    """
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
     try:
         # 1. Consultar MongoDB para obtener la REFERENCIA (Ruta Completa guardada)
         expediente = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
@@ -80,7 +88,11 @@ def inicio():
 
 # --- Formulario de registro (antes era la raíz) ---
 @app.route("/registro")
+<<<<<<< HEAD
 def registro    ():
+=======
+def formulario():
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
@@ -127,7 +139,11 @@ def guardar():
         }
 
         documentos = {}
+<<<<<<< HEAD
         # 🔔 Bucle CORREGIDO: Incluye los 3 campos de documento
+=======
+        # Bucle CORREGIDO: Incluye los 3 campos de documento
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
         for field in ["acta_n", "identificacion", "comprobante_pago"]:
             file = request.files.get(field) 
             if file and file.filename:
@@ -208,8 +224,13 @@ def login():
 def registro():
     return render_template("registro.html")
 
+<<<<<<< HEAD
 @app.route("/asistencias")
 def listas():
+=======
+@app.route("/listas_asistencias")
+def asistencias():
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
     return render_template("asistenciasestudiantes.html")
 
 @app.route("/avisos")
@@ -220,17 +241,24 @@ def avisos():
 def calificacion():
     return render_template("calificacion.html")
 
+<<<<<<< HEAD
 @app.route("/Añadir")
 def Añadir():
     return render_template("añadiradmin.html")
 
+=======
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
 @app.route("/calificaciones")
 def calificaciones():
     return render_template("calificacionesestudiantes.html")
 
 @app.route("/clases") #faltaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 def clases():
+<<<<<<< HEAD
     return render_template("listagrupos.html")
+=======
+    return render_template("clases.html")
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
 
 @app.route("/cursos")
 def cursos():
@@ -240,7 +268,11 @@ def cursos():
 def evidencias():
     return render_template("evidencias.html")
 
+<<<<<<< HEAD
 @app.route("/grupos") #aqui se ve cuantos se inscriben 
+=======
+@app.route("/grupos")
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
 def grupos():
     return render_template("grupos.html")
 
@@ -249,19 +281,28 @@ def historial():
     return render_template("historial.html")
 
 @app.route("/Maestros") #los nombres de los maestros 
+<<<<<<< HEAD
 def Maestros():
+=======
+def listadodemaestros():
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
     return render_template("listadodemaestros.html")
 
 @app.route("/listadomaestrosss") # no funciona
 def listadomaestrosss():
     return render_template("listadomaestrosss.html")
 
+<<<<<<< HEAD
 @app.route("/clasesprofe") # no funciona
 def clasesprofe():
     return render_template("clasesprofe.html")
 
 @app.route("/asistencia")
 def asistencia():
+=======
+@app.route("/listas")
+def listas():
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
     return render_template("listas.html")
 
 @app.route("/maestroinfo")
@@ -353,7 +394,11 @@ def tablero():
     return render_template("tableroestudiantes.html")
 
 @app.route("/Horario")
+<<<<<<< HEAD
 def Horario():
+=======
+def registrmaestro():
+>>>>>>> bfa45ed7e3cbabb8b1cab643fe3270921f53abfe
     return render_template("registromaestro.html")
 
 @app.route("/Cerrar")
