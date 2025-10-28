@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, abort, redirect, url_for, Response
+from flask import Flask, render_template, request, send_from_directory, abort, redirect, url_for, Response, jsonify
 import mysql.connector
 from pymongo import MongoClient
 from bson import ObjectId
@@ -36,10 +36,7 @@ expedientes_col = mongo_db["expedientes"]
 logs_col = mongo_db["logs"]
 
 # --- Carpeta de uploads ---
-<<<<<<< HEAD
-=======
 # La ruta se usa pacra guardar archivos y para servirlos localmente.
->>>>>>> 1c3e17b6103727c4135ca8179244196c10da34fe
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -95,14 +92,10 @@ def calcular_impuestos(horas_trabajadas):
 
 @app.route('/expediente/ver/<string:mongo_id>/<string:tipo_doc>')
 def ver_documento_expediente(mongo_id, tipo_doc):
-<<<<<<< HEAD
-    """Ruta dinámica para servir documentos desde /uploads."""
-=======
     """
     Ruta dinámica para servir documentos. Consulta Mongo para obtener la ruta del archivo
     y luego sirve el archivo desde el sistema de archivos local (uploads).
     """#ayuda#
->>>>>>> 1c3e17b6103727c4135ca8179244196c10da34fe
     try:
         expediente = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
         
@@ -133,13 +126,11 @@ def parse_enum(row):
         return []
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
 
-<<<<<<< HEAD
 
 # =================================================================
 # === RUTAS ACADÉMICAS Y DE REGISTRO ===
 # =================================================================
 
-=======
 @app.route('/guardar-personal', methods=['POST'])
 def guardar_personal():
     conn = None
@@ -263,7 +254,6 @@ def guardar_personal():
         if conn and conn.is_connected(): conn.close()
 
 # --- NUEVA RUTA INICIAL (index.html) ---
->>>>>>> 1c3e17b6103727c4135ca8179244196c10da34fe
 @app.route("/")
 def inicio():
     return render_template("index.html")
@@ -316,10 +306,7 @@ def guardar():
         }
 
         documentos = {}
-<<<<<<< HEAD
-=======
         # 🔔 Bucle CORREGIDO: Incluye los 3 campos de documento
->>>>>>> 1c3e17b6103727c4135ca8179244196c10da34fe
         for field in ["acta_n", "identificacion", "comprobante_pago"]:
             file = request.files.get(field) 
             if file and file.filename:
@@ -403,12 +390,10 @@ def guardar():
 def login():
     return render_template("login.html")
 
-<<<<<<< HEAD
 @app.route("/listas_asistencias")
 def asistencias():
     return render_template("asistenciasestudiantes.html")
 
-=======
 
 @app.route("/asistencias")
 def listas():
@@ -505,7 +490,6 @@ def maestroinfo():
 def nomina():
     return render_template("nomina.html")
 
->>>>>>> 1c3e17b6103727c4135ca8179244196c10da34fe
 @app.route("/reinscripciones")
 def reinscripciones():
     filtro = request.args.get("tipo", None) 
@@ -573,7 +557,6 @@ def portal_facturacion(id_profesor):
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-<<<<<<< HEAD
         # 1. Obtener datos del PROFESOR (Emisor) y sus datos fiscales
         query_profesor = """
             SELECT 
@@ -737,11 +720,9 @@ def descargar_archivo_prueba(uuid, tipo):
         return response
         
     abort(404)
-=======
 @app.route("/Horario")
 def Horario():
     return render_template("registromaestro.html")
->>>>>>> 1c3e17b6103727c4135ca8179244196c10da34fe
 
 
 if __name__ == "__main__":
