@@ -9,10 +9,8 @@ import uuid # Necesario para generar UUID de prueba en la simulación de timbrad
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 
-
 app = Flask(__name__)
 
-# --- Inyección Global para Jinja2 ---
 # Permite usar {{ now.year }} en las plantillas sin pasarlo en cada ruta
 @app.context_processor
 def inject_now():
@@ -126,7 +124,10 @@ def parse_enum(row):
         return []
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
 # =================================================================
 # === RUTAS ACADÉMICAS Y DE REGISTRO ===
 # =================================================================
@@ -135,58 +136,73 @@ def parse_enum(row):
 def guardar_personal():
     conn = None
     cursor = None
+    email = request.form.get('email')
+
     try:
-        # 1. Obtenemos los datos de texto del formulario
+        # 1. Obtener datos personales (se mantiene igual)
         nombre = request.form['nombre']
         apellidos = request.form['apellidos'] 
         email = request.form['email']
         telefono = request.form['telefono']
         tipo_personal = request.form['tipo_personal']
-        
-        # Leemos la fecha (si está vacía, la guardamos como Nulo)
+        contrasena_plana = request.form['contrasena'] 
+        password_encriptada = generate_password_hash(contrasena_plana)
         fecha_nacimiento = request.form.get('fecha_n') 
+        genero = request.form.get('genero') 
+        
         if fecha_nacimiento == "":
             fecha_nacimiento = None
-            
-        # Leemos la contraseña y la encriptamos (¡Nunca guardes texto plano!)
-        password_plana = request.form['contrasena']
-        password_encriptada = generate_password_hash(password_plana)
         
-        # 2. Obtenemos los archivos
-        documentos = {}
-        for field in ["doc_identificacion", "doc_contrato"]:
-            file = request.files.get(field)
-            if file and file.filename:
-                # Usamos app.config['UPLOAD_FOLDER'] que definiste al inicio
-                filename = f"{secure_filename(email)}_{field}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{secure_filename(file.filename.split('.')[-1])}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                documentos[field] = filepath
-            else:
-                documentos[field] = None
-
-        # 3. Dividimos 'apellidos'
         apellido_parts = apellidos.split(' ')
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        # 4. Guardar en MySQL (Usando tus tablas 'profesores' y 'staff')
+        # 2. Manejo de Archivos: MAPEANDO LOS CAMPOS DEL FORMULARIO A LOS EXPEDIENTES DE MONGO
+        documentos_mongo = {}
+        uploaded_files = request.files
+
+        # Definimos el mapeo de NOMBRE DEL CAMPO EN EL FORMULARIO : CLAVE EN EL DOCUMENTO DE MONGO
+        file_mapping = {
+            "doc_identificacion": "identificacion",
+            "doc_cv": "cv",
+            "doc_comprobante_domicilio": "comprobante_domicilio",
+            "doc_titulo": "titulo",
+            "doc_cedula": "cedula",
+            "doc_situacion_fiscal": "constancia_situacion_fiscal",
+            # Añade aquí otros campos de archivo que decidas incluir en el HTML, 
+            # mapeándolos a sus claves correspondientes en el documento de Mongo.
+        }
+        
+        for form_field, mongo_key in file_mapping.items():
+            file = uploaded_files.get(form_field)
+            if file and file.filename:
+                # Si el archivo existe, lo guardamos con un nombre único
+                ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
+                filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                documentos_mongo[mongo_key] = filepath
+            else:
+                # Si no se subió el archivo, lo registramos como vacío
+                documentos_mongo[mongo_key] = None
+
+        # 3. Conectar a MySQL y realizar la inserción (se mantiene la lógica)
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        table_name = ""
-        id_column = ""
-        query = ""
-        
         if tipo_personal == 'maestro':
+            # ... (Lógica de inserción para profesores) ...
             table_name = "profesores"
             id_column = "id_profesor"
             query = """
                 INSERT INTO profesores 
-                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
+            params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada, genero)
+        
         elif tipo_personal == 'staff':
+            # ... (Lógica de inserción para staff) ...
             table_name = "staff"
             id_column = "id_staff"
             query = """
@@ -194,62 +210,62 @@ def guardar_personal():
                 (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
+            params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada) 
+        
         else:
-            # Si el tipo no es válido, enviamos un error
             return jsonify({'status': 'error', 'message': 'Error: Tipo de personal no válido.'}), 400
 
-        # Pasamos la contraseña encriptada
-        params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada)
         cursor.execute(query, params)
-        
         id_personal = cursor.lastrowid
         
-        # 5. Guardar en MongoDB
+        # 4. Guardar Expediente en MongoDB
         expediente_doc = {
             "tipo": tipo_personal, 
             "id_relacional": id_personal,
-            "documentos": documentos, 
+            "documentos": documentos_mongo, # USA EL DICCIONARIO MAPPEADO COMPLETO
             "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_admin" }
         }
         mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
-
-        # 6. Actualizar MySQL con el ID de Mongo
+        
+        # ... (Resto de la lógica, incluyendo commit, log y manejo de errores, se mantiene igual) ...
+        
+        # 5. Actualizar MySQL con el ID de Mongo
         update_query = f"UPDATE {table_name} SET id_expediente_mongo = %s WHERE {id_column} = %s"
         cursor.execute(update_query, (str(mongo_id), id_personal))
         
         conn.commit()
 
-        # 7. Guardar Log
+        # 6. Guardar Log
         logs_col.insert_one({
             "tipo_entidad": tipo_personal,
             "id_entidad": id_personal,
             "accion": "registro_personal",
-            "detalle": "Personal registrado y expediente creado.",
-            "usuario": "sistema_admin", # (Puedes cambiar esto por el admin logueado)
+            "detalle": f"Personal ({tipo_personal}) registrado y expediente creado. Documentos: {list(documentos_mongo.keys())}", 
+            "usuario": "sistema_admin", 
             "fecha": datetime.utcnow()
         })
         
-        # 8. Enviar respuesta de ÉXITO de vuelta al JavaScript
-        return jsonify({
-            'status': 'success',
-            'message': '¡Personal guardado exitosamente!'
-        })
+        return jsonify({'status': 'success', 'message': f'¡{tipo_personal.capitalize()} guardado exitosamente!'}), 200
 
     except mysql.connector.Error as err:
+        # ... (Manejo de error de DB se mantiene igual) ...
         if conn: conn.rollback()
         print(f"Error de MySQL: {err}")
-        # Error de correo duplicado
+        
+        error_msg = f'Error en la base de datos: {err}'
+        status_code = 500
+        
         if err.errno == 1062:
-             return jsonify({'status': 'error', 'message': f'Error: El correo electrónico "{email}" ya está registrado.'}), 400
-        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err}'}), 500
+            error_msg = f'Error: El correo electrónico "{email}" ya está registrado.'
+            status_code = 400
+            
+        return jsonify({'status': 'error', 'message': error_msg}), status_code
         
     except Exception as e:
-        # 9. Si algo más falla, hacer rollback y enviar ERROR
         if conn: conn.rollback()
-        print(f"Error al guardar personal: {e}")
+        print(f"Error general: {e}")
         return jsonify({'status': 'error', 'message': f'Error en el servidor: {e}'}), 500
     finally:
-        # 10. Cerrar conexiones
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
@@ -306,7 +322,10 @@ def guardar():
         }
 
         documentos = {}
+<<<<<<< HEAD
         # 🔔 Bucle CORREGIDO: Incluye los 3 campos de documento
+=======
+>>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
         for field in ["acta_n", "identificacion", "comprobante_pago"]:
             file = request.files.get(field) 
             if file and file.filename:
@@ -390,12 +409,16 @@ def guardar():
 def login():
     return render_template("login.html")
 
+<<<<<<< HEAD
 @app.route("/listas_asistencias")
 def asistencias():
     return render_template("asistenciasestudiantes.html")
 
 
 @app.route("/asistencias")
+=======
+@app.route("/asistencias_estudiantes")
+>>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
 def listas():
     return render_template("asistenciasestudiantes.html")
 
@@ -407,40 +430,9 @@ def avisos():
 def calificacion():
     return render_template("calificacion.html")
 
-@app.route("/Añadir")
-def Añadir():
-    lista_personal = []
-    conn = None
-    cursor = None
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-
-        # 1. Obtenemos todos los profesores
-        cursor.execute("""
-            SELECT id_profesor, nombre, apellido_p, apellido_m, 'maestro' as rol 
-            FROM profesores 
-            ORDER BY nombre
-        """)
-        lista_personal.extend(cursor.fetchall()) # .extend() añade todos los items de una lista a otra
-        
-        # 2. Obtenemos todo el staff
-        cursor.execute("""
-            SELECT id_staff, nombre, apellido_p, apellido_m, 'staff' as rol 
-            FROM staff 
-            ORDER BY nombre
-        """)
-        lista_personal.extend(cursor.fetchall())
-
-    except Exception as e:
-        print(f"Error al cargar la lista de personal: {e}")
-    finally:
-        # 3. Cerramos la conexión
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-    
-    # 4. Pasamos la lista completa al HTML usando la variable 'personal'
-    return render_template("añadiradmin.html", personal=lista_personal)
+@app.route("/añadir_admin")
+def añadir_admin():
+    return render_template("añadiradmin.html",)
 
 @app.route("/calificaciones")
 def calificaciones():
@@ -458,7 +450,7 @@ def cursos():
 def evidencias():
     return render_template("evidencias.html")
 
-@app.route("/grupos") #aqui se ve cuantos se inscriben 
+@app.route("/grupos") #aqui se ve cuantos se inscriben
 def grupos():
     return render_template("grupos.html")
 
@@ -470,11 +462,8 @@ def historial():
 def Maestros():
     return render_template("listadodemaestros.html")
 
-@app.route("/listadomaestrosss") # no funciona
-def listadomaestrosss():
-    return render_template("listadomaestrosss.html")
 #
-@app.route("/clasesprofe") # no funciona
+@app.route("/clasesprofe") # no funciona, ya ví xd
 def clasesprofe():
     return render_template("clasesprofe.html")
 
@@ -492,37 +481,71 @@ def nomina():
 
 @app.route("/reinscripciones")
 def reinscripciones():
+    """
+    Muestra la lista de alumnos, filtrando por tipo de inscripción, 
+    y obtiene los datos para las listas desplegables (Grupos, Cursos, Profesores).
+    """
     filtro = request.args.get("tipo", None) 
     alumnos = []
+    # Listas para los SELECTs en la plantilla
+    cursos = []
+    grupos = []
+    profesores = []
+    conn = None
+    cursor = None
 
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        query = """
+        # 1. Obtener Cursos (Niveles)
+        cursor.execute("SELECT id_curso, CONCAT(idioma, ' - Nivel ', nivel) AS nombre_completo FROM cursos")
+        cursos = cursor.fetchall()
+
+        # 2. Obtener Grupos (con su docente asociado)
+        query_grupos = """
             SELECT 
+                g.id_grupo, 
+                g.grupo, 
+                CONCAT(p.nombre, ' ', p.apellido_p) AS nombre_profesor, 
+                g.id_profesor
+            FROM grupos g
+            JOIN profesores p ON g.id_profesor = p.id_profesor
+        """
+        cursor.execute(query_grupos)
+        grupos = cursor.fetchall()
+        
+        # 3. Obtener Profesores (para mostrar en el select si fuera necesario, aunque el grupo ya lo implica)
+        cursor.execute("SELECT id_profesor, CONCAT(nombre, ' ', apellido_p, ' ', apellido_m) AS nombre_completo FROM profesores")
+        profesores = cursor.fetchall()
+
+        # 4. Obtener Alumnos (Consulta principal)
+        query_alumnos = """
+             SELECT 
                 a.*,
                 TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, CURDATE()) AS edad,
                 g.grupo AS nombre_grupo,
-                CONCAT(p.nombre, ' ', p.apellido_p) AS maestro
-            FROM alumnos a
-            LEFT JOIN grupos g ON a.id_grupo = g.id_grupo
-            LEFT JOIN profesores p ON g.id_profesor = p.id_profesor
+                CONCAT(p.nombre, ' ', p.apellido_p) AS maestro,
+                c.nivel AS nivel_curso
+             FROM alumnos a
+             LEFT JOIN grupos g ON a.id_grupo = g.id_grupo
+             LEFT JOIN profesores p ON g.id_profesor = p.id_profesor
+             LEFT JOIN cursos c ON a.id_curso = c.id_curso
         """
 
         if filtro:
-            query += " WHERE a.tipo_inscripcion = %s" 
-            cursor.execute(query, (filtro,))
+            query_alumnos += " WHERE a.tipo_inscripcion = %s" 
+            cursor.execute(query_alumnos, (filtro,))
         else:
-            cursor.execute(query) 
+            cursor.execute(query_alumnos) 
 
         alumnos = cursor.fetchall()
 
-        # Vincular con MongoDB
         for alumno in alumnos:
             if alumno.get("id_expediente_mongo"):
                 try:
                     expediente = expedientes_col.find_one({"_id": ObjectId(alumno["id_expediente_mongo"])})
+                    # Usar 'acta_n' para mantener la consistencia con la clave guardada en el otro código
                     alumno["documentos"] = expediente.get("documentos", {}) if expediente else {}
                 except Exception as e:
                     print(f"Error en ObjectId para alumno {alumno['id_alumno']}: {e}")
@@ -534,13 +557,77 @@ def reinscripciones():
                 alumno["fecha_nacimiento"] = alumno["fecha_nacimiento"].strftime("%d/%m/%Y")
 
     except Exception as e:
-        print("Error:", e)
+        print("Error en reinscripciones:", e)
     finally:
-        if 'conn' in locals() and conn.is_connected():
+        if conn and conn.is_connected():
             cursor.close()
             conn.close()
 
-    return render_template("reinscripciones.html", alumnos=alumnos, filtro=filtro)
+    return render_template(
+        "reinscripciones.html", 
+        alumnos=alumnos, 
+        filtro=filtro,
+        cursos=cursos,
+        grupos=grupos,
+        profesores=profesores
+    )
+
+
+@app.route('/asignar_grupo_curso', methods=['POST'])
+def asignar_grupo_curso():
+    """
+    Ruta AJAX para actualizar el id_grupo y el id_curso (nivel) de un alumno.
+    """
+    conn = None
+    try:
+        # 1. Obtener datos del AJAX (usamos request.json)
+        id_alumno = request.json.get('id_alumno')
+        id_grupo = request.json.get('id_grupo')
+        id_curso = request.json.get('id_curso') # Esto es el nivel
+        
+        # Validación básica de datos
+        if not id_alumno or not id_grupo or not id_curso:
+            return jsonify({'status': 'error', 'message': 'Faltan datos de alumno, grupo o curso.'}), 400
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 2. Query de Actualización en MySQL
+        query = """
+            UPDATE alumnos 
+            SET 
+                id_grupo = %s, 
+                id_curso = %s
+            WHERE id_alumno = %s
+        """
+        cursor.execute(query, (id_grupo, id_curso, id_alumno))
+        
+        conn.commit()
+        
+        # 3. Registrar Log en MongoDB
+        logs_col.insert_one({
+            "tipo_entidad": "alumno",
+            "id_entidad": id_alumno,
+            "accion": "asignacion_grupo_curso",
+            "detalle": f"Asignado al Grupo ID {id_grupo} y Curso ID {id_curso}.",
+            "usuario": "admin_logueado", # **IMPORTANTE: Reemplazar con el usuario real logueado**
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': 'Asignación de grupo/nivel actualizada correctamente.'})
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        print(f"Error de MySQL: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la DB: {err}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general: {e}")
+        return jsonify({'status': 'error', 'message': f'Error del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 # --- (Otras rutas académicas como /avisos, /calificacion, etc.) ---
 
@@ -720,11 +807,17 @@ def descargar_archivo_prueba(uuid, tipo):
         return response
         
     abort(404)
+<<<<<<< HEAD
 @app.route("/Horario")
 def Horario():
     return render_template("registromaestro.html")
 
+=======
+
+@app.route("/Horario")
+def Horario():
+    return render_template("registromaestro.html")
+>>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
 
 if __name__ == "__main__":
-    # Otras rutas sin modificar: /avisos, /calificacion, /clases, /cursos, /evidencias, /grupos, /historial, /Maestros, /listas, /maestroinfo, /nomina (es la nueva), /reinscripciones, /salon, /teachers, /tablero, /Horario, /Cerrar
     app.run(debug=True)

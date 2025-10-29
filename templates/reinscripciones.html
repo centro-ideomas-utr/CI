@@ -1,187 +1,251 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pantalla Tabla</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla de Reinscripciones</title>
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
-    <div class="navbar">
-        <div class="menu-icon" id="menu-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <h1>reinscripciones</h1>
-        <div class="profile"></div>
-    </div>
-
     <nav class="sidebar" id="sidebar">
         <ul>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
             <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="#"><i class="fas fa-chart-bar"></i><span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-compass"></i><span>Explore</span></a></li>
-            <li><a href="#"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
-            <li><a href="#"><i class="fas fa-gear"></i><span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-user"></i><span>Account</span></a></li>
-            <li><a href="#"><i class="fas fa-file-alt"></i><span>Report</span></a></li>
-            <li><a href="#"><i class="fas fa-address-book"></i><span>Contact</span></a></li>
-            <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+            <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
+            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+            <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
     </nav>
 
-<div class="buttons-container">
-    <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}"><button class="btn blue">REINSCRIPCIÓN ADULTO REGULAR</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}"><button class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS DESCUENTO') }}"><button class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTO DESCUENTO') }}"><button class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES REGULAR') }}"><button class="btn green">REINSCRIPCIÓN MENORES REGULAR</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES REGULAR') }}"><button class="btn purple">INSCRIPCIÓN MENORES REGULAR</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES DESCUENTO') }}"><button class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</button></a>
-    <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}"><button class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</button></a>
-</div>
-
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Matrícula</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Correo Electrónico</th>
-                <th>Teléfono</th>
-                <th>Edad</th>
-                <th>Fecha de Nac.</th>
-                <th>Domicilio</th>
-                <th>Expediente</th>
-                <th>Género</th>
-                <th>Tipo de Inscripión</th>
-                <th>Horario</th>
-                <th>Nivel</th>
-                <th>Grupo</th>
-                <th>Maestro Actual</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for alumno in alumnos %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ alumno.matricula }}</td>
-                <td>{{ alumno.nombre }}</td>
-                <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
-                <td>{{ alumno.correo_electronico }}</td>
-                <td>{{ alumno.telefono }}</td>
-                <td>{{ alumno.edad }}</td>
-                <td>{{ alumno.fecha_nacimiento }}</td>
-                <td>{{ alumno.domicilio }}</td>
-                
-                <td>
-                    {% if alumno.documentos.comprobante_pago %}
-                        <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='comprobante_pago') }}" 
-                           target="_blank" class="btn-expediente">
-                            <button class="btn-expediente-small">Ticket de Pago</button>
-                        </a><br>
-                    {% endif %}
-                    {% if alumno.documentos.identificacion %}
-                        <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='identificacion') }}" 
-                           target="_blank" class="btn-expediente">
-                            <button class="btn-expediente-small">Identificación</button>
-                        </a><br>
-                    {% endif %}
-                    {% if alumno.documentos.acta_n %}
-                        <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='acta_n') }}" 
-                           target="_blank" class="btn-expediente">
-                            <button class="btn-expediente-small">Acta de Nacimiento</button>
-                        </a>
-                    {% endif %}
-                    {% if not alumno.documentos or (not alumno.documentos.comprobante_pago and not alumno.documentos.identificacion and not alumno.documentos.acta_n) %}
-                        ---
-                    {% endif %}
-                </td>
-
-                <td>{{ alumno.genero }}</td>
-                <td>{{ alumno.tipo_inscripcion }}</td>
-                <td>{{ alumno.horario }}</td>
-                <td>---</td>
-                <td>{{ alumno.nombre_grupo or '---' }}</td>
-                <td>{{ alumno.maestro or '---' }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="16" style="text-align:center;">No hay alumnos registrados para este tipo de inscripción.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-  <footer class="main-footer">
-    <div class="footer-content">
-      <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
-      <div class="social-login-icons">
-        <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer">
-          <div class="socialcontainer">
-            <div class="icon social-icon-2-2">
-              <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
-              </svg>
-            </div>
-            <div class="social-icon-2">
-              <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
-              </svg>
-            </div>
-          </div>
-        </a>
-        <a href="https://www.facebook.com/share/1Cf7KRJFKm/" target="_blank" rel="noopener noreferrer">
-          <div class="socialcontainer">
-            <div class="icon social-icon-3-3">
-              <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
-              </svg>
-            </div>
-            <div class="social-icon-3">
-              <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
-              </svg>
-            </div>
-          </div>
-        </a>
-        <a href="https://www.tiktok.com/@centrodeidiomasutr?_t=ZS-8zg1HTdLcZM&_r=1" target="_blank" rel="noopener noreferrer">
-            <div class="socialcontainer">
-              <div class="icon social-icon-5-5">
-                 <svg viewBox="0 0 448 512" fill="white" height="1.4em">
-                    <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
-                </svg>
-              </div>
-              <div class="social-icon-5">
-                 <svg viewBox="0 0 448 512" fill="white" height="1.4em">
-                    <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
-                </svg>
-              </div>
-            </div>
-        </a>
-        <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer">
-            <div class="socialcontainer">
-              <div class="icon social-icon-6-6">
-                <svg fill="white" viewBox="0 0 16 16" height="1.4em">
-                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
-                </svg>
-              </div>
-              <div class="social-icon-6">
-                <svg fill="white" viewBox="0 0 16 16" height="1.4em">
-                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
-                </svg>
-              </div>
-            </div>
-        </a>
-      </div>
+<main class="page-content"> 
+    <div class="buttons-container">
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}" class="btn blue">REINSCRIPCIÓN ADULTOS REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}" class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS DESCUENTO') }}" class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTO DESCUENTO') }}" class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</a>
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES REGULAR') }}" class="btn green">REINSCRIPCIÓN MENORES REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES REGULAR') }}" class="btn purple">INSCRIPCIÓN MENORES REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES DESCUENTO') }}" class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}" class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</a>
     </div>
-  </footer>
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo Electrónico</th>
+                    <th>Edad</th>
+                    <th>Expediente</th>
+                    <th>Tipo de Inscripión</th>
+                    <th>Horario Inicial</th>
+                    <th>Nivel Actual</th>
+                    <th>Grupo Actual</th>
+                    <th>Maestro Actual</th>
+                    <th>ASIGNAR NIVEL</th>
+                    <th>ASIGNAR GRUPO</th>
+                    <th>GUARDAR</th>
+                    <th>Enviar Cobro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alumno in alumnos %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><span class="lila">{{ alumno.matricula }}</span></td>
+                    <td>{{ alumno.nombre }}</td>
+                    <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
+                    <td>{{ alumno.correo_electronico }}</td>
+                    <td><span class="blue">{{ alumno.edad }}</span></td>
+                    
+                    <td>
+                        {% if alumno.documentos.comprobante_pago %}
+                            <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='comprobante_pago') }}" 
+                               target="_blank" class="btn-expediente" title="Ver Comprobante de Pago">
+                                <button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button>
+                            </a>
+                        {% endif %}
+                        {% if alumno.documentos.identificacion %}
+                            <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='identificacion') }}" 
+                               target="_blank" class="btn-expediente" title="Ver Identificación Oficial">
+                                <button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button>
+                            </a>
+                        {% endif %}
+                        {% if alumno.documentos.acta_n %}
+                            <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='acta_n') }}" 
+                               target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento">
+                                <button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button>
+                            </a>
+                        {% endif %}
+                        {% if not alumno.documentos or (not alumno.documentos.comprobante_pago and not alumno.documentos.identificacion and not alumno.documentos.acta_n) %}
+                            <span class="lightred">---</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% set tipo_inscripcion_clase = "" %}
+                        {% if alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS REGULARES' %}
+                            {% set tipo_inscripcion_clase = "btn-blue-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTOS REGULAR' %}
+                            {% set tipo_inscripcion_clase = "btn-orange-text" %}
+                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS DESCUENTO' %}
+                            {% set tipo_inscripcion_clase = "btn-red-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTO DESCUENTO' %}
+                            {% set tipo_inscripcion_clase = "btn-pink-text" %}
+                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES REGULAR' %}
+                            {% set tipo_inscripcion_clase = "btn-green-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES REGULAR' %}
+                            {% set tipo_inscripcion_clase = "btn-purple-text" %}
+                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES DESCUENTO' %}
+                            {% set tipo_inscripcion_clase = "btn-yellow-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES DESCUENTO' %}
+                            {% set tipo_inscripcion_clase = "btn-magenta-text" %}
+                        {% endif %}
+                        <span class="{{ tipo_inscripcion_clase }}">{{ alumno.tipo_inscripcion }}</span>
+                    </td>
+
+                    <td>{{ alumno.horario or '---' }}</td>
+                    <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td>
+                    <td>{{ alumno.nombre_grupo or 'N/A' }}</td>
+                    <td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
+
+                    <td>
+                        <select class="form-control select-curso" data-alumno-id="{{ alumno.id_alumno }}">
+                            <option value="">-- Seleccionar Nivel --</option>
+                            {% for curso in cursos %}
+                                <option value="{{ curso.id_curso }}" 
+                                        {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>
+                                    {{ curso.nombre_completo }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    
+                    <td>
+                        <select class="form-control select-grupo" data-alumno-id="{{ alumno.id_alumno }}">
+                            <option value="">-- Seleccionar Grupo --</option>
+                            {% for grupo in grupos %}
+                                <option value="{{ grupo.id_grupo }}"
+                                        {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>
+                                    {{ grupo.grupo }} (Prof: {{ grupo.nombre_profesor }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+
+                    <td>
+                        <button class="btn green btn-guardar-asignacion" 
+                                data-id="{{ alumno.id_alumno }}" 
+                                style="padding: 6px 10px;">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </td>
+                    
+                    <td>
+                        <button class="btn magenta" style="padding: 6px 10px;">
+                            <i class="fas fa-envelope-open-text"></i> Cobrar
+                        </button>
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr><td colspan="16" style="text-align:center;"><i class="fas fa-exclamation-triangle"></i> No hay alumnos registrados para este tipo de inscripción.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+    
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>Contacto: info@centrodeideomas.edu | Tel: (123) 456-7890</p>
+            <div class="social-login-icons">
+                 <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer">
+                    <div class="socialcontainer"><div class="icon social-icon-2-2"><svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path></svg></div></div>
+                </a>
+                 <a href="https://www.facebook.com/share/1Cf7KRJFKm/" target="_blank" rel="noopener noreferrer">
+                    <div class="socialcontainer"><div class="icon social-icon-3-3"><svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg"><path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path></svg></div></div>
+                </a>
+                <a href="https://www.tiktok.com/@centrodeidiomasutr?_t=ZS-8zg1HTdLcZM&_r=1" target="_blank" rel="noopener noreferrer">
+                    <div class="socialcontainer"><div class="icon social-icon-5-5"><svg viewBox="0 0 448 512" fill="white" height="1.4em"><path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/></svg></div></div>
+                </a>
+                <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer">
+                    <div class="socialcontainer"><div class="icon social-icon-6-6"><svg fill="white" viewBox="0 0 16 16" height="1.4em"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path></svg></div></div>
+                </a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lógica del Menú Hamburguesa (IDÉNTICA a la de añadiradmin.js)
+        const sidebar = document.getElementById('sidebar');
+        const menuIcon = document.getElementById('menu-icon');
+        
+        if (menuIcon && sidebar) {
+            menuIcon.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        }
+        
+        // Lógica AJAX de la tabla de Reinscripciones
+        document.querySelectorAll('.btn-guardar-asignacion').forEach(button => {
+            button.addEventListener('click', function() {
+                const id_alumno = this.getAttribute('data-id');
+                const cursoSelect = document.querySelector(`.select-curso[data-alumno-id="${id_alumno}"]`);
+                const grupoSelect = document.querySelector(`.select-grupo[data-alumno-id="${id_alumno}"]`);
+                
+                const id_curso = cursoSelect.value;
+                const id_grupo = grupoSelect.value;
+
+                if (!id_curso || !id_grupo) {
+                    alert('Por favor, selecciona tanto el Nivel (Curso) como el Grupo antes de guardar.');
+                    return;
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+                fetch("{{ url_for('asignar_grupo_curso') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_alumno: id_alumno,
+                        id_grupo: id_grupo,
+                        id_curso: id_curso
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        window.location.reload(); 
+                    } else {
+                        alert('Error al guardar: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ocurrió un error de conexión con el servidor.');
+                })
+                .finally(() => {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-save"></i> Guardar';
+                });
+            });
+        });
+    });
+    </script>
+    <script src="{{ url_for('static', filename='js/añadiradmin.js') }}"></script>
 </body>
 </html>

@@ -1,20 +1,24 @@
 /* --- Estilos Generales --- */
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Usando 'Inter' para consistencia con añadiradmin.css */
+    font-family: 'Inter', sans-serif; 
     background-color: #f4f6f8;
     color: #333;
-    transition: margin-left 0.3s; /* Animación para el contenido principal */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
 main {
-    flex: 1; /* Permite que el contenido principal crezca */
+    flex: 1;
+    padding: 20px;
+    /* La transición se aplica aquí para el empuje */
+    transition: margin-left 0.3s; 
 }
 
-/* --- Barra de Navegación Superior --- */
+
+/* --- Barra de Navegación Superior (Navbar) --- */
 .navbar {
     background-color: #566a93;
     color: white;
@@ -23,10 +27,9 @@ main {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: fixed;
+    /* Usando sticky para consistencia con añadiradmin.css */
+    position: sticky; 
     top: 0;
-    left: 0;
-    right: 0;
     z-index: 1001;
 }
 
@@ -55,35 +58,28 @@ main {
     background-color: #f4f6f8;
     border-radius: 50%;
 }
-/* --- Barra Lateral (Sidebar) --- */
+
+/* --- Menú Lateral (Sidebar) --- */
+.sidebar ul li a i {
+    width: 30px; 
+    text-align: center;
+    margin-right: 10px;
+} 
+
 .sidebar {
     height: 100%;
-    width: 250px;
+    width: 230px;
     position: fixed;
     z-index: 1000;
-    top: 0;
-    left: -250px; /* Oculto por defecto */
+    left: -230px; /* Oculto por defecto */
     background-color: #48597a;
     overflow-x: hidden;
     transition: 0.3s;
-    padding-top: 80px; /* Espacio para la navbar */
+    padding-top: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
-    /* --- Menú Lateral (Sidebar) --- */
-        .sidebar {
-            height: 100%;
-            width: 250px;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: -250px; /* Oculto por defecto */
-            background-color: #48597a;
-            overflow-x: hidden;
-            transition: 0.3s;
-            padding-top: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
 
 .sidebar.active {
     left: 0;
@@ -107,55 +103,43 @@ main {
 .sidebar ul li a:hover {
     background-color: #566a93;
 }
-        .sidebar ul li a:hover {
-            background-color: #566a93;
-        }
-        
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .logout-btn:hover {
-             background-color: #c0392b !important;
-        }
 
-        /* --- Contenedor Principal --- */
-        .page-content {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        /* --- Contenedor de Botones --- */
-        .buttons-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            padding: 20px;
-            margin-top: 80px; /* Empujar debajo de la navbar */
-        }
+.logout-btn {
+    background-color: #e74c3c;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
 
-/* --- Contenedor de Botones de Filtro --- */
+.logout-btn:hover {
+    background-color: #c0392b !important;
+}
+
+/* --- Clases específicas de Reinscripciones --- */
+.page-content {
+    /* Nota: Mantenemos estas reglas aquí para la pantalla de Reinscripciones */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+/* (Reglas de botones de filtro, tablas, etc. de Reinscripciones...) */
+
 .buttons-container {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 15px;
-    padding: 20px;
-    margin-top: 80px; /* Empujar debajo de la navbar */
+    gap: 10px;
+    padding: 20px 0;
+    width: 100%;
 }
 
 .btn {
     border: none;
-    color: white;
+    color: white !important; 
     padding: 12px 20px;
     font-size: 0.9em;
     font-weight: bold;
@@ -163,6 +147,8 @@ main {
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn:hover {
@@ -179,19 +165,21 @@ main {
 .btn.yellow { background-color: #f1c40f; }
 .btn.magenta { background-color: #e84393; }
 
-/* --- Contenedor de la Tabla --- */
 .table-container {
-    padding: 20px;
-    overflow-x: auto; /* Permite scroll horizontal en pantallas pequeñas */
+    width: 100%;
+    padding: 0 20px;
+    overflow-x: auto;
 }
 
 table {
     width: 100%;
+    min-width: 1200px;
     border-collapse: collapse;
     background-color: white;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     border-radius: 8px;
     overflow: hidden;
+    margin-bottom: 20px;
 }
 
 thead {
@@ -200,10 +188,10 @@ thead {
 }
 
 th, td {
-    padding: 15px;
+    padding: 10px 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
-    white-space: nowrap; /* Evita que el texto se rompa en varias líneas */
+    white-space: nowrap;
 }
 
 tbody tr:hover {
@@ -214,7 +202,6 @@ tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* --- Estilos para las celdas de colores --- */
 td {
     font-weight: 500;
 }
@@ -225,17 +212,39 @@ td {
 .lightred { color: #c0392b; }
 .lila { color: #9b59b6; }
 
-/* 🔔 NUEVOS ESTILOS PARA LOS BOTONES DE EXPEDIENTE 🔔 */
+.btn-blue-text { color: #3498db; }
+.btn-orange-text { color: #e67e22; }
+.btn-red-text { color: #e74c3c; }
+.btn-pink-text { color: #ff7eb9; }
+.btn-green-text { color: #2ecc71; }
+.btn-purple-text { color: #9b59b6; }
+.btn-yellow-text { color: #f1c40f; }
+.btn-magenta-text { color: #e84393; }
+
+.form-control {
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9em;
+    min-width: 150px;
+    appearance: none;
+    background-color: white;
+}
+
+.btn-guardar-asignacion {
+    font-size: 0.8em;
+    padding: 6px 10px !important;
+}
+
 .btn-expediente {
-    display: block; /* Asegura que cada enlace ocupe su propia línea */
-    text-decoration: none; /* Quita el subrayado del enlace padre */
-    margin-bottom: 5px; /* Espacio entre los botones */
+    display: block; 
+    text-decoration: none; 
+    margin-bottom: 5px; 
 }
 
 .btn-expediente-small {
-    /* Estilo que coincide con tu imagen (Fondo claro/blanco, Borde sutil) */
     background-color: white; 
-    color: #48597a; /* Color de texto que contrasta con el fondo de la tabla */
+    color: #48597a; 
     border: 1px solid #ccc;
     padding: 6px 10px;
     font-size: 0.85em;
@@ -246,19 +255,17 @@ td {
     width: 100%; 
     text-align: center;
     white-space: nowrap; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Sombra muy sutil */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
 }
 
 .btn-expediente-small:hover {
-    /* Efecto Hover: Borde azul/morado más grueso y resaltado (como el que me mostraste) */
     background-color: #f9f9f9;
-    color: #566a93; /* Resaltar texto con el color de la navbar */
+    color: #566a93; 
     border: 1px solid #566a93; 
-    box-shadow: 0 0 0 2px rgba(86, 106, 147, 0.4); /* Sombra exterior azul */
+    box-shadow: 0 0 0 2px rgba(86, 106, 147, 0.4); 
 }
-/* ----------------------------------------------------- */
 
-/* --- FOOTER --- */
+/* --- FOOTER (Mismos estilos que añadiradmin.css) --- */
 .main-footer {
     background-color: #566a93;
     color: white;
@@ -274,59 +281,13 @@ td {
     flex-wrap: wrap;
     gap: 20px;
 }
-
-.footer-content p {
-    margin: 0;
-    font-size: 0.9em;
-}
-
-/* --- Social Icons --- */
-.social-login-icons {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
-}
-.social-login-icons svg {
-    width: 30px;
-}
-.social-login-icons a {
-    text-decoration: none;
-}
-
-.social-icon-2,
-.social-icon-2-2,
-.social-icon-3,
-.social-icon-3-3,
-.social-icon-5,
-.social-icon-5-5,
-.social-icon-6,
-.social-icon-6-6 {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50px;
-    margin: 0;
-}
-
-.icon svg {
-    fill: #111;
-}
-
-.socialcontainer {
-    height: 40px;
-    overflow: hidden;
-}
-
-.social-icon-2 svg,
-.social-icon-3 svg,
-.social-icon-5 svg,
-.social-icon-6 svg {
-    opacity: 0;
-    transition-duration: 0.5s;
-    transition-delay: 0.2s;
+.footer-content p { margin: 0; font-size: 0.9em; }
+.social-login-icons { display: flex; align-items: center; gap: 10px; }
+.social-login-icons svg { width: 30px; fill: white; }
+.social-icon-2, .social-icon-3, .social-icon-5, .social-icon-6 {
+    /* Reglas de animación que deben ser consistentes */
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
 }
 .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
     transition-duration: 0.4s;
@@ -338,31 +299,10 @@ td {
 .socialcontainer:hover .social-icon-6 {
     transform: translateY(-40px);
 }
-.socialcontainer:hover svg {
-    opacity: 1;
-}
-.social-icon-2 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: linear-gradient(
-        72.44deg,
-        #ff7a00 11.92%,
-        #ff0169 51.56%,
-        #d300c5 85.69%
-    );
-}
-.social-icon-3 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: #316ff6;
-}
- .social-icon-5 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: #000000;
-}
- .social-icon-6 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: #25D366;
-}
+.socialcontainer { height: 40px; overflow: hidden; }
+
+/* Colores de iconos (Añadidos para consistencia) */
+.social-icon-2 { background: linear-gradient( 72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69% ); }
+.social-icon-3 { background: #316ff6; }
+.social-icon-5 { background: #000000; }
+.social-icon-6 { background: #25D366; }
