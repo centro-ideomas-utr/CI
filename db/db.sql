@@ -45,6 +45,7 @@ CREATE TABLE profesores (
     correo_electronico VARCHAR(255) UNIQUE NOT NULL,
     contraseña VARCHAR(255),
     id_expediente_mongo CHAR(24),
+    genero enum('M','H'),
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -205,3 +206,30 @@ create table evidencias(
 
 alter table evidencias add constraint foreign key (id_grupo) references grupos (id_grupo);
 alter table evidencias add constraint foreign key (id_profesor) references profesores (id_profesor);
+
+CREATE TABLE profesores_datos_fiscales (
+    id_datos_fiscales INT AUTO_INCREMENT PRIMARY KEY,
+    id_profesor INT UNIQUE NOT NULL, 
+    rfc VARCHAR(13) UNIQUE NOT NULL,
+    razon_social VARCHAR(255) NOT NULL,
+    regimen_fiscal VARCHAR(100) NOT NULL, 
+    metodo_pago VARCHAR(50), 
+    uso_cfdi VARCHAR(50),     
+    cuenta_clabe VARCHAR(18)
+);
+
+alter table profesores_datos_fiscales add constraint foreign key (id_profesor) references profesores (id_profesor);
+
+CREATE TABLE facturas_emitidas (
+    id_factura INT AUTO_INCREMENT PRIMARY KEY,
+    id_profesor INT NOT NULL,
+    uuid CHAR(36) UNIQUE NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    total DECIMAL(10, 2) NOT NULL,
+    periodo_pago VARCHAR(100),
+    url_pdf VARCHAR(255),
+    url_xml VARCHAR(255),
+    fecha_timbrado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+alter table facturas_emitidas add constraint foreign key (id_profesor) references profesores (id_profesor);

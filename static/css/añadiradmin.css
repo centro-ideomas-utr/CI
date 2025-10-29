@@ -12,10 +12,8 @@ body {
 main {
     flex: 1;
     padding: 20px;
-    /* La transición se aplica aquí para el empuje */
     transition: margin-left 0.3s;
 }
-
 
 /* --- Barra de Navegación Superior --- */
 .navbar {
@@ -64,14 +62,13 @@ main {
     margin-right: 10px;
 } 
 
-/* Ajustado a 230px para coincidir con el JS */
 .sidebar {
     height: 100%;
     width: 230px;
     position: fixed;
     z-index: 1000;
     top: 0;
-    left: -230px; /* Oculto por defecto */
+    left: -230px;
     background-color: #48597a;
     overflow-x: hidden;
     transition: 0.3s;
@@ -124,7 +121,6 @@ main {
     box-sizing: border-box;
 }
 
-/* APLICADO a H2 general, se sobreescribe en el modal */
 h2 {
     font-family: 'Playfair Display', serif;
     font-size: 2.5rem;
@@ -154,7 +150,7 @@ h2 {
 }
 
 .add-btn {
-    background-color: #2ecc71; /* Verde */
+    background-color: #2ecc71;
 }
 .add-btn:hover {
     background-color: #27ae60;
@@ -175,16 +171,16 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 5px solid; /* Borde dinámico */
+    border-left: 5px solid;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .personal-card.maestro {
-    border-color: #9c94b8; /* Púrpura para Maestros */
+    border-color: #9c94b8;
 }
 
 .personal-card.staff {
-    border-color: #3498db; /* Azul para Staff */
+    border-color: #3498db;
 }
 
 .personal-card:hover {
@@ -211,7 +207,7 @@ h2 {
 }
 
 .view-btn {
-    background-color: #3498db; /* Azul */
+    background-color: #3498db;
     padding: 8px 20px;
     font-size: 0.9em;
     white-space: nowrap;
@@ -223,111 +219,85 @@ h2 {
 
 /* --- FOOTER --- */
 .main-footer {
-  background-color: #566a93;
-  color: white;
-  padding: 20px 0;
-  text-align: center;
-  margin-top: auto;
+    background-color: #566a93;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    margin-top: auto;
 }
 
 .footer-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
 .footer-content p {
-  margin: 0;
-  font-size: 0.9em;
+    margin: 0;
+    font-size: 0.9em;
 }
 
 /* --- Social Icons --- */
 .social-login-icons {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
 }
 .social-login-icons svg {
-  width: 30px;
+    width: 30px;
 }
 .social-login-icons a {
     text-decoration: none;
 }
 
-.social-icon-2,
-.social-icon-2-2,
-.social-icon-3,
-.social-icon-3-3,
-.social-icon-5,
-.social-icon-5-5,
-.social-icon-6,
-.social-icon-6-6 {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50px;
-  margin: 0;
+.social-icon-2, .social-icon-2-2, .social-icon-3, .social-icon-3-3, .social-icon-5, .social-icon-5-5, .social-icon-6, .social-icon-6-6 {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    margin: 0;
 }
 
-.icon svg {
-  fill: #111;
-}
+.icon svg { fill: #111; }
+.socialcontainer { height: 40px; overflow: hidden; }
 
-.socialcontainer {
-  height: 40px;
-  overflow: hidden;
-}
-
-.social-icon-2 svg,
-.social-icon-3 svg,
-.social-icon-5 svg,
-.social-icon-6 svg {
-  opacity: 0;
-  transition-duration: 0.5s;
-  transition-delay: 0.2s;
+.social-icon-2 svg, .social-icon-3 svg, .social-icon-5 svg, .social-icon-6 svg {
+    opacity: 0;
+    transition-duration: 0.5s;
+    transition-delay: 0.2s;
 }
 .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-  transition-duration: 0.4s;
-  background-color: rgba(0, 0, 0, 0);
+    transition-duration: 0.4s;
+    background-color: rgba(0, 0, 0, 0);
 }
-.socialcontainer:hover .social-icon-2,
-.socialcontainer:hover .social-icon-3,
-.socialcontainer:hover .social-icon-5,
-.socialcontainer:hover .social-icon-6 {
-  transform: translateY(-40px);
+.socialcontainer:hover .social-icon-2, .socialcontainer:hover .social-icon-3, .socialcontainer:hover .social-icon-5, .socialcontainer:hover .social-icon-6 {
+    transform: translateY(-40px);
 }
-.socialcontainer:hover svg {
-  opacity: 1;
-}
+.socialcontainer:hover svg { opacity: 1; }
 .social-icon-2 {
-  transition-duration: 0.4s;
-  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-  background: linear-gradient(
-    72.44deg,
-    #ff7a00 11.92%,
-    #ff0169 51.56%,
-    #d300c5 85.69%
-  );
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: linear-gradient( 72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69% );
 }
 .social-icon-3 {
-  transition-duration: 0.4s;
-  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-  background: #316ff6;
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #316ff6;
 }
- .social-icon-5 {
-  transition-duration: 0.4s;
-  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-  background: #000000;
+.social-icon-5 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #000000;
 }
- .social-icon-6 {
-  transition-duration: 0.4s;
-  transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-  background: #25D366;
+.social-icon-6 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #25D366;
 }
 
 /* --- ESTILOS PARA EL BOTÓN DE CERRAR SESIÓN --- */
@@ -341,15 +311,9 @@ h2 {
     color: #ffffff;
 }
 
-/*
-=====================================
---- ESTILOS DEL MODAL (AÑADIDOS) ---
-=====================================
-*/
-
-/* El overlay (fondo semitransparente) */
+/* --- ESTILOS DEL MODAL --- */
 .modal-overlay {
-    display: none; /* Oculto por defecto (MUY IMPORTANTE) */
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -357,23 +321,19 @@ h2 {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
     z-index: 2000;
-    
-    /* 'flex' es usado por el JS para centrar el modal */
     justify-content: center;
     align-items: center;
 }
 
-/* El contenedor del modal (la caja blanca) */
 .modal {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.3);
     width: 90%;
     max-width: 500px;
-    overflow: hidden; /* Para que el header no se salga */
+    overflow: hidden;
 }
 
-/* --- Cabecera del Modal --- */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -383,13 +343,12 @@ h2 {
     border-bottom: 1px solid #e0e0e0;
 }
 
-/* Ajuste para el H2 dentro del modal */
 .modal-header h2 {
     margin: 0;
     font-size: 1.5rem;
     color: #333;
     text-align: left;
-    font-family: 'Inter', sans-serif; /* Usar la fuente principal */
+    font-family: 'Inter', sans-serif;
 }
 
 .modal-close-btn {
@@ -406,7 +365,6 @@ h2 {
     color: #333;
 }
 
-/* --- Cuerpo del Modal (Formulario) --- */
 .modal-body {
     padding: 20px 25px;
 }
@@ -422,23 +380,19 @@ h2 {
     color: #555;
 }
 
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group select,
-.form-group input[type="file"] {
+.form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"], .form-group input[type="date"], .form-group select, .form-group input[type="file"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+    box-sizing: border-box;
     font-size: 1rem;
 }
 
 .form-group input[type="file"] {
-    padding: 5px; /* Ajuste para inputs de archivo */
+    padding: 5px;
 }
 
-/* --- Pie del Modal (Botones) --- */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -448,7 +402,7 @@ h2 {
 }
 
 .btn-save {
-    background-color: #2ecc71; /* Verde, como el botón de añadir */
+    background-color: #2ecc71;
 }
 .btn-save:hover {
     background-color: #27ae60;
