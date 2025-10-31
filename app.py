@@ -124,10 +124,6 @@ def parse_enum(row):
         return []
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
 # =================================================================
 # === RUTAS ACADÉMICAS Y DE REGISTRO ===
 # =================================================================
@@ -322,10 +318,7 @@ def guardar():
         }
 
         documentos = {}
-<<<<<<< HEAD
-        # 🔔 Bucle CORREGIDO: Incluye los 3 campos de documento
-=======
->>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
+        #  Bucle CORREGIDO: Incluye los 3 campos de documento
         for field in ["acta_n", "identificacion", "comprobante_pago"]:
             file = request.files.get(field) 
             if file and file.filename:
@@ -405,20 +398,74 @@ def guardar():
     return f"<h1>{mensaje}</h1><a href='/'>Volver</a>"
 
 # --- Demás rutas existentes ---
-@app.route("/login")
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    if request.method == "GET":
+        return render_template("login.html")
 
-<<<<<<< HEAD
-@app.route("/listas_asistencias")
-def asistencias():
-    return render_template("asistenciasestudiantes.html")
+    # Tomar los datos del formulario
+    correo = request.form.get("correo_electronico")
+    contrasena = request.form.get("contraseña")
 
+    conn = None
+    cursor = None
 
-@app.route("/asistencias")
-=======
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1️⃣ Verificar si es maestro
+        cursor.execute("""
+            SELECT id_profesor AS id, correo_electronico, contraseña, 'maestro' AS tipo
+            FROM profesores WHERE correo_electronico = %s
+        """, (correo,))
+        usuario = cursor.fetchone()
+
+        # 2️⃣ Si no es maestro, verificar si es alumno
+        if not usuario:
+            cursor.execute("""
+                SELECT id_alumno AS id, correo_electronico, NULL AS contraseña, 'alumno' AS tipo
+                FROM alumnos WHERE correo_electronico = %s
+            """, (correo,))
+            usuario = cursor.fetchone()
+
+        # 3️⃣ Si no es alumno, verificar si es staff
+        if not usuario:
+            cursor.execute("""
+                SELECT id_staff AS id, correo_electronico, contraseña, 'staff' AS tipo
+                FROM staff WHERE correo_electronico = %s
+            """, (correo,))
+            usuario = cursor.fetchone()
+
+        # 4️⃣ Si no existe en ninguna tabla
+        if not usuario:
+            return render_template("login.html", error="Usuario no encontrado.")
+
+        # 5️⃣ Verificar contraseña si aplica (solo maestro o staff)
+        if usuario["contraseña"] and not check_password_hash(usuario["contraseña"], contrasena):
+            return render_template("login.html", error="Contraseña incorrecta.")
+
+        # 6️⃣ Redirigir según el tipo de usuario
+        if usuario["tipo"] == "maestro":
+            return redirect(url_for("portal_facturacion", id_profesor=usuario["id"]))
+        elif usuario["tipo"] == "alumno":
+            return redirect(url_for("tablero"))
+        elif usuario["tipo"] == "staff":
+            return redirect(url_for("reinscripciones"))
+
+        # Seguridad por si acaso
+        return render_template("login.html", error="Tipo de usuario no válido.")
+
+    except Exception as e:
+        print("Error en login:", e)
+        return render_template("login.html", error="Error interno del servidor.")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
 @app.route("/asistencias_estudiantes")
->>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
 def listas():
     return render_template("asistenciasestudiantes.html")
 
@@ -437,6 +484,10 @@ def añadir_admin():
 @app.route("/calificaciones")
 def calificaciones():
     return render_template("calificacionesestudiantes.html")
+
+@app.route("/tablero")
+def tablero():
+    return render_template("tableroestudiantes.html")
 
 @app.route("/clases") #faltaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 def clases():
@@ -471,13 +522,17 @@ def clasesprofe():
 def asistencia():
     return render_template("listas.html")
 
-@app.route("/maestroinfo")
+@app.route("/maestroinfo") #???
 def maestroinfo():
     return render_template("maestroinfo.html")
 
 @app.route("/nomina")
 def nomina():
     return render_template("nomina.html")
+
+@app.route("/Horario")
+def Horario():
+    return render_template("registromaestro.html")
 
 @app.route("/reinscripciones")
 def reinscripciones():
@@ -807,17 +862,9 @@ def descargar_archivo_prueba(uuid, tipo):
         return response
         
     abort(404)
-<<<<<<< HEAD
-@app.route("/Horario")
-def Horario():
-    return render_template("registromaestro.html")
-
-=======
-
-@app.route("/Horario")
-def Horario():
-    return render_template("registromaestro.html")
->>>>>>> 2b51bd2af3077bcedb4d5dab2ba2465e6c1e317c
+@app.route("/Cerrar")
+def cerrar():
+    return redirect(url_for('inicio')) 
 
 if __name__ == "__main__":
     app.run(debug=True)
