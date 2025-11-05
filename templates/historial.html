@@ -10,29 +10,28 @@
 </head>
 <body>
 
-    <div class="navbar">
-        <div class="menu-icon" id="menu-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <h1>Evidencias</h1>
-        <div class="profile"></div>
-    </div>
 
-    <nav class="sidebar" id="sidebar">
-        <ul>
-            <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="#"><i class="fas fa-chart-bar"></i><span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-compass"></i><span>Explore</span></a></li>
-            <li><a href="#"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
-            <li><a href="#"><i class="fas fa-gear"></i><span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-user"></i><span>Account</span></a></li>
-            <li><a href="#"><i class="fas fa-file-alt"></i><span>Report</span></a></li>
-            <li><a href="#"><i class="fas fa-address-book"></i><span>Contact</span></a></li>
-            <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
-        </ul>
-    </nav>
+<div class="navbar">
+    <div class="menu-icon" id="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <h1>Gestión de Personal</h1>
+    <div class="profile"></div>
+</div>
+
+<nav class="sidebar" id="sidebar">
+    <ul>
+        <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+        <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
+        <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+        <li><a href="{{ url_for('inicio') }}"><i class="fas fa-home"></i><span>Home</span></a></li>
+        <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
+        <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+        <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+    </ul>
+</nav>
 
     <div class="page-content">
         <div class="action-bar">
