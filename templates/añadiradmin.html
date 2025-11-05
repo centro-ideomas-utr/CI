@@ -98,8 +98,8 @@
                     <label for="genero">Género</label>
                     <select id="genero" name="genero">
                         <option value="">Seleccione...</option>
-                        <option value="H">Hombre</option>
-                        <option value="M">Mujer</option>
+                        <option value="H">H</option>
+                        <option value="M">M</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -111,32 +111,56 @@
                     </select>
                 </div>
 
-                <h3 style="margin-top: 30px; font-size: 1.2em; color: #566a93;">Documentos del Expediente (Opcional)</h3>
+                <h3 style="margin-top: 30px; font-size: 1.2em; color: #566a93;">Documentos del Expediente</h3>
 
                 <div class="form-group">
-                    <label for="doc_identificacion">1. Identificación (INE/Pasaporte)</label>
+                    <label for="doc_acta">1. Acta Nacimiento</label>
+                    <input type="file" id="doc_acta" name="doc_acta" accept=".pdf">
+                </div>
+
+                <div class="form-group">
+                    <label for="doc_identificacion">2. Identificación</label>
                     <input type="file" id="doc_identificacion" name="doc_identificacion" accept=".pdf">
                 </div>
+
                 <div class="form-group">
-                    <label for="doc_cv">2. Curriculum Vitae (CV)</label>
+                    <label for="doc_estado">3. Estado de cuenta</label>
+                    <input type="file" id="doc_estado" name="doc_estado" accept=".pdf">
+                </div>
+
+                <div class="form-group">
+                    <label for="doc_cv">4. Curriculum Vitae</label>
                     <input type="file" id="doc_cv" name="doc_cv" accept=".pdf">
                 </div>
+                
                 <div class="form-group">
-                    <label for="doc_comprobante_domicilio">3. Comprobante de Domicilio</label>
+                    <label for="doc_comprobante_domicilio">5. Comprobante de Domicilio</label>
                     <input type="file" id="doc_comprobante_domicilio" name="doc_comprobante_domicilio" accept=".pdf">
                 </div>
+
                 <div class="form-group">
-                    <label for="doc_titulo">4. Título Profesional (Solo Docentes)</label>
+                    <label for="doc_carta1">6. Carta Recomendacion (1)</label>
+                    <input type="file" id="doc_carta1" name="doc_carta1" accept=".pdf">
+                </div>
+
+                <div class="form-group">
+                    <label for="doc_carta2">7. Carta Recomendacion (2)</label>
+                    <input type="file" id="doc_carta2" name="doc_carta2" accept=".pdf">
+                </div>
+
+                <div class="form-group">
+                    <label for="doc_titulo">8. Título Profesional</label>
                     <input type="file" id="doc_titulo" name="doc_titulo" accept=".pdf">
                 </div>
                 <div class="form-group">
-                    <label for="doc_cedula">5. Cédula Profesional (Solo Docentes)</label>
+                    <label for="doc_cedula">9. Cédula Profesional</label>
                     <input type="file" id="doc_cedula" name="doc_cedula" accept=".pdf">
                 </div>
                 <div class="form-group">
-                    <label for="doc_situacion_fiscal">6. Constancia de Situación Fiscal</label>
+                    <label for="doc_situacion_fiscal">10. Constancia de Situación Fiscal</label>
                     <input type="file" id="doc_situacion_fiscal" name="doc_situacion_fiscal" accept=".pdf">
                 </div>
+
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-save">Guardar Personal</button>
                 </div>

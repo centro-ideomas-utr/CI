@@ -159,13 +159,16 @@ def guardar_personal():
 
         # Definimos el mapeo de NOMBRE DEL CAMPO EN EL FORMULARIO : CLAVE EN EL DOCUMENTO DE MONGO
         file_mapping = {
+            "doc_acta": "acta_nacimiento",
             "doc_identificacion": "identificacion",
+            "doc_estado": "estado_de_cuenta",
             "doc_cv": "cv",
             "doc_comprobante_domicilio": "comprobante_domicilio",
+            "doc_carta1": "carta_recomendacion1",
+            "doc_carta2": "carta_recomendacion2",
             "doc_titulo": "titulo",
             "doc_cedula": "cedula",
             "doc_situacion_fiscal": "constancia_situacion_fiscal",
-            # Añade aquí otros campos de archivo que decidas incluir en el HTML, 
             # mapeándolos a sus claves correspondientes en el documento de Mongo.
         }
         
