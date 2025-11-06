@@ -1,0 +1,132 @@
+/* --- Estilos específicos para la vista de detalles (maestroinfo.html) --- */
+
+/* Contenedor principal de la información */
+.info-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+/* Encabezado de la sección (Datos Personales, Fiscales, Documentos) */
+.info-card h3 {
+    color: #566a93;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+/* Grid para mostrar los datos clave */
+.detail-grid {
+    display: grid;
+    /* Adapta las columnas automáticamente, mínimo 250px por columna */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.detail-grid strong {
+    display: block;
+    color: #3D348B;
+    margin-bottom: 2px;
+    font-size: 0.95em;
+    font-weight: 700;
+}
+
+.detail-grid p {
+    margin: 0;
+    padding-left: 5px;
+    font-size: 1.1em;
+    word-wrap: break-word; 
+}
+
+/* --- Lista de Documentos --- */
+.document-list {
+    list-style: none;
+    padding: 0;
+    /* Adapta las columnas de la lista de documentos */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: grid;
+    gap: 15px;
+}
+
+.document-list li {
+    padding: 10px;
+    border-bottom: 1px dashed #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Estilo para el enlace de documentos (funcionales) */
+.doc-link {
+    color: #2ecc71; /* Verde de éxito */
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.doc-link:hover {
+    text-decoration: underline;
+}
+
+/* Estilo para el estado de documentos faltantes */
+.status-missing {
+    color: #e74c3c; /* Rojo de alerta */
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+/* --- Botones de Acción (Editar y Volver) --- */
+.action-bar-back {
+    text-align: left;
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    /* Asegura que los botones se centren si no hay mucho espacio */
+    justify-content: flex-start;
+}
+
+.back-btn {
+    background-color: #7f8c8d; /* Gris estándar */
+    padding: 10px 25px;
+    text-decoration: none;
+}
+
+.back-btn:hover {
+    background-color: #95a5a6;
+}
+
+/* Sobrescribe el estilo genérico del botón de edición para que se vea bien en la barra */
+#edit-personal-btn {
+    padding: 10px 25px;
+}
+
+
+/* ========================================================== */
+/* === ESTILOS DEL MODAL DE EDICIÓN (Aprovecha estilos de añadiradmin.css) === */
+/* ========================================================== */
+
+/* Nota: Las clases .modal-overlay, .modal, .modal-body, .form-section, .form-group-inline 
+   son heredadas y reutilizadas de añadiradmin.css, asegurando consistencia. */
+
+.form-section legend {
+    color: #3D348B; /* Color más oscuro para el encabezado del fieldset */
+}
+
+
+/* Media Query para responsividad */
+@media (max-width: 768px) {
+    .detail-grid, .document-list {
+        grid-template-columns: 1fr;
+    }
+    .action-bar-back {
+        flex-direction: column;
+    }
+    .action-bar-back .btn {
+        width: 100%;
+        text-align: center;
+    }
+}

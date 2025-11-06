@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
     // 1. SELECTORES PRINCIPALES
     const sidebar = document.getElementById('sidebar');
     const menuIcon = document.getElementById('menu-icon');
@@ -62,12 +61,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // La ruta a tu función de Flask 'guardar_personal'
-            fetch("{{ url_for('guardar_personal') }}", {
+            // NOTA: En archivos .js estáticos NO se puede usar {{ url_for(...) }}. 
+            // Se debe usar la URL directa o definirla como variable global en Jinja. 
+            // Asumimos que la URL directa es '/guardar-personal'.
+            fetch("/guardar-personal", { 
                 method: 'POST',
                 body: formData,
             })
             .then(response => {
-                // Manejo de errores robusto: Verifica status 4xx/5xx
                 if (!response.ok) {
                     return response.json().then(errorData => {
                         throw new Error(errorData.message || 'Error desconocido del servidor.');
@@ -80,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.status === 'success') {
                     modalOverlay.style.display = 'none'; 
                     personalForm.reset(); 
-                    location.reload(); 
+                    location.reload(); // Recargar la página para actualizar la lista
                 }
             })
             .catch(error => {
@@ -95,4 +96,40 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    // ==========================================================
+    // 5. FUNCIÓN DE ELIMINACIÓN (Dar de Baja)
+    // Se adjunta al objeto global window para que sea accesible desde onclick en HTML.
+    // ==========================================================
+    window.confirmDelete = function(tipo, id, nombre) {
+        if (!confirm(`¿Está seguro de dar de baja a ${nombre} (${tipo})? Esta acción es irreversible y eliminará todos sus datos asociados.`)) {
+            return;
+        }
+
+        // Llamada AJAX a la ruta de eliminación en Flask: /eliminar-personal/<tipo>/<id>
+        fetch(`/eliminar-personal/${tipo}/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || 'Error al intentar eliminar.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert(data.message);
+            if (data.status === 'success') {
+                location.reload(); // Recargar la lista
+            }
+        })
+        .catch(error => {
+            console.error('Error al eliminar:', error);
+            alert('Error al eliminar personal: ' + error.message);
+        });
+    };
 });
