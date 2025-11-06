@@ -194,10 +194,6 @@ def guardar_personal():
     """
     conn = None
     email = request.form.get('email')
-    
-    # -------------------------------------------------------------
-    # 1. Procesamiento Inicial y Archivos
-    # -------------------------------------------------------------
     try:
         nombre = request.form['nombre']
         apellidos = request.form['apellidos'] 
