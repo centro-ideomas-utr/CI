@@ -38,6 +38,7 @@ logs_col = mongo_db["logs"]
 # --- Carpeta de uploads ---
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+global_avisos = []
 
 
 # =================================================================
@@ -675,7 +676,7 @@ def login():
         if usuario["tipo"] == "maestro":
             return redirect(url_for("portal_facturacion", id_profesor=usuario["id"]))
         elif usuario["tipo"] == "alumno":
-            return redirect(url_for("tablero"))
+            return redirect(url_for("cursos"))
         elif usuario["tipo"] == "staff":
             # Redirige a la gestión de personal/reinscripciones
             return redirect(url_for("gestion_personal")) 
@@ -698,7 +699,9 @@ def listas():
 
 @app.route("/avisos")
 def avisos():
-    return render_template("avisos.html")
+
+    avisos_ordenados = sorted(global_avisos, key=lambda x: x['id'], reverse=True)
+    return render_template("avisos.html", avisos_publicados=avisos_ordenados)
 
 @app.route("/calificacion")
 def calificacion():
@@ -708,9 +711,58 @@ def calificacion():
 def calificaciones():
     return render_template("calificacionesestudiantes.html")
 
-@app.route("/tablero")
+@app.route('/tablero')
 def tablero():
-    return render_template("tableroestudiantes.html")
+    # Formatear avisos para FullCalendar
+    calendar_events = []
+    for aviso in global_avisos:
+        if 'start' in aviso:  # Solo los que tienen fecha_evento
+            calendar_events.append({
+                'title': aviso['title'],
+                'start': aviso['start'],
+                'display': 'dot',  # ← Esto crea el PUNTO
+                'backgroundColor': '#566a93',
+                'borderColor': '#566a93'
+            })
+    
+    avisos_ordenados = sorted(global_avisos, key=lambda x: x['id'], reverse=True)
+    
+    return render_template(
+        'tableroestudiantes.html',
+        avisos_publicados=avisos_ordenados,
+        calendar_events=calendar_events  # ← Pasa los eventos
+    )
+
+@app.route('/publicar_aviso', methods=['POST'])
+def publicar_aviso():
+    if request.method == 'POST':
+        mensaje_recibido = request.form['mensaje']
+        fecha_iso_cal = request.form['fecha_evento']
+        now = datetime.now()
+        fecha_display = now.strftime("%d/%m/%Y a las %H:%M") 
+
+        # 4. Crear un ID único (simple)
+        aviso_id = len(global_avisos) + 1
+        
+        # 5. Crear el diccionario del aviso (con ambos formatos)
+        nuevo_aviso = {
+            "id": aviso_id,
+            
+            # Campos para la lista de avisos
+            "fecha": fecha_display,
+            "mensaje": mensaje_recibido,
+            
+            # --- CAMPOS PARA FULLCALENDAR ---
+            "title": mensaje_recibido,  # El 'título' del evento es el mensaje
+            "start": fecha_iso_cal      # La 'fecha' del evento es hoy
+        }
+        
+        # 6. Guardar el aviso en nuestra "base de datos"
+        global_avisos.append(nuevo_aviso)
+        
+        # 7. Redirigir al usuario DE VUELTA a la página de avisos
+        # (Usamos request.referrer para volver a la página donde estaba)
+        return redirect(request.referrer or url_for('avisos'))
 
 @app.route("/clases")
 def clases():
