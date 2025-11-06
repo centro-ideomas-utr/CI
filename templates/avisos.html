@@ -7,60 +7,78 @@
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/avisos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 </head>
 <body>
 
 <div class="navbar">
-        <div class="menu-icon" id="menu-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <h1>Evidencias</h1>
-        <div class="profile"></div>
+    <div class="menu-icon" id="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
+    <h1>Avisos</h1>
+    <div class="profile"></div>
+</div>
 
 <nav class="sidebar" id="sidebar">
-        <ul>
-            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
-            <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
-            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
-            <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
-            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
-            <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
-        </ul>
+    <ul>
+        <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+        <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
+        <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+        <li><a href="{{ url_for('tablero') }}"><i class="fas fa-home"></i><span>Home</span></a></li>
+        <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
+        <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+        <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+    </ul>
 </nav>
 
 <div class="page-content">
 
     <div class="main-content">
-        <div class="section">
-            <h2 class="section-title">Yesterday</h2>
-            <div class="card">
-                <h3 class="card-title">Título del Aviso 1</h3>
-                <p class="card-content">Contenido breve del aviso o descripción importante aquí.</p>
-                <span class="card-date">10/03/2024</span>
-            </div>
-            <div class="card">
-                <h3 class="card-title">Título del Aviso 2</h3>
-                <p class="card-content">Otro contenido relevante para el aviso del día anterior.</p>
-                <span class="card-date">10/03/2024</span>
-            </div>
-        </div>
 
-        <div class="section">
-            <h2 class="section-title">Today</h2>
-            <div class="card">
-                <h3 class="card-title">Título del Aviso de Hoy</h3>
-                <p class="card-content">Este es el contenido principal del aviso de hoy. Asegúrate de que sea claro y conciso.</p>
-                <span class="card-date">11/03/2024</span>
-            </div>
-        </div>
-    </div>
+        <div class="avisos-layout">
 
+            <div class="columna-avisos">
+                
+                <div class="section">
+                    <h2 class="section-title">Avisos Recientes</h2>
 
-  <footer class="main-footer">
+                    {% if avisos_publicados %}
+                        {% for aviso in avisos_publicados %}
+                            <div class="card">
+                                <p class="card-content">{{ aviso.mensaje }}</p>
+                                <span class="card-date">{{ aviso.fecha }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="card">
+                            <p class="card-content">No hay avisos publicados todavía.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">Publicar Nuevo Aviso</h2>
+                      <div class="form-card">
+                          <form action="{{ url_for('publicar_aviso') }}" method="POST">
+                            <h3 class="card-title">Nuevo Mensaje</h3>
+                              <textarea name="mensaje" placeholder="Escribe tu aviso o comentario aquí..." required></textarea>
+                                                      <label for="fecha_evento" style="font-weight: bold; margin-top: 10px; display: block;">Fecha para el Calendario:</label>
+                             <input type="date" id="fecha_evento" name="fecha_evento" class="input-fecha" required>
+                                                       <button type="submit" class="btn-publicar">
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div> <div class="columna-calendario">
+                <div class="section">
+                    <h2 class="section-title">Calendario de Actividades</h2>
+                    <div id="calendar"></div>
+                </div>
+            </div> </div> </div> <footer class="main-footer">
     <div class="footer-content">
       <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
       <div class="social-login-icons">
@@ -124,8 +142,12 @@
     </div>
   </footer>
 
-</div>
-<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+</div> 
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
+<script>
+       const CALENDAR_EVENTS = {{ avisos_publicados | tojson | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/avisos.js') }}"></script>
 </body>
 </html>

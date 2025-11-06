@@ -4,10 +4,9 @@ from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime
 import os
-import uuid # Necesario para generar UUID de prueba en la simulación de timbrado
-# import requests # Descomentar si se usa una API de PAC real
+import uuid 
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -37,6 +36,7 @@ logs_col = mongo_db["logs"]
 # La ruta se usa pacra guardar archivos y para servirlos localmente.
 UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+global_avisos = []
 
 
 # =================================================================
@@ -415,14 +415,14 @@ def login():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # 1️⃣ Verificar si es maestro
+        # 1️ Verificar si es maestro
         cursor.execute("""
             SELECT id_profesor AS id, correo_electronico, contraseña, 'maestro' AS tipo
             FROM profesores WHERE correo_electronico = %s
         """, (correo,))
         usuario = cursor.fetchone()
 
-        # 2️⃣ Si no es maestro, verificar si es alumno
+        # 2️ Si no es maestro, verificar si es alumno
         if not usuario:
             cursor.execute("""
                 SELECT id_alumno AS id, correo_electronico, NULL AS contraseña, 'alumno' AS tipo
@@ -430,7 +430,7 @@ def login():
             """, (correo,))
             usuario = cursor.fetchone()
 
-        # 3️⃣ Si no es alumno, verificar si es staff
+        # 3 Si no es alumno, verificar si es staff
         if not usuario:
             cursor.execute("""
                 SELECT id_staff AS id, correo_electronico, contraseña, 'staff' AS tipo
@@ -438,19 +438,19 @@ def login():
             """, (correo,))
             usuario = cursor.fetchone()
 
-        # 4️⃣ Si no existe en ninguna tabla
+        # 4️Si no existe en ninguna tabla
         if not usuario:
             return render_template("login.html", error="Usuario no encontrado.")
 
-        # 5️⃣ Verificar contraseña si aplica (solo maestro o staff)
+        # 5️Verificar contraseña si aplica (solo maestro o staff)
         if usuario["contraseña"] and not check_password_hash(usuario["contraseña"], contrasena):
             return render_template("login.html", error="Contraseña incorrecta.")
 
-        # 6️⃣ Redirigir según el tipo de usuario
+        # 6️Redirigir según el tipo de usuario
         if usuario["tipo"] == "maestro":
             return redirect(url_for("portal_facturacion", id_profesor=usuario["id"]))
         elif usuario["tipo"] == "alumno":
-            return redirect(url_for("tablero"))
+            return redirect(url_for("cursos"))
         elif usuario["tipo"] == "staff":
             return redirect(url_for("reinscripciones"))
 
@@ -471,7 +471,9 @@ def listas():
 
 @app.route("/avisos")
 def avisos():
-    return render_template("avisos.html")
+
+    avisos_ordenados = sorted(global_avisos, key=lambda x: x['id'], reverse=True)
+    return render_template("avisos.html", avisos_publicados=avisos_ordenados)
 
 @app.route("/calificacion")
 def calificacion():
@@ -485,9 +487,58 @@ def añadir_admin():
 def calificaciones():
     return render_template("calificacionesestudiantes.html")
 
-@app.route("/tablero")
+@app.route('/tablero')
 def tablero():
-    return render_template("tableroestudiantes.html")
+    # Formatear avisos para FullCalendar
+    calendar_events = []
+    for aviso in global_avisos:
+        if 'start' in aviso:  # Solo los que tienen fecha_evento
+            calendar_events.append({
+                'title': aviso['title'],
+                'start': aviso['start'],
+                'display': 'dot',  # ← Esto crea el PUNTO
+                'backgroundColor': '#566a93',
+                'borderColor': '#566a93'
+            })
+    
+    avisos_ordenados = sorted(global_avisos, key=lambda x: x['id'], reverse=True)
+    
+    return render_template(
+        'tableroestudiantes.html',
+        avisos_publicados=avisos_ordenados,
+        calendar_events=calendar_events  # ← Pasa los eventos
+    )
+
+@app.route('/publicar_aviso', methods=['POST'])
+def publicar_aviso():
+    if request.method == 'POST':
+        mensaje_recibido = request.form['mensaje']
+        fecha_iso_cal = request.form['fecha_evento']
+        now = datetime.now()
+        fecha_display = now.strftime("%d/%m/%Y a las %H:%M") 
+
+        # 4. Crear un ID único (simple)
+        aviso_id = len(global_avisos) + 1
+        
+        # 5. Crear el diccionario del aviso (con ambos formatos)
+        nuevo_aviso = {
+            "id": aviso_id,
+            
+            # Campos para la lista de avisos
+            "fecha": fecha_display,
+            "mensaje": mensaje_recibido,
+            
+            # --- CAMPOS PARA FULLCALENDAR ---
+            "title": mensaje_recibido,  # El 'título' del evento es el mensaje
+            "start": fecha_iso_cal      # La 'fecha' del evento es hoy
+        }
+        
+        # 6. Guardar el aviso en nuestra "base de datos"
+        global_avisos.append(nuevo_aviso)
+        
+        # 7. Redirigir al usuario DE VUELTA a la página de avisos
+        # (Usamos request.referrer para volver a la página donde estaba)
+        return redirect(request.referrer or url_for('avisos'))
 
 @app.route("/clases") #faltaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 def clases():

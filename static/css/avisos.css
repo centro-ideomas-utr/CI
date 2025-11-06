@@ -1,303 +1,378 @@
 /* --- Estilos Generales --- */
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f6f8;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-        /* --- Barra de Navegación Superior --- */
-        .navbar {
-            background-color: #566a93;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1001;
-        }
+/* --- Barra de Navegación Superior --- */
+.navbar {
+    background-color: #566a93;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+}
 
-        .menu-icon {
-            cursor: pointer;
-            z-index: 1002;
-        }
+.menu-icon {
+    cursor: pointer;
+    z-index: 1002;
+}
 
-        .menu-icon span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background-color: white;
-            margin: 5px 0;
-            transition: 0.4s;
-        }
+.menu-icon span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 5px 0;
+    transition: 0.4s;
+}
 
-        .navbar h1 {
-            font-size: 1.5em;
-            margin: 0;
-        }
+.navbar h1 {
+    font-size: 1.5em;
+    margin: 0;
+}
 
-        .profile {
-            width: 40px;
-            height: 40px;
-            background-color: #f4f6f8;
-            border-radius: 50%;
-        }
-    /* --- Menú Lateral (Sidebar) --- */
-        .sidebar ul li a i {
-    width: 30px; 
-    text-align: center;
-    margin-right: 10px;
+.profile {
+    width: 40px;
+    height: 40px;
+    background-color: #f4f6f8;
+    border-radius: 50%;
+}
+/* --- Menú Lateral (Sidebar) --- */
+.sidebar ul li a i {
+width: 30px; 
+text-align: center;
+margin-right: 10px;
 } 
-        /* CAMBIO: Ajustado a 230px para coincidir con tu JS */
-        .sidebar {
-            height: 100%;
-            width: 230px;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: -230px; /* Oculto por defecto */
-            background-color: #48597a;
-            overflow-x: hidden;
-            transition: 0.3s;
-            padding-top: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+/* CAMBIO: Ajustado a 230px para coincidir con tu JS */
+.sidebar {
+    height: 100%;
+    width: 230px;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: -230px; /* Oculto por defecto */
+    background-color: #48597a;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
-        .sidebar.active {
-            left: 0;
-        }
+.sidebar.active {
+    left: 0;
+}
 
-        .sidebar ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
 
-        .sidebar ul li a {
-            padding: 15px 20px;
-            text-decoration: none;
-            font-size: 18px;
-            color: #f4f6f8;
-            display: block;
-            transition: 0.2s;
-        }
+.sidebar ul li a {
+    padding: 15px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #f4f6f8;
+    display: block;
+    transition: 0.2s;
+}
 
-        .sidebar ul li a:hover {
-            background-color: #566a93;
-        }
-        
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .logout-btn:hover {
-             background-color: #c0392b !important;
-        }
+.sidebar ul li a:hover {
+    background-color: #566a93;
+}
 
-        /* --- Contenedor Principal (Wrapper) --- */
-        /* NUEVA REGLA: Este es el div que el JS empujará */
-        .page-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            transition: margin-left 0.3s;
-        }
+.logout-btn {
+    background-color: #e74c3c;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
 
-        
-        /* --- Contenido Principal --- */
-        /* CAMBIO: Se quitó 'flex: 1' y 'transition' */
-        .main-content {
-            padding: 30px 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.logout-btn:hover {
+    background-color: #c0392b !important;
+}
 
-        .section {
-            margin-bottom: 30px;
-        }
+/* --- Contenedor Principal (Wrapper) --- */
+.page-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s;
+}
 
-        .section-title {
-            font-size: 1.2em;
-            color: #7f8c8d;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ddd;
-        }
 
-        .card {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 5px solid #566a93;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-        }
+/* --- Contenido Principal --- */
+.main-content {
+    padding: 30px 20px;
+    /* MODIFICADO: Aumentamos el ancho máximo para que quepan las columnas */
+    max-width: 1400px; 
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    /* Añadido para que el contenido principal crezca */
+    flex: 1;
+}
 
-        .card-title {
-            margin: 0 0 10px 0;
-            font-size: 1.3em;
-            color: #333;
-        }
+.section {
+    margin-bottom: 30px;
+}
 
-        .card-content {
-            margin: 0 0 15px 0;
-            color: #555;
-            line-height: 1.6;
-        }
+.section-title {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+}
 
-        .card-date {
-            font-size: 0.8em;
-            color: #999;
-            text-align: right;
-            display: block;
-        }
-        
-        /* --- Contenedor de Botones --- */
-        .buttons-container {
-            text-align: center;
-            padding: 20px;
-        }
+.card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 15px;
+    border-left: 5px solid #566a93;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        .btn {
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            font-size: 1em;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #7f8c8d;
-            transition: background-color 0.3s ease;
-        }
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
 
-        .btn:hover {
-            background-color: #6c7a7b;
-        }
+.card-title {
+    margin: 0 0 10px 0;
+    font-size: 1.3em;
+    color: #333;
+}
 
-        /* --- FOOTER --- */
-        .main-footer {
-          background-color: #566a93;
-          color: white;
-          padding: 20px 0;
-          text-align: center;
-          margin-top: auto; /* IMPORTANTE: Mantiene el footer abajo */
-        }
+.card-content {
+    margin: 0 0 15px 0;
+    color: #555;
+    line-height: 1.6;
+}
 
-        .footer-content {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 20px;
-        }
+.card-date {
+    font-size: 0.8em;
+    color: #999;
+    text-align: right;
+    display: block;
+}
 
-        .footer-content p {
-          margin: 0;
-          font-size: 0.9em;
-        }
+/* --- Contenedor de Botones --- */
+.buttons-container {
+    text-align: center;
+    padding: 20px;
+}
 
-        /* --- Social Icons --- */
-        .social-login-icons {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
-        }
-        .social-login-icons svg {
-          width: 30px;
-        }
-        .social-login-icons a {
-            text-decoration: none;
-        }
+.btn {
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #7f8c8d;
+    transition: background-color 0.3s ease;
+}
 
-        .social-icon-2,
-        .social-icon-2-2,
-        .social-icon-3,
-        .social-icon-3-3,
-        .social-icon-5,
-        .social-icon-5-5,
-        .social-icon-6,
-        .social-icon-6-6 {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50px;
-          margin: 0;
-        }
+.btn:hover {
+    background-color: #6c7a7b;
+}
+.avisos-layout {
+    display: flex;
+    flex-wrap: wrap; /* Para que en móviles se ponga una columna debajo de la otra */
+    gap: 30px; /* Espacio entre la columna izquierda y derecha */
+}
 
-        .icon svg {
-          fill: #111;
-        }
+.columna-avisos {
+    flex: 2; /* La columna de avisos ocupa 2 partes */
+    min-width: 350px; /* Ancho mínimo antes de que se rompa el layout */
+    display: flex;
+    flex-direction: column; /* Para que las secciones de avisos y formulario se apilen verticalmente */
+}
 
-        .socialcontainer {
-          height: 40px;
-          overflow: hidden;
-        }
-        
-        .social-icon-2 svg,
-        .social-icon-3 svg,
-        .social-icon-5 svg,
-        .social-icon-6 svg {
-          opacity: 0;
-          transition-duration: 0.5s;
-          transition-delay: 0.2s;
-        }
-        .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-          transition-duration: 0.4s;
-          background-color: rgba(0, 0, 0, 0);
-        }
-        .socialcontainer:hover .social-icon-2,
-        .socialcontainer:hover .social-icon-3,
-        .socialcontainer:hover .social-icon-5,
-        .socialcontainer:hover .social-icon-6 {
-          transform: translateY(-40px);
-        }
-        .socialcontainer:hover svg {
-          opacity: 1;
-        }
-        .social-icon-2 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: linear-gradient(
-            72.44deg,
-            #ff7a00 11.92%,
-            #ff0169 51.56%,
-            #d300c5 85.69%
-          );
-        }
-        .social-icon-3 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #316ff6;
-        }
-         .social-icon-5 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #000000;
-        }
-         .social-icon-6 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #25D366;
-        }
+.columna-calendario {
+    flex: 3; /* La columna del calendario ocupa 3 partes (es más ancha) */
+    min-width: 400px; /* Ancho mínimo */
+}
+
+/* --- FOOTER --- */
+.main-footer {
+background-color: #566a93;
+color: white;
+padding: 20px 0;
+text-align: center;
+/* margin-top: auto; */ /* Comentado, .page-content se encarga */
+}
+
+.footer-content {
+display: flex;
+justify-content: center;
+align-items: center;
+flex-wrap: wrap;
+gap: 20px;
+}
+
+.footer-content p {
+margin: 0;
+font-size: 0.9em;
+}
+
+/* --- Social Icons --- */
+.social-login-icons {
+display: flex;
+align-items: center;
+gap: 10px;
+-webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+}
+.social-login-icons svg {
+width: 30px;
+}
+.social-login-icons a {
+    text-decoration: none;
+}
+
+.social-icon-2,
+.social-icon-2-2,
+.social-icon-3,
+.social-icon-3-3,
+.social-icon-5,
+.social-icon-5-5,
+.social-icon-6,
+.social-icon-6-6 {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    margin: 0;
+}
+
+.icon svg {
+    fill: #111;
+}
+
+.socialcontainer {
+    height: 40px;
+    overflow: hidden;
+}
+
+.social-icon-2 svg,
+.social-icon-3 svg,
+.social-icon-5 svg,
+.social-icon-6 svg {
+    opacity: 0;
+    transition-duration: 0.5s;
+    transition-delay: 0.2s;
+}
+.social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+    transition-duration: 0.4s;
+    background-color: rgba(0, 0, 0, 0);
+}
+.socialcontainer:hover .social-icon-2,
+.socialcontainer:hover .social-icon-3,
+.socialcontainer:hover .social-icon-5,
+.socialcontainer:hover .social-icon-6 {
+    transform: translateY(-40px);
+}
+.socialcontainer:hover svg {
+    opacity: 1;
+}
+.social-icon-2 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: linear-gradient(
+        72.44deg,
+        #ff7a00 11.92%,
+        #ff0169 51.56%,
+        #d300c5 85.69%
+    );
+}
+.social-icon-3 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #316ff6;
+}
+    .social-icon-5 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #000000;
+}
+    .social-icon-6 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #25D366;
+}
+
+/* --- NUEVOS ESTILOS AÑADIDOS --- */
+
+/* Estilos para el formulario de nuevo aviso */
+.form-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 20px;
+    border-left: 5px solid #2ecc71; /* Verde para "nuevo" */
+}
+.form-card textarea {
+    width: 100%;
+    min-height: 80px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 1em;
+    box-sizing: border-box; /* Para que el padding no afecte el ancho */
+    margin-bottom: 15px;
+    resize: vertical;
+}
+.form-card .btn-publicar {
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #27ae60; /* Verde */
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+.form-card .btn-publicar:hover {
+    background-color: #219d55;
+}
+.form-card .input-fecha {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 1em;
+    box-sizing: border-box; /* Importante para que el padding no afecte el ancho */
+    margin-top: 10px;
+    margin-bottom: 20px; /* Espacio antes del botón de publicar */
+}
+
+/* Estilos para el calendario en esta página */
+#calendar {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
