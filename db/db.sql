@@ -233,3 +233,15 @@ CREATE TABLE facturas_emitidas (
 );
 
 alter table facturas_emitidas add constraint foreign key (id_profesor) references profesores (id_profesor);
+
+create table avisos(
+	id_aviso int not null auto_increment primary key,
+    descripcion varchar(500),
+    fecha_calendario DATE,
+    id_profesor int,
+    id_staff int,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+alter table avisos add constraint foreign key (id_profesor) references profesores (id_profesor);
+alter table avisos add constraint foreign key (id_staff) references staff (id_staff);

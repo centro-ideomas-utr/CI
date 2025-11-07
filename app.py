@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, send_from_directory, abort, redirect, url_for, Response, jsonify
+import yagmail
 import mysql.connector
 from pymongo import MongoClient
 from bson import ObjectId
@@ -9,9 +10,19 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import json
 from dotenv import load_dotenv
+import secrets  # <-- AÑADIR ESTE
+import string   # <-- AÑADIR ESTE
 load_dotenv()
 
 app = Flask(__name__)
+
+try:
+    YAG_USER = 'ulisesvega223@gmail.com' 
+    YAG_TOKEN = 'vutcnpkftbnxirno'
+    yag = yagmail.SMTP(YAG_USER, YAG_TOKEN)
+except Exception as e:
+    print(f"Error al inicializar yagmail: {e}")
+    yag = None
 
 # Permite usar {{ now.year }} en las plantillas sin pasarlo en cada ruta
 @app.context_processor
@@ -189,20 +200,26 @@ def gestion_personal():
 
 @app.route('/guardar-personal', methods=['POST'])
 def guardar_personal():
-    """
-    Guarda los datos personales en MySQL (profesores o staff) y los documentos
-    del expediente en el sistema de archivos y MongoDB.
-    """
     conn = None
     email = request.form.get('email')
+    
+    # -------------------------------------------------------------
+    # 1. GENERACIÓN DE CONTRASEÑA TEMPORAL SEGURA 🔒
+    # -------------------------------------------------------------
+    # Se crea una contraseña temporal de 12 caracteres (letras y números)
+    caracteres = string.ascii_letters + string.digits 
+    contrasena_temporal = ''.join(secrets.choice(caracteres) for i in range(12))
+    
+    # Se genera el hash de la contraseña temporal para guardarla en DB
+    password_encriptada = generate_password_hash(contrasena_temporal)
+    
     try:
+        # Asegurarse de que el formulario HTML ya NO envíe el campo 'contrasena'
         nombre = request.form['nombre']
         apellidos = request.form['apellidos'] 
         email = request.form['email']
         telefono = request.form['telefono']
         tipo_personal = request.form['tipo_personal']
-        contrasena_plana = request.form['contrasena'] 
-        password_encriptada = generate_password_hash(contrasena_plana)
         fecha_nacimiento = request.form.get('fecha_n') 
         genero = request.form.get('genero') 
         
@@ -213,7 +230,7 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        # Mapeo de campos del formulario a claves de documento en Mongo
+        # ... (Toda la lógica de manejo de archivos omitida por brevedad) ...
         file_mapping = {
             "doc_acta": "acta_nacimiento",
             "doc_identificacion": "identificacion",
@@ -226,24 +243,22 @@ def guardar_personal():
             "doc_cedula": "cedula",
             "doc_situacion_fiscal": "constancia_situacion_fiscal",
         }
-        
         documentos_mongo = {}
         uploaded_files = request.files
-
         for form_field, mongo_key in file_mapping.items():
             file = uploaded_files.get(form_field)
             if file and file.filename:
                 ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
-                # Nombre de archivo único
                 filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 file.save(filepath)
                 documentos_mongo[mongo_key] = filepath
             else:
                 documentos_mongo[mongo_key] = None
+        # ... (Fin de lógica de manejo de archivos) ...
 
         # -------------------------------------------------------------
-        # 2. Inserción en MySQL
+        # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
         # -------------------------------------------------------------
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
@@ -256,6 +271,7 @@ def guardar_personal():
                 (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
+            # El HASH de la contraseña temporal se guarda en DB
             params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada, genero)
         
         elif tipo_personal == 'staff':
@@ -266,6 +282,7 @@ def guardar_personal():
                 (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
+            # El HASH de la contraseña temporal se guarda en DB
             params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada) 
         
         else:
@@ -275,7 +292,7 @@ def guardar_personal():
         id_personal = cursor.lastrowid
         
         # -------------------------------------------------------------
-        # 3. Guardar Expediente en MongoDB
+        # 3. Guardar Expediente en MongoDB y actualizar MySQL
         # -------------------------------------------------------------
         expediente_doc = {
             "tipo": tipo_personal, 
@@ -284,24 +301,45 @@ def guardar_personal():
             "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_admin" }
         }
         mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
-        
-        # 4. Actualizar MySQL con el ID de Mongo
         update_query = f"UPDATE {table_name} SET id_expediente_mongo = %s WHERE {id_column} = %s"
         cursor.execute(update_query, (str(mongo_id), id_personal))
-        
         conn.commit()
-
-        # 5. Guardar Log
-        logs_col.insert_one({
-            "tipo_entidad": tipo_personal,
-            "id_entidad": id_personal,
-            "accion": "registro_personal",
-            "detalle": f"Personal ({tipo_personal}) registrado y expediente creado.", 
-            "usuario": email, 
-            "fecha": datetime.utcnow()
-        })
         
-        return jsonify({'status': 'success', 'message': f'¡{tipo_personal.capitalize()} guardado exitosamente!'}), 200
+        # -------------------------------------------------------------
+        # 4. ENVÍO DE CORREO CON CONTRASEÑA TEMPORAL
+        # -------------------------------------------------------------
+
+        if yag:
+            nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
+            
+            subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
+            
+            contents = [
+                f"Hola {nombre_completo},",
+                "<p>¡Te damos la más cordial bienvenida! Tu cuenta ha sido creada. A continuación, encontrarás tus credenciales:</p>",
+                
+                "<ul>",
+                f"<li>**Usuario (Correo):** <b>{email}</b></li>",
+                f"<li>**Contraseña TEMPORAL:** <b>{contrasena_temporal}</b></li>",
+                "</ul>",
+                
+                f"<p>Por favor, utiliza este enlace para ingresar: <a href=\"{url_for('login', _external=True)}\">Acceder al Sistema CIUTR</a></p>",
+                "<p>Te recomendamos **cambiar tu contraseña inmediatamente** después de iniciar sesión.</p>",
+                "<p>Atentamente,<br>Equipo de Administración CIUTR</p>"
+            ]
+            
+            yag.send(to=email, subject=subject, contents=contents)
+            
+            logs_col.insert_one({
+                "tipo_entidad": "sistema",
+                "id_entidad": id_personal,
+                "accion": "correo_bienvenida_enviado",
+                "detalle": f"Correo de bienvenida enviado con credenciales a {email}.", 
+                "usuario": "sistema_auto", 
+                "fecha": datetime.utcnow()
+            })
+
+        return jsonify({'status': 'success', 'message': f'¡{tipo_personal.capitalize()} guardado exitosamente y credenciales enviadas!'}), 200
 
     except mysql.connector.Error as err:
         if conn: conn.rollback()
@@ -321,7 +359,7 @@ def guardar_personal():
         print(f"Error general: {e}")
         return jsonify({'status': 'error', 'message': f'Error en el servidor: {e}'}), 500
     finally:
-        if cursor: cursor.close()
+        if 'cursor' in locals() and cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
 @app.route("/editar-personal/<string:tipo>/<int:id>", methods=['POST'])
