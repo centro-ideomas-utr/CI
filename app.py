@@ -876,6 +876,10 @@ def maestroinfo(tipo, id):
 def nomina():
     return render_template("nomina.html")
 
+@app.route("/perfil")
+def perfil():
+    return render_template("Perfil.html")
+
 @app.route("/Horario")
 def Horario():
     return render_template("registromaestro.html")
