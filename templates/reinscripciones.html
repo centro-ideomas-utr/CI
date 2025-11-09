@@ -67,25 +67,30 @@
                     <td><span class="blue">{{ alumno.edad }}</span></td>
                     
                     <td>
-                        {% if alumno.documentos.comprobante_pago %}
-                            <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='comprobante_pago') }}" 
-                               target="_blank" class="btn-expediente" title="Ver Comprobante de Pago">
+                        {% set docs = alumno.documentos_urls %} 
+                        
+                        {% if docs.comprobante_pago %}
+                            <a href="{{ docs.comprobante_pago }}" 
+                            target="_blank" class="btn-expediente" title="Ver Comprobante de Pago">
                                 <button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button>
                             </a>
                         {% endif %}
-                        {% if alumno.documentos.identificacion %}
-                            <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='identificacion') }}" 
-                               target="_blank" class="btn-expediente" title="Ver Identificación Oficial">
+                        {% if docs.identificacion %}
+                            <a href="{{ docs.identificacion }}" 
+                            target="_blank" class="btn-expediente" title="Ver Identificación Oficial">
                                 <button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button>
                             </a>
                         {% endif %}
-                        {% if alumno.documentos.acta_n %}
-                            <a href="{{ url_for('ver_documento_expediente', mongo_id=alumno.id_expediente_mongo, tipo_doc='acta_n') }}" 
-                               target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento">
+                        {% if docs.acta_n %}
+                            <a href="{{ docs.acta_n }}" 
+                            target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento">
                                 <button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button>
                             </a>
                         {% endif %}
-                        {% if not alumno.documentos or (not alumno.documentos.comprobante_pago and not alumno.documentos.identificacion and not alumno.documentos.acta_n) %}
+                        
+                        {% set documentos_presentes = docs.comprobante_pago or docs.identificacion or docs.acta_n %}
+                        
+                        {% if not documentos_presentes %}
                             <span class="lightred">---</span>
                         {% endif %}
                     </td>

@@ -5,6 +5,8 @@
   id_relacional: 12,  // ID correspondiente de MySQL
   documentos: {
     acta_nacimiento: "acta.pdf",
+    formato_descuento "descuento.pdf",
+    documentos_comprobatorios: "comprobatorios",
     identificacion: "ine.pdf",
     comprobante_pago: "pago.pdf",
     estado_de_cuenta: "cuenta.pdf",
@@ -47,7 +49,17 @@
     evidencia_7: "evidencia_7.pdf",
     evidencia_8: "evidencia_8.pdf",
     evidencia_9: "evidencia_9.pdf",
-    evidencia_10: "evidencia_10.pdf"
+    evidencia_10: "evidencia_10.pdf",
+    evidencia_11: "evidencia_11.pdf",
+    evidencia_12: "evidencia_12.pdf",
+    evidencia_13: "evidencia_13.pdf",
+    evidencia_14: "evidencia_14.pdf",
+    evidencia_15: "evidencia_15.pdf",
+    evidencia_16: "evidencia_16.pdf",
+    evidencia_17: "evidencia_17.pdf",
+    evidencia_18: "evidencia_18.pdf",
+    evidencia_19: "evidencia_19.pdf",
+    evidencia_20: "evidencia_20.pdf"
   },
   metadata: {
     fecha_subida: ISODate("2025-10-09T15:00:00Z"),

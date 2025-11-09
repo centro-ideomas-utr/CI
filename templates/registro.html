@@ -1,98 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro</title>
-  <meta name="description" content="Formulario de Registro para el Centro de Idiomas">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <meta name="description" content="Formulario de Registro para el Centro de Idiomas">
 
-  <!-- Fuentes de Google -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    
+    <!-- Se mantiene el enlace a tu CSS externo -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- CSS en línea para manejar la visibilidad dinámica (asume que tu CSS principal usa display: grid/flex) -->
+    <style>
+        /* Oculta los campos de documentos por defecto, el JS los mostrará */
+        .documento-dinamico {
+            display: none;
+        }
+    </style>
 </head>
 <body class="your_css_selector_here"> 
-  <main class="contenedor">
-    <div class="contenido">
-      <h1>Regístrate</h1>
-      <div id="error-message" class="error-message" style="display: none;"></div>
+    <main class="contenedor">
+        <div class="contenido">
+            <h1>Regístrate</h1>
+            <div id="error-message" class="error-message" style="display: none;"></div>
 
-   
-      <form class="formulario-registro" action="{{ url_for('guardar') }}" method="POST" enctype="multipart/form-data">
+            <form class="formulario-registro" action="{{ url_for('guardar') }}" method="POST" enctype="multipart/form-data">
 
-        <div class="campo nombre">
-          <input class="registro_field" type="text" id="nombre" name="nombre" placeholder="Nombre(s)" required>
+                <div class="campo nombre">
+                    <input class="registro_field" type="text" id="nombre" name="nombre" placeholder="Nombre(s)" required>
+                </div>
+
+                <div class="campo apellido_p">
+                    <input class="registro_field" type="text" id="apellido_p" name="apellido_p" placeholder="Apellido Paterno" required>
+                </div>
+
+                <div class="campo apellido_m">
+                    <input class="registro_field" type="text" id="apellido_m" name="apellido_m" placeholder="Apellido Materno" required>
+                </div>
+                
+                <div class="campo correo_electronico">
+                    <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
+                </div>
+
+                <div class="campo telefono">
+                    <input class="registro_field" type="text" id="telefono" name="telefono" placeholder="Telefono" required>
+                </div>
+
+                <div class="campo fecha_n">
+                    <input class="registro_field" type="date" id="fecha_n" name="fecha_n" placeholder="Fecha de Nacimiento" required>
+                </div>
+
+                <div class="campo domicilio">
+                    <input class="registro_field" type="text" id="domicilio" name="domicilio" placeholder="Domicilio" required>
+                </div>
+
+                <div class="campo genero">
+                    <select class="registro_field" name="genero" id="genero" required>
+                        <option value="" disabled selected>-- Selecciona género --</option>
+                        {% for g in genero %}
+                        <option value="{{ g }}">{{ g }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- SELECT CON EVENTO DINÁMICO -->
+                <div class="campo tipodeinscripcion">
+                    <select 
+                        class="registro_field" 
+                        id="tipodeinscripcion" 
+                        name="tipodeinscripcion" 
+                        required
+                        onchange="updateDocumentRequirements()"
+                    >
+                        <option value="" disabled selected>-- Tipo de Inscripción --</option>
+                        {% for tipo in tipodeinscripcion %}
+                        <option value="{{ tipo }}">{{ tipo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo horario">
+                    <select class="registro_field" id="horario" name="horario" required>
+                        <option value="" disabled selected>-- Elige un horario --</option>
+                        {% for h in horarios %}
+                        <option value="{{ h }}">{{ h }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo documento-dinamico doc_acta" data-doc-name="acta_n">
+                    <label for="acta_n" class="file-label">Acta de Nacimiento (PDF)</label>
+                    <input type="file" id="acta_n" name="acta_n" accept=".pdf">
+                </div>
+
+                <div class="campo documento-dinamico doc_identificacion" data-doc-name="identificacion">
+                    <label for="identificacion" class="file-label">Identificación (PDF)</label>
+                    <input type="file" id="identificacion" name="identificacion" accept=".pdf">
+                </div>
+
+                <div class="campo documento-dinamico doc_descuento" data-doc-name="formato_descuento">
+                    <label for="formato_descuento" class="file-label">Formato de Descuento (PDF)</label>
+                    <input type="file" id="formato_descuento" name="formato_descuento" accept=".pdf">
+                </div>
+
+                <div class="campo documento-dinamico doc_comprobatorios" data-doc-name="documentos_comprobatorios">
+                    <label for="documentos_comprobatorios" class="file-label">Documentos Comprobatorios (PDF)</label>
+                    <input type="file" id="documentos_comprobatorios" name="documentos_comprobatorios" accept=".pdf">
+                </div>
+                
+                <div class="campo-boton boton1">
+                    <input type="submit" value="Crear Cuenta" class="boton boton--primario">
+                </div>
+            </form>
         </div>
-
-        <div class="campo apellido_p">
-          <input class="registro_field" type="text" id="apellido_p" name="apellido_p" placeholder="Apellido Paterno" required>
-        </div>
-
-        <div class="campo apellido_m">
-          <input class="registro_field" type="text" id="apellido_m" name="apellido_m" placeholder="Apellido Materno" required>
-        </div>
+    </main>
+    
+    <script>
+        const documentRequirements = {
+            // Documentos requeridos mapeados a los atributos 'name'/'id' del input file
+            
+            // ADULTOS
+            "INSCRIPCIÓN ADULTOS REGULAR": ["identificacion"],
+            "INSCRIPCIÓN ADULTO DESCUENTO": ["identificacion", "formato_descuento", "documentos_comprobatorios"],
+            "REINSCRIPCIÓN ADULTOS REGULARES": [], // Ninguno
+            "REINSCRIPCIÓN ADULTOS DESCUENTO": ["formato_descuento", "documentos_comprobatorios"],
+            
+            // MENORES
+            "INSCRIPCIÓN MENORES REGULAR": ["acta_n", "identificacion"],
+            "INSCRIPCIÓN MENORES DESCUENTO": ["acta_n", "identificacion", "formato_descuento", "documentos_comprobatorios"],
+            "REINSCRIPCIÓN MENORES REGULAR": [], // Ninguno
+            "REINSCRIPCIÓN MENORES DESCUENTO": ["formato_descuento", "documentos_comprobatorios"]
+        };
         
-        <div class="campo correo_electronico">
-          <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
-        </div>
+        // Lista de todos los campos de archivo posibles
+        const allDocFields = [
+            'acta_n', 
+            'identificacion', 
+            'formato_descuento', 
+            'documentos_comprobatorios'
+        ];
 
-        <div class="campo telefono">
-          <input class="registro_field" type="text" id="telefono" name="telefono" placeholder="Telefono" required>
-        </div>
+        function updateDocumentRequirements() {
+            const select = document.getElementById('tipodeinscripcion');
+            const selectedType = select.value;
+            
+            // Obtener la lista de documentos que deben ser obligatorios para este tipo
+            const requiredDocs = documentRequirements[selectedType] || [];
+            
+            allDocFields.forEach(docName => {
+                // Selecciona el contenedor del campo (el <div>) y el input file
+                const docElement = document.querySelector(`.documento-dinamico[data-doc-name="${docName}"]`);
+                const fileInput = document.getElementById(docName);
 
-        <div class="campo fecha_n">
-          <input class="registro_field" type="date" id="fecha_n" name="fecha_n" placeholder="Fecha de Nacimiento" required>
-        </div>
+                if (!docElement || !fileInput) return;
 
-        <div class="campo domicilio">
-          <input class="registro_field" type="text" id="domicilio" name="domicilio" placeholder="Domicilio" required>
-        </div>
+                const isRequired = requiredDocs.includes(docName);
 
-      <div class="campo genero">
-        <select class="registro_field" name="genero" id="genero" required>
-          <option value="" disabled selected>-- Selecciona género --</option>
-          {% for g in genero %}
-          <option value="{{ g }}">{{ g }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-        <div class="campo tipodeinscripcion">
-          <select class="registro_field" id="tipodeinscripcion" name="tipodeinscripcion" required>
-            <option value="" disabled selected>-- Tipo de Inscripción --</option>
-            {% for tipo in tipodeinscripcion %}
-            <option value="{{ tipo }}">{{ tipo }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="campo horario">
-          <select class="registro_field" id="horario" name="horario" required>
-            <option value="" disabled selected>-- Elige un horario --</option>
-            {% for h in horarios %}
-            <option value="{{ h }}">{{ h }}</option>
-            {% endfor %}
-          </select>
-        </div>
+                if (isRequired) {
+                    // Mostrar y hacer obligatorio
+                    docElement.style.display = 'flex';
+                    // Nota: Si tu CSS usa grid, es mejor 'grid' o '' (cadena vacía)
+                    // Usamos 'flex' aquí, asumiendo un layout simple para el campo individual.
+                    fileInput.setAttribute('required', 'required');
+                } else {
+                    // Ocultar, liberar de la obligación y limpiar el valor
+                    docElement.style.display = 'none';
+                    fileInput.removeAttribute('required');
+                    // Limpiar el valor para evitar que se envíen archivos no solicitados
+                    fileInput.value = ''; 
+                }
+            });
+        }
         
-        <div class="campo documento1">
-             <label for="acta_n" class="file-label">Acta de Nacimiento (PDF)</label>
-             <input type="file" id="acta_n" name="acta_n" accept=".pdf" required>
-        </div>
-
-        <div class="campo documento2">
-             <label for="identificacion" class="file-label">Identificación (PDF)</label>
-             <input type="file" id="identificacion" name="identificacion" accept=".pdf" required>
-        </div>
-        
-        <div class="campo-boton boton1">
-          <input type="submit" value="Crear Cuenta" class="boton boton--primario">
-        </div>
-      </form>
-    </div>
-  </main>
+        // Ejecutar la función al cargar la página para inicializar
+        document.addEventListener('DOMContentLoaded', updateDocumentRequirements);
+    </script>
 </body>
 </html>

@@ -245,3 +245,9 @@ create table avisos(
 
 alter table avisos add constraint foreign key (id_profesor) references profesores (id_profesor);
 alter table avisos add constraint foreign key (id_staff) references staff (id_staff);
+
+ALTER TABLE profesores ADD COLUMN reset_token VARCHAR(100) DEFAULT NULL;
+ALTER TABLE profesores ADD COLUMN token_expiration DATETIME DEFAULT NULL;
+
+ALTER TABLE staff ADD COLUMN reset_token VARCHAR(100) DEFAULT NULL;
+ALTER TABLE staff ADD COLUMN token_expiration DATETIME DEFAULT NULL;

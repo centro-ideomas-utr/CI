@@ -17,7 +17,6 @@ main {
     transition: margin-left 0.3s; 
 }
 
-
 /* --- Barra de Navegación Superior (Navbar) --- */
 .navbar {
     background-color: #566a93;
@@ -194,6 +193,15 @@ th, td {
     white-space: nowrap;
 }
 
+/* 🟢 CORRECCIÓN: APLICAMOS FLEXBOX Y ESPACIADO A LA CELDA DE EXPEDIENTE (Columna 7) */
+td:nth-child(7) {
+    display: flex;
+    flex-wrap: nowrap; /* Aseguramos que permanezcan en una línea si hay espacio */
+    gap: 5px; /* Espacio horizontal y vertical entre los botones */
+    align-items: center;
+    padding: 10px 5px; 
+}
+
 tbody tr:hover {
     background-color: #f1f1f1;
 }
@@ -236,12 +244,12 @@ td {
     padding: 6px 10px !important;
 }
 
+/* CORRECCIÓN CLAVE 1: El enlace actúa como contenedor, eliminamos el display: block; */
 .btn-expediente {
-    display: block; 
     text-decoration: none; 
-    margin-bottom: 5px; 
 }
 
+/* 🟢 CORRECCIÓN CLAVE 2: Aseguramos que el botón anidado no ocupe 100% de ancho */
 .btn-expediente-small {
     background-color: white; 
     color: #48597a; 
@@ -252,7 +260,10 @@ td {
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    width: 100%; 
+    width: auto; /* <--- Cambio crucial: solo ocupa el espacio necesario */
+    display: inline-flex; /* Asegura que el contenido fluya horizontalmente (ícono y texto) */
+    align-items: center; 
+    gap: 5px; /* Espacio entre el icono y el texto dentro del botón */
     text-align: center;
     white-space: nowrap; 
     box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
