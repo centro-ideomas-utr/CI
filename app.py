@@ -10,8 +10,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import json
 from dotenv import load_dotenv
-import secrets  # <-- AÑADIR ESTE
-import string   # <-- AÑADIR ESTE
+import secrets  
+import string  
 load_dotenv()
 
 app = Flask(__name__)
