@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Factura de Cobro CIUTR - {{ nombre_completo }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: white; }
+        .factura-container { width: 700px; margin: 0 auto; background-color: white; }
+        .header-top { background-color: #9b59b6; height: 30px; width: 100%; }
+        .header-main { display: flex; justify-content: space-between; padding: 20px 0 10px 0; margin: 0 40px; }
+        .logo-section { flex: 1; display: flex; align-items: flex-end; }
+        .logo-box { background-color: #9b59b6; width: 60px; height: 60px; float: left; margin-right: 10px; margin-top: -10px; }
+        .logo-text { margin-left: 10px; }
+        .logo-text h1 { margin: 0; font-size: 1.5em; color: #48597a; font-weight: 700; line-height: 1.1; }
+        .logo-text p { margin: 0; font-size: 0.8em; color: #9b59b6; font-weight: 600; }
+        
+        .factura-info { text-align: right; color: #48597a; }
+        .factura-info h2 { margin: 0 0 10px 0; font-size: 2.5em; color: #48597a; font-weight: 800; }
+        .factura-info p { margin: 0; font-size: 0.9em; color: #666; }
+        .factura-info strong { color: #48597a; }
+
+        .alumno-info { padding: 30px 40px; }
+        .alumno-info h3 { margin: 0 0 5px 0; font-size: 1.8em; color: #9b59b6; text-transform: uppercase; }
+        .alumno-info p { margin: 3px 0; font-size: 0.9em; color: #333; }
+        
+        .bank-section { margin: 0 40px 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .bank-data-header { background-color: #9b59b6; color: white; padding: 10px 20px; text-align: center; font-size: 1.2em; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .bank-data-header strong { font-size: 1.4em; }
+        
+        .bank-detail-row { display: flex; padding: 10px 20px; font-size: 0.9em; border-bottom: 1px solid #f0f0f0; }
+        .bank-detail-row:last-child { border-bottom: none; }
+        .bank-detail-row:nth-child(even) { background-color: #f9f9f9; }
+
+        .bank-highlight { background-color: #7987C2 !important; color: white; font-weight: bold; }
+        .bank-label { width: 35%; font-weight: bold; color: #666; }
+        .bank-highlight .bank-label { color: white; }
+        .bank-value { width: 65%; }
+        
+        .summary-box { margin: 20px 40px 0 40px; text-align: right; }
+        .summary-box p { margin: 5px 0; font-size: 0.9em; }
+        .summary-box .total { font-size: 1.8em; font-weight: bold; color: #9b59b6; }
+        .summary-box .descuento { color: #e74c3c; }
+        
+        .footer-factura { background-color: #9b59b6; color: white; padding: 30px 40px; display: flex; justify-content: space-between; margin-top: 40px; }
+        .footer-contact { text-align: right; border-left: 2px solid white; padding-left: 20px; }
+        .footer-contact p { margin: 3px 0; font-size: 0.85em; }
+        .footer-thanks { font-size: 2.5em; font-weight: 800; }
+        
+    </style>
+</head>
+<body>
+    <div class="factura-container">
+        <div class="header-main">
+            <div class="logo-section">
+                <div class="logo-box"></div>
+                <div class="logo-text">
+                    <h1>CENTRO DE IDIOMAS</h1>
+                    <p>UNIVERSIDAD TECNOLÓGICA EL RETOÑO</p>
+                </div>
+            </div>
+            <div class="factura-info">
+                <h2>FACTURA</h2>
+                <p><strong>{{ fecha_actual }}</strong></p>
+            </div>
+        </div>
+
+        <div class="alumno-info">
+            <h3>{{ nombre_completo | upper }}</h3>
+            <p>{{ telefono }}</p>
+            <p>{{ domicilio }}</p>
+        </div>
+        
+        <!-- Datos Bancarios Santander (Simulación según la imagen) -->
+        <div class="bank-section">
+            <div class="bank-data-header">
+                <strong style="margin-right: 10px;">Santander</strong>
+            </div>
+            <div class="bank-detail-row">
+                <span class="bank-label">Nombre Cliente:</span>
+                <span class="bank-value">UNIVERSIDAD TECNOLÓGICA EL RETOÑO</span>
+            </div>
+            <div class="bank-detail-row bank-highlight">
+                <span class="bank-label">Alias:</span>
+                <span class="bank-value">IP CENTRO DE IDIOMAS</span>
+            </div>
+            <div class="bank-detail-row">
+                <span class="bank-label">No. Cuenta:</span>
+                <span class="bank-value">18 00 01 78 73 2</span>
+            </div>
+            <div class="bank-detail-row bank-highlight">
+                <span class="bank-label">Clave:</span>
+                <span class="bank-value">0140 1018 0001 7873 25</span>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <p>Subtotal: ${{ costo_base | round(2) | format_currency}}</p>
+            <p class="descuento">Descuento ({{ descuento_porcentaje }}): ${{ descuento_monto | round(2) | format_currency}}</p>
+            <p style="font-size: 1.2em; font-weight: bold; margin-top: 15px;">Total:</p>
+            <p class="total">${{ total_a_pagar | round(2) | format_currency }} MXN</p>
+        </div>
+
+        <div class="footer-factura">
+            <div class="footer-thanks">
+                ¡Gracias!
+            </div>
+            <div class="footer-contact">
+                <p style="font-weight: bold;">Contacto</p>
+                <p>449 975 5783</p>
+                <p>info@centrodeidiomas.edu</p>
+                <p>CDesarrollo Especial Talleres</p>
+                <p>F.F.C.C., 20270 Aguascalientes</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

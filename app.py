@@ -742,8 +742,6 @@ def guardar():
             "identificacion": "identificacion",
             "formato_descuento": "formato_descuento",
             "documentos_comprobatorios": "documentos_comprobatorios",
-            # Si el comprobante de pago no es condicional, se puede añadir aquí:
-            # "comprobante_pago_form": "comprobante_pago",
         }
         
         documentos_mongo = {}
@@ -1133,7 +1131,6 @@ def reinscripciones():
         alumnos = cursor.fetchall()
 
         # 3. Adjuntar información de documentos (Mongo)
-        # Definimos todas las posibles claves de Mongo para alumnos
         document_fields = ["acta_nacimiento", "identificacion", "formato_descuento", "documentos_comprobatorios", "comprobante_pago"] 
         
         for alumno in alumnos:
