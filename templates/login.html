@@ -1,44 +1,88 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-  <meta name="description" content="Login para el Centro de Idiomas">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <meta name="description" content="Login para el Centro de Idiomas">
 
-  <!-- Fuentes de Google -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
 
-  <!-- Enlace al CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
-  
-  <!-- Ícono -->
-  <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
+    
+    <!-- Ícono -->
+    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+
+    <style>
+        /* Estilos básicos para mensajes de feedback */
+        .error-message {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .success-message {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .restablecer-link {
+            margin-top: 1.5rem;
+        }
+        .restablecer-link a {
+            color: #4a90e2; /* Un color que contraste para el enlace */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .restablecer-link a:hover {
+            color: #fff;
+        }
+    </style>
 </head>
 <body class="your_css_selector_here"> 
-  <main class="contenedor">
-    <div class="contenido">
-      <h1>Inicia Sesión</h1>
-      <div id="error-message" class="error-message" style="display: none;"></div>
+    <main class="contenedor">
+        <div class="contenido">
+            <h1>Inicia Sesión</h1>
+            
+            <!-- 1. LÓGICA DE MENSAJES DE FLASK (Restablecimiento Exitoso/Error de Login) -->
+            {% if error %}
+            <div id="error-message" class="error-message">{{ error }}</div>
+            {% elif message %}
+            <div id="success-message" class="success-message">{{ message }}</div>
+            {% endif %}
 
-      <!-- Formulario -->
-      <form class="formulario-login" action="{{ url_for('login') }}" method="POST">
+            <!-- Formulario -->
+            <form class="formulario-login" action="{{ url_for('login') }}" method="POST">
 
-        <div class="campo correo_electronico">
-          <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
+                <div class="campo correo_electronico">
+                    <input class="registro_field" type="email" id="correo_electronico" name="correo_electronico" placeholder="Correo Electrónico" required>
+                </div>
+
+                <div class="campo contraseña">
+                    <input class="registro_field" type="password" id="contraseña" name="contraseña" placeholder="Contraseña" required>
+                </div>
+
+                <div class="campo-boton">
+                    <input type="submit" value="Ingresar" class="boton boton--primario">
+                </div>
+            </form>
+            
+            <!-- 2. ENLACE A SOLICITAR RESTABLECIMIENTO -->
+            <div class="restablecer-link">
+                <a href="{{ url_for('solicitar_restablecimiento') }}">¿Olvidaste tu contraseña?</a>
+            </div>
+            
         </div>
-
-        <div class="campo contraseña">
-          <input class="registro_field" type="password" id="contraseña" name="contraseña" placeholder="Contraseña" required>
-        </div>
-
-        <div class="campo-boton">
-          <input type="submit" value="Ingresar" class="boton boton--primario">
-        </div>
-      </form>
-    </div>
-  </main>
+    </main>
 </body>
 </html>

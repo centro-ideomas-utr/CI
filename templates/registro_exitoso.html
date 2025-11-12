@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Exitoso</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    
+    <style>
+        .enlace-volver {
+            color: #4a90e2; /* Un color que destaque */
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 1.5rem;
+            transition: color 0.3s ease;
+        }
+        .enlace-volver:hover {
+            color: #74b4ff;
+            text-decoration: underline;
+        }
+        .mensaje-matricula {
+            margin-bottom: 2.5rem;
+        }
+    </style>
+</head>
+<body class="your_css_selector_here"> 
+    <main class="contenedor">
+        <div class="contenido">
+            
+            <h1 style="color: green; margin-bottom: 1rem;">¡Registro Exitoso!</h1> 
+            
+            <div class="mensaje-matricula">
+                <p style="font-size: 1.6rem; font-weight: 700; color: var(--negro);">
+                    Tu Matrícula es: <span style="color: #4a90e2;">{{ matricula }}</span>
+                </p>
+                <p style="font-size: 1.1rem; color: var(--negro); margin-top: 0.5rem;">
+                    Guarda este número para futuros trámites. Tu cobro será enviado a tu cuenta de correo electronico que nos proporcionaste, bienvenido a la familia CIUTR. 
+                </p>
+            </div>
+            
+            <a href="{{ url_for('inicio') }}" class="enlace-volver">
+                Volver al inicio
+            </a>
+
+        </div>
+    </main>
+</body>
+</html>

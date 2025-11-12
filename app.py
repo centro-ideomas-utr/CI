@@ -3,15 +3,15 @@ import yagmail
 import mysql.connector
 from pymongo import MongoClient
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import uuid
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import json
 from dotenv import load_dotenv
-import secrets  
-import string  
+import secrets
+import string
 load_dotenv()
 
 app = Flask(__name__)
@@ -30,7 +30,6 @@ def inject_now():
     return {'now': datetime.utcnow()}
 
 # --- Configuración de MySQL ---
-# ADVERTENCIA: Las credenciales DEBEN ir en variables de entorno en producción.
 db_config = {
     "host": "localhost",
     "user": "root",
@@ -196,7 +195,7 @@ def gestion_personal():
             conn.close()
 
     # Pasa la lista y el término de búsqueda al template
-    return render_template("añadiradmin.html", personal=personal, busqueda=busqueda)
+    return render_template("gestion_personal.html", personal=personal, busqueda=busqueda)
 
 @app.route('/guardar-personal', methods=['POST'])
 def guardar_personal():
@@ -204,7 +203,7 @@ def guardar_personal():
     email = request.form.get('email')
     
     # -------------------------------------------------------------
-    # 1. GENERACIÓN DE CONTRASEÑA TEMPORAL SEGURA 🔒
+    # 1. GENERACIÓN DE CONTRASEÑA TEMPORAL SEGURA
     # -------------------------------------------------------------
     # Se crea una contraseña temporal de 12 caracteres (letras y números)
     caracteres = string.ascii_letters + string.digits 
@@ -230,7 +229,6 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        # ... (Toda la lógica de manejo de archivos omitida por brevedad) ...
         file_mapping = {
             "doc_acta": "acta_nacimiento",
             "doc_identificacion": "identificacion",
@@ -362,6 +360,149 @@ def guardar_personal():
         if 'cursor' in locals() and cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+# =================================================================
+# === RUTAS DE RESTABLECIMIENTO DE CONTRASEÑA ===
+# =================================================================
+
+@app.route('/solicitar-restablecimiento', methods=['GET', 'POST'])
+def solicitar_restablecimiento():
+    """Muestra el formulario para solicitar el correo o envía el enlace."""
+    if request.method == 'GET':
+        # La plantilla que acabamos de crear
+        return render_template('solicitar_restablecimiento.html') 
+    
+    email = request.form.get('correo_electronico')
+    conn = None
+    
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # 1. Buscar el usuario en ambas tablas (Staff y Profesores)
+        table_name = None
+        
+        cursor.execute("SELECT id_profesor FROM profesores WHERE correo_electronico = %s", (email,))
+        if cursor.fetchone():
+            table_name = "profesores"
+        else:
+            cursor.execute("SELECT id_staff FROM staff WHERE correo_electronico = %s", (email,))
+            if cursor.fetchone():
+                table_name = "staff"
+        
+        if not table_name:
+            # Mensaje genérico para no revelar si el correo existe
+            return render_template('solicitar_restablecimiento.html', 
+                                   message="Si el correo existe en nuestro sistema, se ha enviado un enlace.")
+
+        # 2. Generar un token seguro y establecer la caducidad (ej: 1 hora)
+        reset_token = secrets.token_urlsafe(32)
+        expiration = datetime.now() + timedelta(hours=1)
+        
+        # 3. Guardar el token en la base de datos
+        query = f"""
+            UPDATE {table_name} 
+            SET reset_token = %s, token_expiration = %s 
+            WHERE correo_electronico = %s
+        """
+        cursor.execute(query, (reset_token, expiration, email))
+        conn.commit()
+
+        # 4. Enviar el correo con el enlace de restablecimiento
+        if yag:
+            reset_url = url_for('restablecer_contrasena', token=reset_token, _external=True)
+            subject = "Solicitud de Restablecimiento de Contraseña UTR"
+            contents = [
+                "<p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.</p>",
+                f"<p>Haz clic en el siguiente enlace para continuar:</p>",
+                f"<p><a href='{reset_url}'>Restablecer Contraseña Ahora</a></p>",
+                "<p>Este enlace caducará en 1 hora. Si no solicitaste este cambio, por favor ignora este correo.</p>"
+            ]
+            yag.send(to=email, subject=subject, contents=contents)
+
+        return render_template('solicitar_restablecimiento.html', 
+                               message="Si el correo existe en nuestro sistema, se ha enviado un enlace para restablecer la contraseña.")
+        
+    except Exception as e:
+        print(f"Error en solicitud de restablecimiento: {e}")
+        return render_template('solicitar_restablecimiento.html', 
+                               error="Error interno del servidor. Intente más tarde.")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+
+@app.route('/restablecer-contrasena/<token>', methods=['GET', 'POST'])
+def restablecer_contrasena(token):
+    """Verifica el token y permite al usuario establecer una nueva contraseña."""
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Buscar usuario por token en ambas tablas
+        user_data = None
+        table_name = None
+        id_column = None
+        
+        # Intentar buscar en profesores
+        cursor.execute("SELECT id_profesor AS id, reset_token, token_expiration FROM profesores WHERE reset_token = %s", (token,))
+        user_data = cursor.fetchone()
+        if user_data:
+            table_name = "profesores"
+            id_column = "id_profesor"
+        
+        # Si no está en profesores, buscar en staff
+        if not user_data:
+            cursor.execute("SELECT id_staff AS id, reset_token, token_expiration FROM staff WHERE reset_token = %s", (token,))
+            user_data = cursor.fetchone()
+            if user_data:
+                table_name = "staff"
+                id_column = "id_staff"
+
+        # 2. Validar token y expiración
+        if not user_data or user_data['token_expiration'] < datetime.now():
+            return render_template('form_restablecer.html', 
+                                   error="El enlace de restablecimiento es inválido o ha expirado.", 
+                                   token=token)
+
+        if request.method == 'GET':
+            # Muestra el formulario de cambio de contraseña
+            return render_template('form_restablecer.html', token=token)
+
+        # Si es POST, procesar nueva contraseña
+        nueva_contrasena = request.form.get('nueva_contrasena')
+        confirmar_contrasena = request.form.get('confirmar_contrasena')
+        
+        if not nueva_contrasena or nueva_contrasena != confirmar_contrasena or len(nueva_contrasena) < 8:
+            return render_template('form_restablecer.html', 
+                                   error="Las contraseñas no coinciden o no cumplen con la longitud mínima (8 caracteres).", 
+                                   token=token)
+
+        hashed_password = generate_password_hash(nueva_contrasena)
+        
+        # 3. Actualizar contraseña y limpiar token
+        query = f"""
+            UPDATE {table_name} 
+            SET contraseña = %s, reset_token = NULL, token_expiration = NULL 
+            WHERE {id_column} = %s
+        """
+        cursor.execute(query, (hashed_password, user_data['id']))
+        conn.commit()
+
+        # Redirigir al login con mensaje de éxito
+        return redirect(url_for('login', message="Contraseña restablecida con éxito. Ya puede iniciar sesión."))
+        
+    except Exception as e:
+        print(f"Error en restablecimiento de contraseña: {e}")
+        return render_template('form_restablecer.html', 
+                               error="Error interno del servidor al procesar el cambio.", 
+                               token=token)
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
 @app.route("/editar-personal/<string:tipo>/<int:id>", methods=['POST'])
 def editar_personal(tipo, id):
     """
@@ -402,7 +543,7 @@ def editar_personal(tipo, id):
             # Solo actualizamos campos que tienen un valor en el formulario
             value = data.get(field)
             if value is not None:
-                 # Evitamos actualizar fechas con cadena vacía si el usuario la borró
+                # Evitamos actualizar fechas con cadena vacía si el usuario la borró
                 if field == 'fecha_nacimiento' and value == '':
                     personal_updates.append(f"{field} = NULL")
                 else:
@@ -576,7 +717,10 @@ def registro():
 
 @app.route("/guardar", methods=["POST"])
 def guardar():
-    """Guarda los datos del alumno en MySQL, documentos en /uploads y referencia en Mongo."""
+    """
+    Guarda los datos del alumno en MySQL, documentos en /uploads y referencia en Mongo.
+    MODIFICADO para devolver la plantilla de éxito con la matrícula.
+    """
     conn = None
     try:
         datos = {
@@ -592,20 +736,33 @@ def guardar():
             "horario": request.form["horario"]
         }
 
-        documentos = {}
-        for field in ["acta_n", "identificacion", "comprobante_pago"]:
-            file = request.files.get(field) 
+        # --- Definición de campos de archivo y sus claves en MongoDB ---
+        file_fields = {
+            "acta_n": "acta_nacimiento",
+            "identificacion": "identificacion",
+            "formato_descuento": "formato_descuento",
+            "documentos_comprobatorios": "documentos_comprobatorios",
+            # Si el comprobante de pago no es condicional, se puede añadir aquí:
+            # "comprobante_pago_form": "comprobante_pago",
+        }
+        
+        documentos_mongo = {}
+        
+        for form_field, mongo_key in file_fields.items():
+            file = request.files.get(form_field) 
             if file and file.filename:
                 original_filename_secure = secure_filename(file.filename)
                 name, ext = os.path.splitext(original_filename_secure)
                 
                 # Nombre único con correo, tipo de documento y timestamp
-                filename = f"{secure_filename(datos['correo'])}_{field}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
+                filename = f"{secure_filename(datos['correo'])}_{form_field}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 file.save(filepath)
-                documentos[field] = filepath 
+                documentos_mongo[mongo_key] = filepath 
             else:
-                documentos[field] = None
+                # Si el archivo no fue enviado (porque era opcional/oculto), se guarda como None
+                documentos_mongo[mongo_key] = None
+
 
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
@@ -632,7 +789,7 @@ def guardar():
         expediente_doc = {
             "tipo": "alumno",
             "id_relacional": id_alumno,
-            "documentos": documentos,
+            "documentos": documentos_mongo, # Usamos el diccionario completo con todos los campos
             "metadata": {
                 "fecha_subida": datetime.utcnow(),
                 "actualizado_por": "sistema_auto"
@@ -657,19 +814,20 @@ def guardar():
             "fecha": datetime.utcnow()
         })
 
-        mensaje = f"Registro exitoso. Matrícula: {matricula}"
+        # --- MODIFICACIÓN CLAVE ---
+        return render_template("registro_exitoso.html", matricula=matricula) # Enviamos la matrícula a la nueva plantilla
 
     except Exception as e:
         mensaje = f"Error: {e}"
         print(e)
         if 'conn' in locals() and conn.is_connected():
             conn.rollback() 
+        return f"<h1>Error en el registro: {e}</h1><a href='/'>Volver</a>" # Manejo simple del error
+
     finally:
         if 'conn' in locals() and conn.is_connected():
             cursor.close()
             conn.close()
-
-    return f"<h1>{mensaje}</h1><a href='/'>Volver</a>"
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -954,7 +1112,6 @@ def reinscripciones():
         cursor.execute("SELECT id_profesor, CONCAT(nombre, ' ', apellido_p, ' ', apellido_m) AS nombre_completo FROM profesores")
         profesores = cursor.fetchall()
 
-        # 2. Obtener Alumnos (Consulta principal)
         query_alumnos = """
              SELECT 
                 a.*,
@@ -976,7 +1133,8 @@ def reinscripciones():
         alumnos = cursor.fetchall()
 
         # 3. Adjuntar información de documentos (Mongo)
-        document_fields = ["acta_nacimiento", "identificacion", "comprobante_pago"] # Usar claves de Mongo
+        # Definimos todas las posibles claves de Mongo para alumnos
+        document_fields = ["acta_nacimiento", "identificacion", "formato_descuento", "documentos_comprobatorios", "comprobante_pago"] 
         
         for alumno in alumnos:
             alumno["documentos_urls"] = {}
@@ -1019,7 +1177,6 @@ def reinscripciones():
         grupos=grupos,
         profesores=profesores
     )
-
 
 @app.route('/asignar_grupo_curso', methods=['POST'])
 def asignar_grupo_curso():
