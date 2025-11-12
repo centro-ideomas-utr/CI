@@ -12,11 +12,30 @@ import json
 from dotenv import load_dotenv
 import secrets
 import string
+import locale
+
 load_dotenv()
 
 app = Flask(__name__)
 
+# --- Configuración de Jinja2 y Filtros ---
+def format_currency_mxn(value):
+    """Formatea un valor numérico a la representación de moneda MXN."""
+    if value is None:
+        return "0.00"
+    try:
+        # Usa formateo simple para evitar problemas de locale en el servidor, 
+        # reemplazando puntos por comas en el separador de miles.
+        return f"{float(value):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    except (TypeError, ValueError):
+        return str(value)
+
+# Registra la función de formato de moneda como un filtro Jinja2
+app.jinja_env.filters['format_currency'] = format_currency_mxn
+# ----------------------------------------
+
 try:
+    # Usar variables de entorno en un entorno real. Aquí usamos las cadenas provistas:
     YAG_USER = 'ulisesvega223@gmail.com' 
     YAG_TOKEN = 'vutcnpkftbnxirno'
     yag = yagmail.SMTP(YAG_USER, YAG_TOKEN)
@@ -66,6 +85,7 @@ UTR_DATA = {
     "forma_pago": "03 - Transferencia electrónica"
 }
 VALOR_HORA = 105.00 # MXN - Valor unitario de la hora
+COSTO_REINSCRIPCION_BASE = 1870.00 # MXN - Costo base de reinscripción
 
 def calcular_impuestos(horas_trabajadas):
     """Calcula Subtotal, IVA, Retenciones e Importe Neto, asumiendo RESICO."""
@@ -719,7 +739,6 @@ def registro():
 def guardar():
     """
     Guarda los datos del alumno en MySQL, documentos en /uploads y referencia en Mongo.
-    MODIFICADO para devolver la plantilla de éxito con la matrícula.
     """
     conn = None
     try:
@@ -742,8 +761,6 @@ def guardar():
             "identificacion": "identificacion",
             "formato_descuento": "formato_descuento",
             "documentos_comprobatorios": "documentos_comprobatorios",
-            # Si el comprobante de pago no es condicional, se puede añadir aquí:
-            # "comprobante_pago_form": "comprobante_pago",
         }
         
         documentos_mongo = {}
@@ -770,8 +787,7 @@ def guardar():
         cursor.execute("SELECT COALESCE(MAX(matricula),1000)+1 FROM alumnos")
         matricula = cursor.fetchone()[0]
 
-        # La contraseña se deja vacía o con un valor por defecto si no se requiere login de alumno
-        # Si se requiere login, este formulario debe incluir el campo y generar hash
+        # La contraseña se deja NULL por defecto en el registro inicial
         cursor.execute("""
             INSERT INTO alumnos 
             (matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono,
@@ -814,15 +830,14 @@ def guardar():
             "fecha": datetime.utcnow()
         })
 
-        # --- MODIFICACIÓN CLAVE ---
-        return render_template("registro_exitoso.html", matricula=matricula) # Enviamos la matrícula a la nueva plantilla
+        return render_template("registro_exitoso.html", matricula=matricula)
 
     except Exception as e:
         mensaje = f"Error: {e}"
         print(e)
         if 'conn' in locals() and conn.is_connected():
             conn.rollback() 
-        return f"<h1>Error en el registro: {e}</h1><a href='/'>Volver</a>" # Manejo simple del error
+        return f"<h1>Error en el registro: {e}</h1><a href='/'>Volver</a>"
 
     finally:
         if 'conn' in locals() and conn.is_connected():
@@ -848,13 +863,13 @@ def login():
         user_types = [
             ("staff", "id_staff", "contraseña", "staff"),
             ("profesores", "id_profesor", "contraseña", "maestro"),
-            ("alumnos", "id_alumno", "contraseña", "alumno"), # Alumnos con contraseña NULL/plana es un riesgo
+            ("alumnos", "id_alumno", "contraseña", "alumno"), 
         ]
         
         usuario = None
         for table, id_col, pass_col, tipo in user_types:
             cursor.execute(f"""
-                SELECT {id_col} AS id, correo_electronico, {pass_col}, '{tipo}' AS tipo
+                SELECT {id_col} AS id, correo_electronico, {pass_col}, telefono, domicilio, '{tipo}' AS tipo
                 FROM {table} WHERE correo_electronico = %s
             """, (correo,))
             usuario = cursor.fetchone()
@@ -864,8 +879,11 @@ def login():
         if not usuario:
             return render_template("login.html", error="Usuario no encontrado.")
 
-        # Verificar contraseña (solo para Staff y Maestros que tienen hash)
-        if usuario.get('contraseña') and not check_password_hash(usuario["contraseña"], contrasena):
+        # Verificar contraseña (solo si hay hash almacenado)
+        stored_password = usuario.get('contraseña')
+        if stored_password and not check_password_hash(stored_password, contrasena):
+            # Nota: Si el alumno no tiene contraseña (NULL), el login fallará aquí o por
+            # no cumplir con el hash. Para alumnos nuevos, la contraseña se genera en el cobro.
              return render_template("login.html", error="Contraseña incorrecta.")
         
         # Redirigir según el tipo de usuario
@@ -1133,7 +1151,6 @@ def reinscripciones():
         alumnos = cursor.fetchall()
 
         # 3. Adjuntar información de documentos (Mongo)
-        # Definimos todas las posibles claves de Mongo para alumnos
         document_fields = ["acta_nacimiento", "identificacion", "formato_descuento", "documentos_comprobatorios", "comprobante_pago"] 
         
         for alumno in alumnos:
@@ -1231,6 +1248,148 @@ def asignar_grupo_curso():
             conn.close()
 
 
+@app.route("/enviar_cobro_factura", methods=["POST"])
+def enviar_cobro_factura():
+    """
+    Recibe la información de cobro y descuento, genera credenciales de acceso 
+    para el alumno, renderiza la factura HTML y envía el correo electrónico.
+    
+    MODIFICADO para adjuntar el HTML de la factura como un archivo descargable.
+    """
+    conn = None
+    temp_file_path = None
+    try:
+        data = request.get_json()
+        id_alumno = data.get('id_alumno')
+        total_a_cobrar = float(data.get('total_a_cobrar'))
+        descuentos_aplicados = data.get('descuentos_aplicados')
+        porcentaje_aplicado = data.get('porcentaje_aplicado')
+        
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Obtener datos del alumno
+        cursor.execute(
+            "SELECT nombre, apellido_p, apellido_m, correo_electronico, telefono, domicilio, contraseña FROM alumnos WHERE id_alumno = %s",
+            (id_alumno,)
+        )
+        alumno_data = cursor.fetchone()
+
+        if not alumno_data:
+            return jsonify({'status': 'error', 'message': 'Alumno no encontrado.'}), 404
+
+        nombre_completo = f"{alumno_data['nombre']} {alumno_data['apellido_p']} {alumno_data['apellido_m']}".strip()
+        email = alumno_data['correo_electronico']
+        
+        # 2. GENERACIÓN DE CONTRASEÑA TEMPORAL (Solo si es NULL/no existe)
+        password_hash = alumno_data.get('contraseña')
+        contrasena_temporal = None
+        
+        if not password_hash:
+            # Crear contraseña temporal
+            caracteres = string.ascii_letters + string.digits
+            contrasena_temporal = ''.join(secrets.choice(caracteres) for i in range(10))
+            password_encriptada = generate_password_hash(contrasena_temporal)
+            
+            # Actualizar alumno con el nuevo hash
+            cursor.execute(
+                "UPDATE alumnos SET contraseña = %s WHERE id_alumno = %s",
+                (password_encriptada, id_alumno)
+            )
+            conn.commit()
+            
+            # Mensaje para el correo incluyendo las nuevas credenciales
+            credenciales_msg = f"""
+                <p>También hemos generado credenciales de acceso a su portal de alumno:</p>
+                <ul>
+                    <li>**Usuario (Correo Electrónico):** <b>{email}</b></li>
+                    <li>**Contraseña TEMPORAL:** <b>{contrasena_temporal}</b></li>
+                </ul>
+                <p>Por favor, utilice este enlace para ingresar: <a href="{url_for('login', _external=True)}">Acceder al Portal de Alumnos</a></p>
+                <p>Le recomendamos **cambiar su contraseña inmediatamente** después de iniciar sesión.</p>
+            """
+        else:
+            # Mensaje solo recordatorio de portal si ya tiene cuenta
+            credenciales_msg = f"""
+                <p>Puede acceder con sus credenciales ya existentes al Portal de Alumnos para consultar sus documentos:</p>
+                <p><a href="{url_for('login', _external=True)}">Acceder al Portal de Alumnos</a></p>
+            """
+
+        # 3. Preparar variables para renderizar la Factura HTML
+        costo_base = COSTO_REINSCRIPCION_BASE
+        descuento_monto = round(costo_base - total_a_cobrar, 2)
+        fecha_actual = datetime.now().strftime("%d/%m/%Y")
+        
+        # Renderizar la factura HTML (aviso_cobro.html)
+        html_factura = render_template('aviso_cobro.html',
+            nombre_completo=nombre_completo,
+            fecha_actual=fecha_actual,
+            telefono=alumno_data.get('telefono', 'N/A'),
+            domicilio=alumno_data.get('domicilio', 'N/A'),
+            costo_base=costo_base,
+            descuento_porcentaje=f"{porcentaje_aplicado}% ({descuentos_aplicados})",
+            descuento_monto=descuento_monto,
+            total_a_pagar=total_a_cobrar,
+            email=email
+        )
+        
+        # 4. CREAR ARCHIVO TEMPORAL (.html) PARA ADJUNTARLO
+        temp_filename = f"Aviso_Cobro_{id_alumno}_{datetime.now().strftime('%Y%m%d%H%M%S')}.html"
+        # Usamos app.root_path para asegurar que la ruta de guardado sea accesible
+        temp_file_path = os.path.join(app.root_path, temp_filename)
+        
+        with open(temp_file_path, "w", encoding="utf-8") as f:
+            f.write(html_factura)
+
+        # 5. ENVÍO DE CORREO (Adjunta el HTML de la Factura)
+        if yag:
+            subject = f"Aviso de Cobro de Reinscripción - Centro de Idiomas UTR"
+            
+            # Contenido principal del correo (texto simple para la introducción)
+            main_body = [
+                f"Hola {nombre_completo},",
+                f"<p>Adjunto se encuentra el archivo de su Aviso de Cobro para el proceso de inscripción/reinscripción. Puede descargar y guardar este documento para sus registros.</p>",
+                credenciales_msg,
+                "<p>Atentamente,<br>Control Escolar CIUTR</p>"
+            ]
+            
+            # Envío con el archivo adjunto
+            yag.send(
+                to=email, 
+                subject=subject, 
+                contents=main_body,
+                attachments=temp_file_path # Adjunta el archivo HTML renderizado
+            ) 
+
+            # 6. Registrar Log de acción
+            logs_col.insert_one({
+                "tipo_entidad": "alumno",
+                "id_entidad": id_alumno,
+                "accion": "cobro_enviado",
+                "detalle": f"Correo de cobro enviado con adjunto HTML. Total: ${total_a_cobrar:,.2f}. Descuentos: {descuentos_aplicados}", 
+                "usuario": "admin_logueado", 
+                "fecha": datetime.utcnow()
+            })
+
+            return jsonify({'status': 'success', 'message': f'Cobro y credenciales enviados exitosamente a {email}.'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'Error: El servicio de envío de correos (yagmail) no está disponible.'}), 500
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al enviar cobro/factura: {e}")
+        return jsonify({'status': 'error', 'message': f'Error en el servidor al procesar el cobro: {e}'}), 500
+    finally:
+        # 7. ELIMINAR ARCHIVO TEMPORAL
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+            except Exception as e:
+                print(f"Advertencia: No se pudo eliminar el archivo temporal {temp_file_path}. Error: {e}")
+        
+        if 'cursor' in locals() and cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+
 # =================================================================
 # === RUTAS DE FACTURACIÓN ===
 # =================================================================
@@ -1272,7 +1431,7 @@ def portal_facturacion(id_profesor):
         print(f"Error de base de datos al cargar datos fiscales: {err}")
         abort(500, description="Error interno al cargar datos.")
     finally:
-        if 'conn' in locals() and conn.is_connected():
+        if conn and conn.is_connected():
             cursor.close()
             conn.close()
 

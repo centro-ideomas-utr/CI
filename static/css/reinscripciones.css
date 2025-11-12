@@ -1,274 +1,83 @@
 /* --- Estilos Generales --- */
-body {
-    margin: 0;
-    /* Usando 'Inter' para consistencia con añadiradmin.css */
-    font-family: 'Inter', sans-serif; 
-    background-color: #f4f6f8;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+body { margin: 0; font-family: 'Inter', sans-serif; background-color: #f4f6f8; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; padding: 20px; transition: margin-left 0.3s; }
+
+/* ========================================================== */
+/* --- 1. Sidebar Styles --- */
+/* ========================================================== */
+.sidebar ul li a i { width: 30px; text-align: center; margin-right: 10px; } 
+.sidebar { height: 100%; width: 230px; position: fixed; z-index: 1000; left: -230px; background-color: #48597a; overflow-x: hidden; transition: 0.3s; padding-top: 80px; display: flex; flex-direction: column; justify-content: space-between; }
+.sidebar.active { left: 0; }
+.sidebar ul { list-style-type: none; padding: 0; margin: 0; }
+.sidebar ul li a { padding: 15px 20px; text-decoration: none; font-size: 18px; color: #f4f6f8; display: block; transition: 0.2s; }
+.sidebar ul li a:hover { background-color: #566a93; }
+.logout-btn { background-color: #e74c3c; color: white; text-align: center; font-weight: bold; }
+.logout-btn:hover { background-color: #c0392b !important; }
+
+/* ========================================================== */
+/* --- 2. Content, Buttons, and Layouts --- */
+/* ========================================================== */
+.page-content { padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+.buttons-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 20px 0; width: 100%; }
+
+.btn { border: none; color: white !important; padding: 12px 20px; font-size: 0.9em; font-weight: bold; border-radius: 8px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-decoration: none; display: inline-block; }
+.btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+
+/* Colores de botones de filtro */
+.btn.blue { background-color: #3498db; } .btn.orange { background-color: #e67e22; }
+.btn.red { background-color: #e74c3c; } .btn.pink { background-color: #ff7eb9; }
+.btn.green { background-color: #2ecc71; } .btn.purple { background-color: #9b59b6; }
+.btn.yellow { background-color: #f1c40f; } .btn.magenta { background-color: #e84393; }
+
+/* ========================================================== */
+/* --- 3. Table Styles --- */
+/* ========================================================== */
+.table-container { width: 100%; padding: 0 20px; overflow-x: auto; }
+table { width: 100%; min-width: 1200px; border-collapse: collapse; background-color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+thead { background-color: #9c94b8; color: white; }
+th, td { 
+    padding: 10px 15px; 
+    text-align: left; 
+    border-bottom: 1px solid #ddd; 
+    white-space: nowrap; 
+    /* MEJORA: Borde derecho sutil para separar visualmente las columnas */
+    border-right: 1px solid #eee; 
 }
+td:last-child, th:last-child { border-right: none; } /* Remueve el borde derecho de la última columna */
 
-main {
-    flex: 1;
-    padding: 20px;
-    /* La transición se aplica aquí para el empuje */
-    transition: margin-left 0.3s; 
-}
+/* Estilos específicos para la columna de Expediente (columna 7) */
+td:nth-child(7) { display: flex; flex-wrap: nowrap; gap: 5px; align-items: center; padding: 10px 5px; }
+tbody tr:hover { background-color: #f1f1f1; }
 
-/* --- Barra de Navegación Superior (Navbar) --- */
-.navbar {
-    background-color: #566a93;
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* Usando sticky para consistencia con añadiradmin.css */
-    position: sticky; 
-    top: 0;
-    z-index: 1001;
-}
+/* Colores de texto dentro de la tabla */
+.green { color: #27ae60; } .purple { color: #8e44ad; } .blue { color: #2980b9; } 
+.lightblue { color: #3498db; } .lightred { color: #c0392b; } .lila { color: #9b59b6; }
+.btn-blue-text { color: #3498db; } .btn-red-text { color: #e74c3c; } 
+.btn-orange-text { color: #e67e22; } .btn-pink-text { color: #ff7eb9; } 
+.btn-green-text { color: #2ecc71; } .btn-purple-text { color: #9b59b6; }
+.btn-yellow-text { color: #f1c40f; } .btn-magenta-text { color: #e84393; }
 
-.menu-icon {
-    cursor: pointer;
-    z-index: 1002;
-}
-
-.menu-icon span {
-    display: block;
-    width: 25px;
-    height: 3px;
-    background-color: white;
-    margin: 5px 0;
-    transition: 0.4s;
-}
-
-.navbar h1 {
-    font-size: 1.5em;
-    margin: 0;
-}
-
-.profile {
-    width: 40px;
-    height: 40px;
-    background-color: #f4f6f8;
-    border-radius: 50%;
-}
-
-/* --- Menú Lateral (Sidebar) --- */
-.sidebar ul li a i {
-    width: 30px; 
-    text-align: center;
-    margin-right: 10px;
-} 
-
-.sidebar {
-    height: 100%;
-    width: 230px;
-    position: fixed;
-    z-index: 1000;
-    left: -230px; /* Oculto por defecto */
-    background-color: #48597a;
-    overflow-x: hidden;
-    transition: 0.3s;
-    padding-top: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.sidebar.active {
-    left: 0;
-}
-
-.sidebar ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar ul li a {
-    padding: 15px 20px;
-    text-decoration: none;
-    font-size: 18px;
-    color: #f4f6f8;
-    display: block;
-    transition: 0.2s;
-}
-
-.sidebar ul li a:hover {
-    background-color: #566a93;
-}
-
-.logout-btn {
-    background-color: #e74c3c;
-    color: white;
-    text-align: center;
-    font-weight: bold;
-}
-
-.logout-btn:hover {
-    background-color: #c0392b !important;
-}
-
-/* --- Clases específicas de Reinscripciones --- */
-.page-content {
-    /* Nota: Mantenemos estas reglas aquí para la pantalla de Reinscripciones */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    width: 100%;
-}
-
-/* (Reglas de botones de filtro, tablas, etc. de Reinscripciones...) */
-
-.buttons-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 20px 0;
-    width: 100%;
-}
-
-.btn {
-    border: none;
-    color: white !important; 
-    padding: 12px 20px;
-    font-size: 0.9em;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    text-decoration: none;
-    display: inline-block;
-}
-
-.btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-}
-
-.btn.blue { background-color: #3498db; }
-.btn.orange { background-color: #e67e22; }
-.btn.red { background-color: #e74c3c; }
-.btn.pink { background-color: #ff7eb9; }
-.btn.green { background-color: #2ecc71; }
-.btn.purple { background-color: #9b59b6; }
-.btn.yellow { background-color: #f1c40f; }
-.btn.magenta { background-color: #e84393; }
-
-.table-container {
-    width: 100%;
-    padding: 0 20px;
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    min-width: 1200px;
-    border-collapse: collapse;
-    background-color: white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-
-thead {
-    background-color: #9c94b8;
-    color: white;
-}
-
-th, td {
-    padding: 10px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-    white-space: nowrap;
-}
-
-/* 🟢 CORRECCIÓN: APLICAMOS FLEXBOX Y ESPACIADO A LA CELDA DE EXPEDIENTE (Columna 7) */
-td:nth-child(7) {
-    display: flex;
-    flex-wrap: nowrap; /* Aseguramos que permanezcan en una línea si hay espacio */
-    gap: 5px; /* Espacio horizontal y vertical entre los botones */
-    align-items: center;
-    padding: 10px 5px; 
-}
-
-tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-tbody tr:last-child td {
-    border-bottom: none;
-}
-
-td {
-    font-weight: 500;
-}
-.green { color: #27ae60; }
-.purple { color: #8e44ad; }
-.blue { color: #2980b9; }
-.lightblue { color: #3498db; }
-.lightred { color: #c0392b; }
-.lila { color: #9b59b6; }
-
-.btn-blue-text { color: #3498db; }
-.btn-orange-text { color: #e67e22; }
-.btn-red-text { color: #e74c3c; }
-.btn-pink-text { color: #ff7eb9; }
-.btn-green-text { color: #2ecc71; }
-.btn-purple-text { color: #9b59b6; }
-.btn-yellow-text { color: #f1c40f; }
-.btn-magenta-text { color: #e84393; }
-
-.form-control {
-    padding: 5px 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.9em;
-    min-width: 150px;
-    appearance: none;
-    background-color: white;
-}
-
-.btn-guardar-asignacion {
-    font-size: 0.8em;
-    padding: 6px 10px !important;
-}
-
-/* CORRECCIÓN CLAVE 1: El enlace actúa como contenedor, eliminamos el display: block; */
-.btn-expediente {
-    text-decoration: none; 
-}
-
-/* 🟢 CORRECCIÓN CLAVE 2: Aseguramos que el botón anidado no ocupe 100% de ancho */
-.btn-expediente-small {
+/* Controles de formulario y botones pequeños */
+.form-control { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em; min-width: 150px; appearance: none; background-color: white; }
+.btn-expediente { text-decoration: none; }
+.btn-expediente-small { 
     background-color: white; 
     color: #48597a; 
-    border: 1px solid #ccc;
-    padding: 6px 10px;
-    font-size: 0.85em;
-    font-weight: 500;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    width: auto; /* <--- Cambio crucial: solo ocupa el espacio necesario */
-    display: inline-flex; /* Asegura que el contenido fluya horizontalmente (ícono y texto) */
+    border: 1px solid #ccc; 
+    padding: 6px 10px; 
+    font-size: 0.85em; 
+    font-weight: 500; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    transition: all 0.2s ease-in-out; 
+    width: auto; 
+    display: inline-flex; 
     align-items: center; 
-    gap: 5px; /* Espacio entre el icono y el texto dentro del botón */
-    text-align: center;
+    gap: 5px; 
+    text-align: center; 
     white-space: nowrap; 
     box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
 }
-
 .btn-expediente-small:hover {
     background-color: #f9f9f9;
     color: #566a93; 
@@ -276,44 +85,66 @@ td {
     box-shadow: 0 0 0 2px rgba(86, 106, 147, 0.4); 
 }
 
-/* --- FOOTER (Mismos estilos que añadiradmin.css) --- */
-.main-footer {
-    background-color: #566a93;
-    color: white;
-    padding: 20px 0;
-    text-align: center;
-    margin-top: auto;
+/* ========================================================== */
+/* --- 4. Modal (Cobro y Notificación) Styles --- */
+/* ========================================================== */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); padding-top: 50px; }
+.modal-content { 
+    background-color: #ffffff; 
+    margin: 5% auto; 
+    padding: 30px; 
+    border: 1px solid #888; 
+    width: 90%; 
+    max-width: 500px; 
+    border-radius: 12px; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+    position: relative; 
+    animation-name: animatetop; 
+    animation-duration: 0.4s 
 }
+@keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+.close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; position: absolute; top: 10px; right: 20px; line-height: 20px; }
+.descuento-options { display: flex; flex-direction: column; gap: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; background-color: #f9f9f9; }
+.descuento-checkbox { display: flex; align-items: center; font-weight: 500; cursor: pointer; padding: 5px 0; }
+.cobro-summary { background-color: #ecf0f1; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 1.1em; font-weight: bold; text-align: center; border: 1px solid #bdc3c7; }
+.cobro-summary .original { color: #e74c3c; text-decoration: line-through; margin-right: 10px; }
+.cobro-summary .final { color: #2ecc71; font-size: 1.3em; }
+.modal-actions { display: flex; justify-content: flex-end; margin-top: 15px; }
 
-.footer-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-}
+/* Mensajes de notificación */
+.message { padding: 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; text-align: center; }
+.message.success { background-color: #e6ffe6; color: #27ae60; border: 1px solid #27ae60; }
+.message.error { background-color: #ffe6e6; color: #e74c3c; border: 1px solid #e74c3c; }
+.message.info { background-color: #e6f7ff; color: #3498db; border: 1px solid #3498db; }
+.hidden { display: none; }
+
+/* ========================================================== */
+/* --- 5. Footer Styles --- */
+/* ========================================================== */
+.main-footer { background-color: #566a93; color: white; padding: 20px 0; text-align: center; margin-top: auto; }
+.footer-content { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; }
 .footer-content p { margin: 0; font-size: 0.9em; }
 .social-login-icons { display: flex; align-items: center; gap: 10px; }
-.social-login-icons svg { width: 30px; fill: white; }
+.socialcontainer { height: 40px; overflow: hidden; }
+
+/* Estilos de iconos sociales */
 .social-icon-2, .social-icon-3, .social-icon-5, .social-icon-6 {
-    /* Reglas de animación que deben ser consistentes */
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+     transition-duration: 0.4s;
+     transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+     width: 30px; height: 30px; 
 }
 .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-    transition-duration: 0.4s;
-    background-color: rgba(0, 0, 0, 0);
+     background-color: rgba(0, 0, 0, 0); 
 }
+/* Colores de iconos (Añadidos para consistencia) */
+.social-icon-2 { background: linear-gradient( 72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69% ); }
+.social-icon-3 { background: #316ff6; }
+.social-icon-5 { background: #000000; }
+.social-icon-6 { background: #25D366; }
+
 .socialcontainer:hover .social-icon-2,
 .socialcontainer:hover .social-icon-3,
 .socialcontainer:hover .social-icon-5,
 .socialcontainer:hover .social-icon-6 {
     transform: translateY(-40px);
 }
-.socialcontainer { height: 40px; overflow: hidden; }
-
-/* Colores de iconos (Añadidos para consistencia) */
-.social-icon-2 { background: linear-gradient( 72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69% ); }
-.social-icon-3 { background: #316ff6; }
-.social-icon-5 { background: #000000; }
-.social-icon-6 { background: #25D366; }
