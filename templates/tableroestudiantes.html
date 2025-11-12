@@ -14,36 +14,43 @@
 <body>
 
     <header>Centro de Idiomas
-        <nav>
-            <a href="{{ url_for('cursos') }}">
-                <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-                </svg>
-                <span>Cursos</span>
-            </a>
-            <a href="{{ url_for('listas') }}">
-                <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-                </svg>
-                <span>Asistencias</span>
-            </a>
-            <a href="{{ url_for('calificaciones') }}">
-                <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-                </svg>
-                <span>Calificaciones</span>
-            </a>
-            <a href="{{ url_for('cerrar') }}" id="logout-btn">
-                <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
-                    <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
-                </svg>
-                <span>cerrar</span>
-            </a>
-        </nav>
+      <nav>
+          <a href="{{ url_for('cursos') }}">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>cursos</span>
+          </a>
+          <a href="{{ url_for('perfil') }}">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>Perfil</span>
+          </a> 
+          <a href="{{ url_for('calificaciones') }}">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>Calificaciones</span>
+          </a> 
+          <a href="{{ url_for('tablero') }}">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>Calendario</span>
+          </a>
+          <a href="{{ url_for('cerrar') }}" id="logout-btn">
+            <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+              <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+            </svg>
+            <span>cerrar</span>
+          </a>
+      </nav>
     </header>
     
 <main>

@@ -18,6 +18,12 @@ load_dotenv()
 
 app = Flask(__name__)
 
+
+# --- Configuración de Clave Secreta ---!
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+if not app.config['SECRET_KEY']:
+    raise ValueError("No se encontró SECRET_KEY. Define la variable de entorno.")
+
 # --- Configuración de Jinja2 y Filtros ---
 def format_currency_mxn(value):
     """Formatea un valor numérico a la representación de moneda MXN."""
@@ -35,10 +41,14 @@ app.jinja_env.filters['format_currency'] = format_currency_mxn
 # ----------------------------------------
 
 try:
-    # Usar variables de entorno en un entorno real. Aquí usamos las cadenas provistas:
-    YAG_USER = 'ulisesvega223@gmail.com' 
-    YAG_TOKEN = 'vutcnpkftbnxirno'
+    YAG_USER = os.getenv('YAG_USER')
+    YAG_TOKEN = os.getenv('YAG_TOKEN')
+    
+    if not YAG_USER or not YAG_TOKEN:
+        raise ValueError("Credenciales de Yagmail no encontradas en .env")
+        
     yag = yagmail.SMTP(YAG_USER, YAG_TOKEN)
+    
 except Exception as e:
     print(f"Error al inicializar yagmail: {e}")
     yag = None
@@ -50,15 +60,16 @@ def inject_now():
 
 # --- Configuración de MySQL ---
 db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "Uli0514122324#",
-    "database": "ci_prueba"
+    "host": os.getenv('DB_HOST'),
+    "user": os.getenv('DB_USER'),
+    "password": os.getenv('DB_PASSWORD'),
+    "database": os.getenv('DB_NAME')
 }
 
 # --- Configuración de MongoDB ---
-MONGO_URI = "mongodb+srv://alucard:Uli0514122324@ci.4v4asta.mongodb.net/?retryWrites=true&w=majority"
-
+MONGO_URI = os.getenv('MONGO_URI')
+if not MONGO_URI:
+    raise ValueError("No se encontró MONGO_URI. Define la variable de entorno.")
 mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client["ci_prueba"]
 expedientes_col = mongo_db["expedientes"]

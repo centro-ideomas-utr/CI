@@ -12,26 +12,26 @@
 </head>
 <body>
 
-    <div class="navbar">
-        <div class="menu-icon" id="menu-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <h1>Grupos</h1>
-        <div class="profile"></div>
+<div class="navbar">
+    <div class="menu-icon" id="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
+    <h1>Grupos</h1>
+    <div class="profile"></div>
+</div>
 
 <nav class="sidebar" id="sidebar">
-        <ul>
-            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
-            <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
-            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
-            <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
-            <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
-            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
-            <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
-        </ul>
+    <ul>
+        <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+        <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciónes</span></a></li>
+        <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+        <li><a href="{{ url_for('tablero') }}"><i class="fas fa-home"></i><span>Home</span></a></li>
+        <li><a href="{{ url_for('listas') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
+        <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+        <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+    </ul>
 </nav>
      
     <div class="page-content">
