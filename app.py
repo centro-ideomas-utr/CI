@@ -18,27 +18,30 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# --- Configuración de Jinja2 y Filtros ---
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+if not app.config['SECRET_KEY']:
+    raise ValueError("No se encontró SECRET_KEY. Define la variable de entorno.")
+
 def format_currency_mxn(value):
-    """Formatea un valor numérico a la representación de moneda MXN."""
     if value is None:
         return "0.00"
     try:
-        # Usa formateo simple para evitar problemas de locale en el servidor, 
-        # reemplazando puntos por comas en el separador de miles.
         return f"{float(value):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
     except (TypeError, ValueError):
         return str(value)
 
-# Registra la función de formato de moneda como un filtro Jinja2
 app.jinja_env.filters['format_currency'] = format_currency_mxn
 # ----------------------------------------
 
 try:
-    # Usar variables de entorno en un entorno real. Aquí usamos las cadenas provistas:
-    YAG_USER = 'ulisesvega223@gmail.com' 
-    YAG_TOKEN = 'vutcnpkftbnxirno'
+    YAG_USER = os.getenv('YAG_USER')
+    YAG_TOKEN = os.getenv('YAG_TOKEN')
+    
+    if not YAG_USER or not YAG_TOKEN:
+        raise ValueError("Credenciales de Yagmail no encontradas en .env")
+        
     yag = yagmail.SMTP(YAG_USER, YAG_TOKEN)
+    
 except Exception as e:
     print(f"Error al inicializar yagmail: {e}")
     yag = None
@@ -50,15 +53,16 @@ def inject_now():
 
 # --- Configuración de MySQL ---
 db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "Uli0514122324#",
-    "database": "ci_prueba"
+    "host": os.getenv('DB_HOST'),
+    "user": os.getenv('DB_USER'),
+    "password": os.getenv('DB_PASSWORD'),
+    "database": os.getenv('DB_NAME')
 }
 
 # --- Configuración de MongoDB ---
-MONGO_URI = "mongodb+srv://alucard:Uli0514122324@ci.4v4asta.mongodb.net/?retryWrites=true&w=majority"
-
+MONGO_URI = os.getenv('MONGO_URI')
+if not MONGO_URI:
+    raise ValueError("No se encontró MONGO_URI. Define la variable de entorno.")
 mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client["ci_prueba"]
 expedientes_col = mongo_db["expedientes"]
@@ -737,9 +741,6 @@ def registro():
 
 @app.route("/guardar", methods=["POST"])
 def guardar():
-    """
-    Guarda los datos del alumno en MySQL, documentos en /uploads y referencia en Mongo.
-    """
     conn = None
     try:
         datos = {
@@ -755,7 +756,6 @@ def guardar():
             "horario": request.form["horario"]
         }
 
-        # --- Definición de campos de archivo y sus claves en MongoDB ---
         file_fields = {
             "acta_n": "acta_nacimiento",
             "identificacion": "identificacion",
@@ -905,8 +905,6 @@ def login():
             cursor.close()
             conn.close()
 
-# --- Demás rutas académicas y de navegación ---
-
 @app.route("/asistencias_estudiantes")
 def listas():
     return render_template("asistenciasestudiantes.html")
@@ -944,7 +942,7 @@ def tablero():
     return render_template(
         'tableroestudiantes.html',
         avisos_publicados=avisos_ordenados,
-        calendar_events=calendar_events  # ← Pasa los eventos
+        calendar_events=calendar_events
     )
 
 @app.route('/publicar_aviso', methods=['POST'])

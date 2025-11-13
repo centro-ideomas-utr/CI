@@ -15,18 +15,35 @@ CREATE TABLE alumnos (
         'INSCRIPCIÓN ADULTOS REGULAR','INSCRIPCIÓN ADULTO DESCUENTO',
         'INSCRIPCIÓN MENORES REGULAR','INSCRIPCIÓN MENORES DESCUENTO'
     ),
-    horario enum('CI INGLES LUNES Y MIERCOLES 8:00-9:30','CI INGLES LUNES Y MIERCOLES 9:30-11:00','CI INGLES LUNES Y MIERCOLES 16:00-17:30','CI INGLES LUNES Y MIERCOLES 17:30-19:00','CI INGLES LUNES Y MIERCOLES 19:00-20:30','CI INGLES MARTES Y JUEVES 8:00-9:30','CI INGLES MARTES Y JUEVES 9:30-11:00','CI INGLES MARTES Y JUEVES 16:00-17:30','CI INGLES MARTES Y JUEVES 17:30-19:00','CI INGLES MARTES Y JUEVES 19:00-20:30','CI INGLES VIERNES 8:00-11:00','CI INGLES VIERNES 16:00-19:00','CI INGLES VIERNES 17:30-20:30','CI INGLES SABADO 8:00-11:00','CI INGLES SABADO 11:00-14:00','CI INGLES SABADO 14:00-17:00','CI ALEMAN LUNES Y MIERCOLES 16:00-17:30','CI ALEMAN LUNES Y MIERCOLES 17:30-19:00','CI ALEMAN MARTES Y JUEVES 16:00-17:30','CI ALEMAN MARTES Y JUEVES 17:30-19:00','CI LSM LUNES Y MIERCOLES 17:30-19:00','CI LSM LUNES Y MIERCOLES 19:00-20:30','CI LSM VIERNES 17:30-20:30','CI JAPONES LUNES Y MIERCOLES 17:30-19:00','CI JAPONES SABADO 8:00-11:00','CI JAPONES SABADO 11:00-14:00','CI JAPONES SABADO 14:00-17:00','CI ITALIANO MARTES Y JUEVES 17:30-19:00','CI ITALIANO SABADO 8:00-11:00','CI ITALIANO SABADO 11:00-14:00','CI FRANCES MARTES Y JUEVES 17:30-19:00','CI FRANCES MARTES Y JUEVES 19:00-20:30','CI FRANCES SABADO 8:00-11:00','CI FRANCES SABADO 11:00-14:00','CI FRANCES SABADO 14:00-17:00','OTRA SEDE INGLES SABADO 8:00-11:00','OTRA SEDE INGLES SABADO 11:00-14:00') not null,
+    id_horario INT,
     id_curso INT,
+    id_idioma INT,
     id_grupo INT,
-    id_expediente_mongo CHAR(24), -- referencia al ObjectId de Mongo
+    id_expediente_mongo CHAR(24),
     contraseña VARCHAR(255),
+	reset_token VARCHAR(100),
+	token_expiration DATETIME DEFAULT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE horario (
+    id_horario INT not null AUTO_INCREMENT PRIMARY KEY,
+    sede varchar(255),
+    dias varchar(255),
+    hora varchar(255)
+);
+
+CREATE TABLE idioma (
+    id_idioma INT not null AUTO_INCREMENT PRIMARY KEY,
+	nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE cursos (
     id_curso INT not null AUTO_INCREMENT PRIMARY KEY,
-    idioma ENUM('Italiano','LSM','Alemán','Japonés','Francés','Inglés'),
-    nivel ENUM('I','II','III','IV','V','VI','VII','VIII','Conv')
+    id_horario INT,
+    id_idioma INT,
+    nivel ENUM('I','II','III','IV','V','VI','VII','VIII','Conv'),
+    club varchar(50)
 );
 
 CREATE TABLE grupos (
@@ -46,6 +63,8 @@ CREATE TABLE profesores (
     contraseña VARCHAR(255),
     id_expediente_mongo CHAR(24),
     genero enum('M','H'),
+    reset_token VARCHAR(100),
+    token_expiration DATETIME DEFAULT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -59,9 +78,16 @@ CREATE TABLE staff (
     correo_electronico VARCHAR(255) UNIQUE NOT NULL,
     contraseña VARCHAR(255),
     id_expediente_mongo CHAR(24),
+    genero enum('M','H'),
+    reset_token VARCHAR(100),
+	token_expiration DATETIME DEFAULT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+alter table cursos add constraint foreign key (id_horario) references horario (id_horario);
+alter table cursos add constraint foreign key (id_idioma) references idioma (id_idioma);
+alter table alumnos add constraint foreign key (id_horario) references horario (id_horario);
+alter table alumnos add constraint foreign key (id_idioma) references idioma (id_idioma);
 alter table alumnos add constraint foreign key (id_curso) references cursos (id_curso);
 alter table alumnos add constraint foreign key (id_grupo) references grupos (id_grupo);
 alter table grupos add constraint foreign key (id_profesor) references profesores(id_profesor);
@@ -245,9 +271,3 @@ create table avisos(
 
 alter table avisos add constraint foreign key (id_profesor) references profesores (id_profesor);
 alter table avisos add constraint foreign key (id_staff) references staff (id_staff);
-
-ALTER TABLE profesores ADD COLUMN reset_token VARCHAR(100) DEFAULT NULL;
-ALTER TABLE profesores ADD COLUMN token_expiration DATETIME DEFAULT NULL;
-
-ALTER TABLE staff ADD COLUMN reset_token VARCHAR(100) DEFAULT NULL;
-ALTER TABLE staff ADD COLUMN token_expiration DATETIME DEFAULT NULL;
