@@ -18,7 +18,6 @@
     <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
 
     <style>
-        /* Estilos básicos para mensajes de feedback */
         .error-message {
             background-color: #e74c3c;
             color: white;
@@ -54,7 +53,6 @@
         <div class="contenido">
             <h1>Inicia Sesión</h1>
             
-            <!-- 1. LÓGICA DE MENSAJES DE FLASK (Restablecimiento Exitoso/Error de Login) -->
             {% if error %}
             <div id="error-message" class="error-message">{{ error }}</div>
             {% elif message %}

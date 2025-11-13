@@ -1253,8 +1253,6 @@ def enviar_cobro_factura():
     """
     Recibe la información de cobro y descuento, genera credenciales de acceso 
     para el alumno, renderiza la factura HTML y envía el correo electrónico.
-    
-    MODIFICADO para adjuntar el HTML de la factura como un archivo descargable.
     """
     conn = None
     temp_file_path = None
@@ -1309,7 +1307,6 @@ def enviar_cobro_factura():
                 <p>Le recomendamos **cambiar su contraseña inmediatamente** después de iniciar sesión.</p>
             """
         else:
-            # Mensaje solo recordatorio de portal si ya tiene cuenta
             credenciales_msg = f"""
                 <p>Puede acceder con sus credenciales ya existentes al Portal de Alumnos para consultar sus documentos:</p>
                 <p><a href="{url_for('login', _external=True)}">Acceder al Portal de Alumnos</a></p>

@@ -6,19 +6,15 @@
     <title>Registro</title>
     <meta name="description" content="Formulario de Registro para el Centro de Idiomas">
 
-    <!-- Fuentes de Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
     
-    <!-- Se mantiene el enlace a tu CSS externo -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
-    <!-- CSS en línea para manejar la visibilidad dinámica (asume que tu CSS principal usa display: grid/flex) -->
     <style>
-        /* Oculta los campos de documentos por defecto, el JS los mostrará */
         .documento-dinamico {
             display: none;
         }
