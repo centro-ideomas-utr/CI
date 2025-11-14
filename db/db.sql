@@ -271,3 +271,18 @@ create table avisos(
 
 alter table avisos add constraint foreign key (id_profesor) references profesores (id_profesor);
 alter table avisos add constraint foreign key (id_staff) references staff (id_staff);
+
+CREATE TABLE permisos_temporales (
+    id_permisos_temporales INT AUTO_INCREMENT PRIMARY KEY,
+    id_grupo INT,
+    id_profesor INT, 
+    id_profesor_sustituto INT, 
+    fecha_inicio DATETIME,
+    fecha_fin DATETIME,
+    estado ENUM('activo', 'expirado', 'revocado') DEFAULT 'activo',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+alter table permisos_temporales add constraint foreign key (id_profesor) references profesores (id_profesor);
+alter table permisos_temporales add constraint foreign key (id_profesor_sustituto) references profesores (id_profesor);
+alter table permisos_temporales add constraint foreign key (id_grupo) references grupos (id_grupo);
