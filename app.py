@@ -281,8 +281,6 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-<<<<<<< HEAD
-=======
         file_mapping = {
             "doc_acta": "acta_nacimiento",
             "doc_identificacion": "identificacion",
@@ -311,7 +309,6 @@ def guardar_personal():
         # -------------------------------------------------------------
         # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
         # -------------------------------------------------------------
->>>>>>> b7e2fd524ced7d7009d2b2849a716893a74e7025
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
@@ -1043,13 +1040,7 @@ def login():
             cursor.close()
             conn.close()
 
-<<<<<<< HEAD
-# --- Demás rutas académicas y de navegación ---
-
-@app.route("/asistencias_estudiantes") #hacerlo responsi estudiante
-=======
 @app.route("/asistencias_estudiantes")
->>>>>>> 1e0030327116c10211f425bd011f29e4d58907e8
 def listas():
     return render_template("asistenciasestudiantes.html")
 
