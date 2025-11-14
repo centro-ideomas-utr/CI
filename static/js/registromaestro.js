@@ -79,6 +79,16 @@
       });
     });
 
-    window.toggleMenu = function () {
-      document.getElementById("sidebar").classList.toggle("active");
-    };
+  const menuIcon = document.getElementById("menu-icon");
+    const sidebar = document.getElementById("sidebar");
+    const pageContent = document.querySelector(".page-content"); // Es el <main>
+
+    // Asegurarse de que los elementos existen antes de añadir el evento
+    if (menuIcon && sidebar && pageContent) {
+        menuIcon.addEventListener("click", function() {
+            // Muestra/oculta el menú
+            sidebar.classList.toggle("active");
+            // Empuja/retrae el contenido
+            pageContent.classList.toggle("active");
+        });
+    }
