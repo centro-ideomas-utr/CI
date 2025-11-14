@@ -174,13 +174,7 @@
             flex-shrink: 0;
         }
 
-        /* --- Contenido de Tarjetas --- */
-        /*
-         * MODIFICACIÓN PARA ULISES:
-         * Aquí se controla la cuadrícula.
-         * - 'grid-template-columns: repeat(3, 1fr);' define 3 columnas de igual tamaño.
-         * Puedes cambiar el '3' por otro número si quieres más o menos columnas.
-        */
+   
         .main-content {
             padding: 0 20px 20px 20px;
             max-width: 1200px;

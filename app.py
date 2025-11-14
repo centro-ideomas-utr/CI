@@ -281,6 +281,37 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
+<<<<<<< HEAD
+=======
+        file_mapping = {
+            "doc_acta": "acta_nacimiento",
+            "doc_identificacion": "identificacion",
+            "doc_estado": "estado_de_cuenta",
+            "doc_cv": "cv",
+            "doc_comprobante_domicilio": "comprobante_domicilio",
+            "doc_carta1": "carta_recomendacion1",
+            "doc_carta2": "carta_recomendacion2",
+            "doc_titulo": "titulo",
+            "doc_cedula": "cedula",
+            "doc_situacion_fiscal": "constancia_situacion_fiscal",
+        }
+        documentos_mongo = {}
+        uploaded_files = request.files
+        for form_field, mongo_key in file_mapping.items():
+            file = uploaded_files.get(form_field)
+            if file and file.filename:
+                ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
+                filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                documentos_mongo[mongo_key] = filepath
+            else:
+                documentos_mongo[mongo_key] = None
+
+        # -------------------------------------------------------------
+        # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
+        # -------------------------------------------------------------
+>>>>>>> b7e2fd524ced7d7009d2b2849a716893a74e7025
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
@@ -1012,25 +1043,31 @@ def login():
             cursor.close()
             conn.close()
 
+<<<<<<< HEAD
+# --- Demás rutas académicas y de navegación ---
+
+@app.route("/asistencias_estudiantes") #hacerlo responsi estudiante
+=======
 @app.route("/asistencias_estudiantes")
+>>>>>>> 1e0030327116c10211f425bd011f29e4d58907e8
 def listas():
     return render_template("asistenciasestudiantes.html")
 
-@app.route("/avisos")
+@app.route("/avisos") #maetsro
 def avisos():
 
     avisos_ordenados = sorted(global_avisos, key=lambda x: x['id'], reverse=True)
     return render_template("avisos.html", avisos_publicados=avisos_ordenados)
 
-@app.route("/calificacion")
+@app.route("/calificacion") #maetsro
 def calificacion():
     return render_template("calificacion.html")
 
-@app.route("/calificaciones")
+@app.route("/calificaciones") #alumno
 def calificaciones():
     return render_template("calificacionesestudiantes.html")
 
-@app.route('/tablero')
+@app.route('/tablero') #alumno
 def tablero():
     # Formatear avisos para FullCalendar
     calendar_events = []
@@ -1052,7 +1089,7 @@ def tablero():
         calendar_events=calendar_events
     )
 
-@app.route('/publicar_aviso', methods=['POST'])
+@app.route('/publicar_aviso', methods=['POST']) #maestros
 def publicar_aviso():
     if request.method == 'POST':
         mensaje_recibido = request.form['mensaje']
@@ -1083,35 +1120,32 @@ def publicar_aviso():
         # (Usamos request.referrer para volver a la página donde estaba)
         return redirect(request.referrer or url_for('avisos'))
 
-@app.route("/clases")
-def clases():
-    return render_template("listagrupos.html")
 
-@app.route("/cursos")
+@app.route("/cursos") #alumono inicio
 def cursos():
     return render_template("cursos.html")
 
-@app.route("/evidencias")
+@app.route("/evidencias") #maetsro
 def evidencias():
     return render_template("evidencias.html")
 
-@app.route("/grupos")
+@app.route("/grupos") #staff
 def grupos():
     return render_template("grupos.html")
 
-@app.route("/historial")
+@app.route("/historial") #staff
 def historial():
     return render_template("historial.html")
 
-@app.route("/Maestros")
+@app.route("/Maestros") #staff
 def Maestros():
     return render_template("listadodemaestros.html")
 
-@app.route("/clasesprofe")
+@app.route("/clasesprofe") #porfe y se queda
 def clasesprofe():
     return render_template("clasesprofe.html")
 
-@app.route("/asistencia")
+@app.route("/asistencia") #maestros
 def asistencia():
     return render_template("listas.html")
 
@@ -1187,19 +1221,19 @@ def maestroinfo(tipo, id):
         datos_fiscales=datos_fiscales
     )
 
-@app.route("/nomina")
+@app.route("/nomina") #actualizar maestros
 def nomina():
     return render_template("nomina.html")
 
-@app.route("/perfil")
+@app.route("/perfil") #actualizar password
 def perfil():
     return render_template("Perfil.html")
 
-@app.route("/Horario")
+@app.route("/Horario") #no me carga staff
 def Horario():
     return render_template("registromaestro.html")
 
-@app.route("/reinscripciones")
+@app.route("/reinscripciones") #encabezados, inconos staff
 def reinscripciones():
     """
     Muestra la lista de alumnos con información académica y de documentos.
