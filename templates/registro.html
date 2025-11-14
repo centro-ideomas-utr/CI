@@ -3,30 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
+    <title>Registro de Alumnos - Centro de Idiomas</title>
     <meta name="description" content="Formulario de Registro para el Centro de Idiomas">
 
+    <!-- Enlaces de fuentes y librerías que deberían estar en tu base.html o cabecera -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
-    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
-    
+    <!-- Asume que aquí iría tu formulario.css -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
     
-    <style>
-        .documento-dinamico {
-            display: none;
-        }
-    </style>
 </head>
+
 <body class="your_css_selector_here"> 
     <main class="contenedor">
         <div class="contenido">
             <h1>Regístrate</h1>
-            <div id="error-message" class="error-message" style="display: none;"></div>
+            
+            <div id="error-message" class="error-message transition-all duration-300" style="display: none;"></div>
 
-            <form class="formulario-registro" action="{{ url_for('guardar') }}" method="POST" enctype="multipart/form-data">
+            <!-- El formulario usa las clases del grid-area definido en el CSS -->
+            <form id="registration-form" class="formulario-registro" action="{{ url_for('guardar') }}" method="POST" enctype="multipart/form-data">
 
                 <div class="campo nombre">
                     <input class="registro_field" type="text" id="nombre" name="nombre" placeholder="Nombre(s)" required>
@@ -45,11 +45,12 @@
                 </div>
 
                 <div class="campo telefono">
-                    <input class="registro_field" type="text" id="telefono" name="telefono" placeholder="Telefono" required>
+                    <input class="registro_field" type="tel" id="telefono" name="telefono" placeholder="Teléfono" pattern="[0-9]{10}" title="Debe ser un número de 10 dígitos" required>
                 </div>
 
                 <div class="campo fecha_n">
-                    <input class="registro_field" type="date" id="fecha_n" name="fecha_n" placeholder="Fecha de Nacimiento" required>
+                    <label for="fecha_n" class="text-sm font-medium block mb-1"></label>
+                    <input class="registro_field" type="date" id="fecha_n" name="fecha_nacimiento" required>
                 </div>
 
                 <div class="campo domicilio">
@@ -60,56 +61,93 @@
                     <select class="registro_field" name="genero" id="genero" required>
                         <option value="" disabled selected>-- Selecciona género --</option>
                         {% for g in genero %}
-                        <option value="{{ g }}">{{ g }}</option>
+                            <option value="{{ g }}">{{ g }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <!-- SELECT CON EVENTO DINÁMICO -->
                 <div class="campo tipodeinscripcion">
                     <select 
                         class="registro_field" 
                         id="tipodeinscripcion" 
-                        name="tipodeinscripcion" 
+                        name="tipo_inscripcion" 
                         required
                         onchange="updateDocumentRequirements()"
                     >
                         <option value="" disabled selected>-- Tipo de Inscripción --</option>
                         {% for tipo in tipodeinscripcion %}
-                        <option value="{{ tipo }}">{{ tipo }}</option>
+                            <option value="{{ tipo }}">{{ tipo }}</option>
                         {% endfor %}
                     </select>
                 </div>
-
-                <div class="campo horario">
-                    <select class="registro_field" id="horario" name="horario" required>
-                        <option value="" disabled selected>-- Elige un horario --</option>
-                        {% for h in horarios %}
-                        <option value="{{ h }}">{{ h }}</option>
-                        {% endfor %}
-                    </select>
+                
+                <!-- Contenedor de Selección Múltiple de Idiomas/Horarios -->
+                <div class="campo idioma_selector">
+                    <label class="file-label" style="align-self: flex-start; margin-bottom: 0.5rem; font-weight: 700;">
+                        <i class="fas fa-globe mr-2"></i> Idiomas a Cursar (Mínimo 1, Máximo 6)
+                    </label>
+                    <div id="language-blocks-container" class="language-block-container w-full">
+                        <!-- Primer bloque de selección (Obligatorio) -->
+                        <div class="language-block" data-id="1">
+                            <div class="campo">
+                                <select name="idiomas[]" class="registro_field" required>
+                                    <option value="" disabled selected>-- Selecciona Idioma --</option>
+                                    {% for idioma in idiomas %}
+                                        <option value="{{ idioma.id_idioma }}">{{ idioma.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="campo">
+                                <select name="horarios[]" class="registro_field" required>
+                                    <option value="" disabled selected>-- Selecciona Horario --</option>
+                                    {% for horario in horarios %}
+                                        <option value="{{ horario.id_horario }}">{{ horario.detalle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Botón de eliminar, oculto para el primer bloque obligatorio -->
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Botón para añadir más bloques de Idioma/Horario -->
+                <div class="campo-boton boton_add">
+                    <button type="button" id="add-language-btn" onclick="addLanguageBlock()" class="boton boton--secundario" style="width: 100%;">
+                        <i class="fas fa-plus-circle mr-2"></i> Añadir Otro Idioma
+                    </button>
+                </div>
+                
+                <!-- Archivos de Documentos (Visibilidad dinámica por JS) -->
+                
                 <div class="campo documento-dinamico doc_acta" data-doc-name="acta_n">
-                    <label for="acta_n" class="file-label">Acta de Nacimiento (PDF)</label>
+                    <label for="acta_n" class="file-label">
+                        <i class="fas fa-file-pdf mr-2"></i> Acta de Nacimiento <span class="text-red-500">*</span>
+                    </label>
                     <input type="file" id="acta_n" name="acta_n" accept=".pdf">
                 </div>
 
                 <div class="campo documento-dinamico doc_identificacion" data-doc-name="identificacion">
-                    <label for="identificacion" class="file-label">Identificación (PDF)</label>
+                    <label for="identificacion" class="file-label">
+                        <i class="fas fa-id-card mr-2"></i> Identificación Oficial <span class="text-red-500">*</span>
+                    </label>
                     <input type="file" id="identificacion" name="identificacion" accept=".pdf">
                 </div>
 
                 <div class="campo documento-dinamico doc_descuento" data-doc-name="formato_descuento">
-                    <label for="formato_descuento" class="file-label">Formato de Descuento (PDF)</label>
+                    <label for="formato_descuento" class="file-label">
+                        <i class="fas fa-percent mr-2"></i> Formato de Descuento <span class="text-red-500">*</span>
+                    </label>
                     <input type="file" id="formato_descuento" name="formato_descuento" accept=".pdf">
                 </div>
 
                 <div class="campo documento-dinamico doc_comprobatorios" data-doc-name="documentos_comprobatorios">
-                    <label for="documentos_comprobatorios" class="file-label">Documentos Comprobatorios (PDF)</label>
+                    <label for="documentos_comprobatorios" class="file-label">
+                        <i class="fas fa-folder-open mr-2"></i> Documentos Comprobatorios <span class="text-red-500">*</span>
+                    </label>
                     <input type="file" id="documentos_comprobatorios" name="documentos_comprobatorios" accept=".pdf">
                 </div>
                 
+                <!-- Botón de Envío -->
                 <div class="campo-boton boton1">
                     <input type="submit" value="Crear Cuenta" class="boton boton--primario">
                 </div>
@@ -118,23 +156,20 @@
     </main>
     
     <script>
+        // Mapping de documentos requeridos por tipo de inscripción
         const documentRequirements = {
-            // Documentos requeridos mapeados a los atributos 'name'/'id' del input file
-            
-            // ADULTOS
+            // Nota: Estos valores deben coincidir exactamente con los ENUM de MySQL
             "INSCRIPCIÓN ADULTOS REGULAR": ["identificacion"],
             "INSCRIPCIÓN ADULTO DESCUENTO": ["identificacion", "formato_descuento", "documentos_comprobatorios"],
-            "REINSCRIPCIÓN ADULTOS REGULARES": [], // Ninguno
+            "REINSCRIPCIÓN ADULTOS REGULARES": [],
             "REINSCRIPCIÓN ADULTOS DESCUENTO": ["formato_descuento", "documentos_comprobatorios"],
             
-            // MENORES
             "INSCRIPCIÓN MENORES REGULAR": ["acta_n", "identificacion"],
             "INSCRIPCIÓN MENORES DESCUENTO": ["acta_n", "identificacion", "formato_descuento", "documentos_comprobatorios"],
-            "REINSCRIPCIÓN MENORES REGULAR": [], // Ninguno
+            "REINSCRIPCIÓN MENORES REGULAR": [],
             "REINSCRIPCIÓN MENORES DESCUENTO": ["formato_descuento", "documentos_comprobatorios"]
         };
         
-        // Lista de todos los campos de archivo posibles
         const allDocFields = [
             'acta_n', 
             'identificacion', 
@@ -142,39 +177,123 @@
             'documentos_comprobatorios'
         ];
 
+        // Función para actualizar la visibilidad y requerimiento de los campos de documento
         function updateDocumentRequirements() {
             const select = document.getElementById('tipodeinscripcion');
             const selectedType = select.value;
             
-            // Obtener la lista de documentos que deben ser obligatorios para este tipo
             const requiredDocs = documentRequirements[selectedType] || [];
             
             allDocFields.forEach(docName => {
-                // Selecciona el contenedor del campo (el <div>) y el input file
                 const docElement = document.querySelector(`.documento-dinamico[data-doc-name="${docName}"]`);
                 const fileInput = document.getElementById(docName);
+                const label = docElement ? docElement.querySelector('.file-label') : null;
 
-                if (!docElement || !fileInput) return;
+                if (!docElement || !fileInput || !label) return;
 
                 const isRequired = requiredDocs.includes(docName);
 
                 if (isRequired) {
-                    // Mostrar y hacer obligatorio
-                    docElement.style.display = 'flex';
-                    // Nota: Si tu CSS usa grid, es mejor 'grid' o '' (cadena vacía)
-                    // Usamos 'flex' aquí, asumiendo un layout simple para el campo individual.
+                    docElement.style.display = 'flex'; 
                     fileInput.setAttribute('required', 'required');
+                    
+                    // Asegurar que el label tenga el asterisco
+                    let labelText = label.innerHTML.split('<span')[0].trim();
+                    if (!labelText.endsWith('*')) {
+                       label.innerHTML = labelText + ' <span class="text-red-500">*</span>';
+                    }
+
                 } else {
-                    // Ocultar, liberar de la obligación y limpiar el valor
                     docElement.style.display = 'none';
                     fileInput.removeAttribute('required');
-                    // Limpiar el valor para evitar que se envíen archivos no solicitados
-                    fileInput.value = ''; 
+                    fileInput.value = ''; // Limpiar el valor para no enviar archivos innecesarios
+                    
+                    // Asegurar que el label NO tenga el asterisco
+                    label.innerHTML = label.innerHTML.split('<span')[0].trim();
                 }
             });
         }
         
-        // Ejecutar la función al cargar la página para inicializar
+        // --- Lógica para la selección dinámica de Idiomas/Horarios ---
+        
+        const MAX_LANGUAGES = 6;
+        let languageCounter = 1; // Ya tenemos el primer bloque
+
+        // Función para generar las opciones de <select> (para reutilizar en nuevos bloques)
+        function getOptions(type) {
+            const options = [];
+            // Usamos los datos de la primera selección como plantilla (opciones estáticas de Jinja)
+            const templateSelect = document.querySelector(`select[name="${type}[]"]`);
+            if (templateSelect) {
+                templateSelect.querySelectorAll('option').forEach(option => {
+                    // Clonamos el HTML de la opción, pero aseguramos que ninguna sea "selected"
+                    const isSelected = option.hasAttribute('selected');
+                    options.push(`<option value="${option.value}" ${option.disabled ? 'disabled' : ''} ${option.value === '' ? 'selected' : ''}>${option.textContent}</option>`);
+                });
+            }
+            return options.join('');
+        }
+
+        function addLanguageBlock() {
+            const container = document.getElementById('language-blocks-container');
+            if (container.children.length >= MAX_LANGUAGES) {
+                alert('Solo se permite la inscripción a un máximo de 6 idiomas.');
+                return;
+            }
+
+            languageCounter++;
+            const newBlock = document.createElement('div');
+            newBlock.className = 'language-block';
+            newBlock.setAttribute('data-id', languageCounter);
+            
+            // Reutilizar opciones generadas con Jinja
+            const idiomaOptions = getOptions('idiomas');
+            const horarioOptions = getOptions('horarios');
+
+            newBlock.innerHTML = `
+                <div class="campo">
+                    <select name="idiomas[]" class="registro_field" required>
+                        ${idiomaOptions}
+                    </select>
+                </div>
+                <div class="campo">
+                    <select name="horarios[]" class="registro_field" required>
+                        ${horarioOptions}
+                    </select>
+                </div>
+                <button type="button" class="remove-btn" onclick="removeLanguageBlock(this)">
+                    <i class="fas fa-trash-alt"></i> Eliminar
+                </button>
+            `;
+
+            container.appendChild(newBlock);
+            
+            // Ocultar el botón si llegamos al máximo
+            if (container.children.length >= MAX_LANGUAGES) {
+                document.getElementById('add-language-btn').style.display = 'none';
+            }
+        }
+
+        function removeLanguageBlock(button) {
+            const container = document.getElementById('language-blocks-container');
+            const blockToRemove = button.closest('.language-block');
+            
+            // Siempre debe haber al menos un bloque (mínimo 1 idioma)
+            if (container.children.length > 1) {
+                blockToRemove.remove();
+                // Mostrar el botón de añadir si estamos por debajo del máximo
+                if (container.children.length < MAX_LANGUAGES) {
+                    document.getElementById('add-language-btn').style.display = 'block';
+                }
+            } else {
+                alert('Debe seleccionar al menos un idioma y su horario correspondiente.');
+            }
+        }
+        
+        window.removeLanguageBlock = removeLanguageBlock; // Exportar al ámbito global
+        window.addLanguageBlock = addLanguageBlock;      // Exportar al ámbito global
+
+        // Inicializar al cargar la página
         document.addEventListener('DOMContentLoaded', updateDocumentRequirements);
     </script>
 </body>

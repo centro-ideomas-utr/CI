@@ -1,3 +1,4 @@
+/* CSS proporcionado por el usuario + variables */
 :root {
     --blanco: #ffffff;
     --negro: #000; /* Color principal para el texto */
@@ -5,7 +6,7 @@
     --rojo-error: #ff4757;
     --fuenteHeadings: 'Roboto', sans-serif;
     --fuenteTitulo: 'Jersey 10 Charted', cursive;
-    --fondo-contenido-opacidad: 0.35; /* NUEVO: Opacidad más alta para el recuadro */
+    --fondo-contenido-opacidad: 0.35; /* Opacidad más alta para el recuadro */
 }
 
 body, html {
@@ -28,30 +29,35 @@ body, html {
     padding: 3rem 0;
 }
 
-/* Caja del formulario - Aumento de Opacidad */
+/* Caja del formulario - Glassmorphism */
 .contenido {
-    /* MODIFICADO: Aumento de opacidad base y reducción del blur para resaltarlo */
     background-color: rgba(255, 255, 255, var(--fondo-contenido-opacidad)); 
-    backdrop-filter: blur(8px); /* Es recomendable subir el blur de nuevo para que el efecto transparente se vea mejor */ 
+    backdrop-filter: blur(8px); 
     padding: 3rem 6rem;
     border-radius: 2rem;
     text-align: center;
-    backdrop-filter: blur(4px); /* Reducir el blur para que se vea más sólido */
-    box-shadow: 0 0 25px rgba(0,0,0,0.2); /* Sombra negra para contraste */
+    backdrop-filter: blur(4px); 
+    box-shadow: 0 0 25px rgba(0,0,0,0.2); 
     width: 100%;
     max-width: 90rem;
-    color: var(--negro); /* Texto general del contenido a negro */
+    color: var(--negro); 
 }
 
 /* Título - Ajustado a Negro */
 .contenido h1 {
-    color: var(--negro); /* MODIFICADO */
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.3); /* Sombra negra sutil */
+    color: var(--negro); 
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.3); 
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 2rem;
+    font-size: 2.5rem; /* Ajuste para visualización */
 }
+.contenido p {
+    color: rgba(0, 0, 0, 0.7); /* Texto secundario */
+    margin-bottom: 2rem;
+}
+
 
 /* ESTILO PARA EL MENSAJE DE ERROR 🚨 */
 .error-message {
@@ -62,7 +68,7 @@ body, html {
     border-radius: 1rem;
     font-weight: 700;
     text-align: left;
-    border: 1px solid var(--negro); /* Borde negro para contraste */
+    border: 1px solid var(--negro); 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.5s ease-out;
 }
@@ -77,50 +83,68 @@ body, html {
 /* ---------------------------------- */
 .formulario-registro {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem 4rem;
-    grid-template-areas:
-        'nombre apellido_p'
-        'apellido_m correo_electronico'
-        'telefono fecha_n'
-        'domicilio domicilio' 
-        'genero tipodeinscripcion'
-        'horario horario' 
-        'doc_acta doc_identificacion'
-        'doc_descuento doc_comprobatorios'
-        'boton1 boton1';
+    grid-template-columns: repeat(1, 1fr); /* Default mobile layout */
+    gap: 1.5rem;
+    margin-top: 2rem;
 }
 
-/* Definición de áreas para los campos de archivo */
-.doc_acta { grid-area: doc_acta; }
-.doc_identificacion { grid-area: doc_identificacion;}
-.doc_descuento { grid-area: doc_descuento; }
-.doc_comprobatorios { grid-area: doc_comprobatorios; }
+/* Layout responsive para 2 columnas en desktop (basado en grid-template-areas) */
+@media (min-width: 768px) {
+    .formulario-registro {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem 4rem;
+        grid-template-areas:
+            'nombre apellido_p'
+            'apellido_m correo_electronico'
+            'telefono fecha_n'
+            'domicilio domicilio' 
+            'genero tipodeinscripcion'
+            'idioma_selector idioma_selector' /* Nueva área para selección dinámica */
+            'boton_add boton_add' /* Nuevo botón de añadir */
+            'doc_acta doc_identificacion'
+            'doc_descuento doc_comprobatorios'
+            'boton1 boton1';
+    }
+    /* Definición de áreas para los campos de archivo */
+    .doc_acta { grid-area: doc_acta; }
+    .doc_identificacion { grid-area: doc_identificacion;}
+    .doc_descuento { grid-area: doc_descuento; }
+    .doc_comprobatorios { grid-area: doc_comprobatorios; }
 
-/* Áreas de campos de texto/select */
-.nombre { grid-area: nombre; }
-.apellido_p { grid-area: apellido_p; }
-.apellido_m { grid-area: apellido_m; }
-.correo_electronico { grid-area: correo_electronico; }
-.telefono { grid-area: telefono; }
-.fecha_n { grid-area: fecha_n; }
-.domicilio { grid-area: domicilio; }
-.genero { grid-area: genero; }
-.tipodeinscripcion { grid-area: tipodeinscripcion; }
-.horario { grid-area: horario; }
+    /* Áreas de campos de texto/select */
+    .nombre { grid-area: nombre; }
+    .apellido_p { grid-area: apellido_p; }
+    .apellido_m { grid-area: apellido_m; }
+    .correo_electronico { grid-area: correo_electronico; }
+    .telefono { grid-area: telefono; }
+    .fecha_n { grid-area: fecha_n; }
+    .domicilio { grid-area: domicilio; }
+    .genero { grid-area: genero; }
+    .tipodeinscripcion { grid-area: tipodeinscripcion; }
+    /* Nuevas áreas */
+    .idioma_selector { grid-area: idioma_selector; }
+    .boton_add { grid-area: boton_add; }
+
+
+    .boton1 { grid-area: boton1; }
+}
 
 .boton1 {
-    grid-area: boton1;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 2rem;
 }
 
-/* Campos de ancho completo */
-.domicilio, .horario {
-    grid-column: 1 / 3;
+/* Campos de ancho completo (Solo para la versión móvil, en desktop lo hace el grid-area) */
+@media (max-width: 767px) {
+    .domicilio, .idioma_selector, .boton_add, 
+    .doc_acta, .doc_identificacion, 
+    .doc_descuento, .doc_comprobatorios {
+        grid-column: 1 / -1;
+    }
 }
+
 
 /* Campo dinámico - CORRECCIÓN DE VISIBILIDAD DE DOCUMENTOS */
 .campo.documento-dinamico {
@@ -130,26 +154,69 @@ body, html {
     justify-content: center;
 }
 
+/* Estilos específicos para el contenedor dinámico de idioma/horario */
+.language-block-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+.language-block {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.4);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.language-block .campo {
+    align-items: flex-start;
+}
+.remove-btn {
+    background: var(--rojo-error);
+    color: var(--blanco);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    height: fit-content;
+    align-self: center;
+    grid-column: 1 / 3;
+}
+@media (min-width: 768px) {
+    .language-block {
+        grid-template-columns: 1fr 1fr auto;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    .remove-btn {
+        grid-column: auto;
+    }
+}
+
+
 /* Estilos de Campos Generales */
 .campo {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Alineación a la izquierda */
 }
 
 .registro_field {
     border: none;
-    /* MODIFICADO: Borde inferior negro */
     border-bottom: 2px solid var(--negro); 
     padding: 1rem;
-    /* MODIFICADO: Color de texto a negro */
     color: var(--negro); 
-    /* MODIFICADO: Fondo de campo más transparente para el efecto */
     background: rgba(255, 255, 255, 0.5); 
     width: 100%;
-    font-size: 1.3rem;
+    font-size: 1.1rem; /* Ajuste a 1.1rem para mejor legibilidad */
     transition: all 0.3s ease;
     box-sizing: border-box;
+    border-radius: 0; /* Sin bordes redondeados */
 }
 
 .registro_field:focus {
@@ -160,13 +227,13 @@ body, html {
 
 /* Placeholders a color gris oscuro para visibilidad */
 .registro_field::placeholder {
-    color: rgba(0,0,0,0.5); /* MODIFICADO: Placeholder oscuro */
+    color: rgba(0,0,0,0.5); 
     text-transform: uppercase;
 }
 
 /* Estilo específico para input[type="date"] */
 input[type="date"] {
-    color: var(--negro); /* MODIFICADO */
+    color: var(--negro); 
     appearance: none; 
     -webkit-appearance: none;
     cursor: pointer;
@@ -175,39 +242,42 @@ input[type="date"]::-webkit-datetime-edit-text,
 input[type="date"]::-webkit-datetime-edit-month-field,
 input[type="date"]::-webkit-datetime-edit-day-field,
 input[type="date"]::-webkit-datetime-edit-year-field {
-    color: var(--negro); /* MODIFICADO */
+    color: var(--negro); 
 }
 
 /* Opciones del select */
 .registro_field option {
-    background-color: var(--blanco); /* Fondo claro para opciones */
-    color: var(--negro); /* MODIFICADO: Texto de opciones a negro */
+    background-color: var(--blanco); 
+    color: var(--negro); 
 }
 
 /* Estilos de Archivos (Documentos) */
 .file-label {
-    color: var(--negro); /* MODIFICADO */
+    color: var(--negro); 
     margin-bottom: 0.5rem;
-    font-size: 1.1rem;
+    font-size: 1rem; /* Ajuste de fuente */
     text-transform: uppercase;
     align-self: flex-start;
+    font-weight: 600; /* Negrita para la etiqueta */
 }
 
+/* Estilo para el input file nativo (que estaba display: none, ahora lo ajustamos si se muestra) */
 input[type="file"] {
-    color: var(--negro); /* MODIFICADO */
+    color: var(--negro); 
     width: 100%;
-    border: 1px dashed rgba(0, 0, 0, 0.5); /* MODIFICADO: Borde de archivo oscuro */
+    border: 1px dashed rgba(0, 0, 0, 0.5); 
     padding: 1rem;
     border-radius: 0.5rem;
     font-size: 1rem; 
     box-sizing: border-box;
     cursor: pointer;
+    display: block; /* Aseguramos que se muestre si es requerido */
 }
 
 /* Estilo para el botón de subir archivo (navegadores basados en Webkit) */
 input[type="file"]::-webkit-file-upload-button {
-    background: rgba(0, 0, 0, 0.1); /* MODIFICADO: Fondo de botón sutilmente oscuro */
-    color: var(--negro); /* MODIFICADO */
+    background: rgba(0, 0, 0, 0.1); 
+    color: var(--negro); 
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 0.3rem;
@@ -221,28 +291,37 @@ input[type="file"]::-webkit-file-upload-button {
     font-size: 1.4rem;
     padding: 1rem 2rem;
     border-radius: 2rem;
-    border: 2px solid var(--negro); /* MODIFICADO: Borde de botón negro */
+    border: 2px solid var(--negro); 
     background: transparent;
-    color: var(--negro); /* MODIFICADO */
+    color: var(--negro); 
     text-transform: uppercase;
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .boton:hover {
-    background: var(--negro); /* Fondo negro al pasar el ratón */
-    color: var(--blanco); /* Letras blancas al pasar el ratón */
+    background: var(--negro); 
+    color: var(--blanco); 
     box-shadow: 0 0 15px rgba(0,0,0,0.4);
 }
 
 .boton--primario {
-    background-color: var(--negro); /* Botón primario invertido */
-    color: var(--blanco); /* MODIFICADO */
+    background-color: var(--negro); 
+    color: var(--blanco); 
     border: none;
 }
 .boton--primario:hover {
     background-color: #333;
     color: var(--blanco);
+}
+
+.boton--secundario {
+    background-color: #3b82f6; /* Blue 500 */
+    color: var(--blanco); 
+    border: none;
+}
+.boton--secundario:hover {
+    background-color: #2563eb; /* Blue 600 */
 }
 
 @keyframes hero-gradient-animation {

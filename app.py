@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, abort, redirect, url_for, Response, jsonify
+from flask import Flask, render_template, request, abort, redirect, url_for, Response, jsonify
 import yagmail
 import mysql.connector
 from pymongo import MongoClient
@@ -56,7 +56,7 @@ db_config = {
     "host": os.getenv('DB_HOST'),
     "user": os.getenv('DB_USER'),
     "password": os.getenv('DB_PASSWORD'),
-    "database": os.getenv('DB_NAME')
+    "database": os.getenv('DB_DATABASE')
 }
 
 # --- Configuración de MongoDB ---
@@ -68,17 +68,15 @@ mongo_db = mongo_client["ci_prueba"]
 expedientes_col = mongo_db["expedientes"]
 logs_col = mongo_db["logs"]
 
-# --- Carpeta de uploads ---
-UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-global_avisos = []
+from gridfs import GridFS
+fs = GridFS(mongo_db) 
 
+global_avisos = []
 
 # =================================================================
 # === CONFIGURACIONES Y FUNCIONES AUXILIARES ===
 # =================================================================
 
-# Datos del RECEPTOR (UTR) - Fijos para la facturación
 UTR_DATA = {
     "rfc": "UTR130212KB3",
     "razon_social": "UNIVERSIDAD TECNOLOGICA EL RETOÑO",
@@ -127,33 +125,36 @@ def parse_enum(row):
 
 @app.route('/expediente/ver/<string:mongo_id>/<string:tipo_doc>')
 def ver_documento_expediente(mongo_id, tipo_doc):
-    """
-    Ruta dinámica para servir documentos. Consulta Mongo para obtener la ruta del archivo
-    y luego sirve el archivo desde el sistema de archivos local (uploads).
-    """
     try:
         expediente = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
         
         if not expediente:
             abort(404, description="Expediente no encontrado en MongoDB.")
 
-        # Obtener la ruta COMPLETA del archivo guardada en Mongo
-        full_filepath = expediente.get('documentos', {}).get(tipo_doc)
+        # Obtener el ObjectId del archivo en GridFS
+        grid_fs_id_str = expediente.get('documentos', {}).get(tipo_doc)
         
-        if not full_filepath or not os.path.exists(full_filepath):
-            abort(404, description=f"Documento '{tipo_doc}' no encontrado en el servidor.")
+        if not grid_fs_id_str:
+            abort(404, description=f"Referencia de documento '{tipo_doc}' no encontrada en el expediente.")
 
-        # Extraer SÓLO el nombre del archivo, ya que send_from_directory lo busca en UPLOAD_FOLDER
-        filename = os.path.basename(full_filepath) 
-        
-        return send_from_directory(
-            UPLOAD_FOLDER, 
-            filename,
-            as_attachment=False
+        # Obtener el archivo de GridFS
+        try:
+            grid_file = fs.get(ObjectId(grid_fs_id_str))
+        except Exception:
+            abort(404, description="Archivo no encontrado en GridFS.")
+
+        # Devolver el archivo como una respuesta de Flask
+        response = Response(
+            response=grid_file.read(),
+            status=200,
+            mimetype=grid_file.content_type
         )
+        # Permite la visualización en línea (inline)
+        response.headers['Content-Disposition'] = f'inline; filename="{grid_file.filename}"'
+        return response
 
     except Exception as e:
-        print(f"Error al servir documento: {e}")
+        print(f"Error al servir documento desde GridFS: {e}")
         abort(500, description="Error interno al acceder al documento.")
 
 
@@ -219,7 +220,7 @@ def gestion_personal():
             conn.close()
 
     # Pasa la lista y el término de búsqueda al template
-    return render_template("gestion_personal.html", personal=personal, busqueda=busqueda)
+    return render_template("añadiradmin.html", personal=personal, busqueda=busqueda)
 
 @app.route('/guardar-personal', methods=['POST'])
 def guardar_personal():
@@ -227,141 +228,110 @@ def guardar_personal():
     email = request.form.get('email')
     
     # -------------------------------------------------------------
-    # 1. GENERACIÓN DE CONTRASEÑA TEMPORAL SEGURA
+    # 1. GENERACIÓN DE CONTRASEÑA TEMPORAL SEGURA (SÍNCRONA)
     # -------------------------------------------------------------
-    # Se crea una contraseña temporal de 12 caracteres (letras y números)
     caracteres = string.ascii_letters + string.digits 
     contrasena_temporal = ''.join(secrets.choice(caracteres) for i in range(12))
-    
-    # Se genera el hash de la contraseña temporal para guardarla en DB
     password_encriptada = generate_password_hash(contrasena_temporal)
     
+    # Extraer la información del formulario
+    form_data = {
+        'nombre': request.form.get('nombre'),
+        'apellidos': request.form.get('apellidos'),
+        'email': email,
+        'telefono': request.form.get('telefono'),
+        'tipo_personal': request.form.get('tipo_personal'),
+        'fecha_nacimiento': request.form.get('fecha_n') if request.form.get('fecha_n') else None,
+        'genero': request.form.get('genero')
+    }
+    
+    # Preparar datos de archivos para pasarlos al hilo.
+    # Se pasa una lista de tuplas (nombre del campo, contenido binario, nombre del archivo, tipo de contenido)
+    uploaded_files_data = []
+    file_mapping = {
+        "doc_acta": "acta_nacimiento",
+        "doc_identificacion": "identificacion",
+        "doc_estado": "estado_de_cuenta",
+        "doc_cv": "cv",
+        "doc_comprobante_domicilio": "comprobante_domicilio",
+        "doc_carta1": "carta_recomendacion1",
+        "doc_carta2": "carta_recomendacion2",
+        "doc_titulo": "titulo",
+        "doc_cedula": "cedula",
+        "doc_situacion_fiscal": "constancia_situacion_fiscal",
+    }
+    
+    for form_field, mongo_key in file_mapping.items():
+        file = request.files.get(form_field)
+        if file and file.filename:
+            # Capturamos el contenido binario y la información para el hilo
+            file_content = file.read()
+            uploaded_files_data.append((mongo_key, file_content, secure_filename(file.filename), file.content_type))
+    
+    # Inicializar cursor a None
+    cursor = None
+    
     try:
-        # Asegurarse de que el formulario HTML ya NO envíe el campo 'contrasena'
-        nombre = request.form['nombre']
-        apellidos = request.form['apellidos'] 
-        email = request.form['email']
-        telefono = request.form['telefono']
-        tipo_personal = request.form['tipo_personal']
-        fecha_nacimiento = request.form.get('fecha_n') 
-        genero = request.form.get('genero') 
+        # -------------------------------------------------------------
+        # 2. INSERCIÓN EN MYSQL (RÁPIDA) - Se guarda sin id_expediente_mongo al inicio
+        # -------------------------------------------------------------
         
-        if fecha_nacimiento == "": fecha_nacimiento = None
-        
-        # Separar apellidos (asume ApellidoPaterno ApellidoMaterno)
-        apellido_parts = apellidos.split(' ')
+        # Separar apellidos
+        apellido_parts = form_data['apellidos'].split(' ')
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        file_mapping = {
-            "doc_acta": "acta_nacimiento",
-            "doc_identificacion": "identificacion",
-            "doc_estado": "estado_de_cuenta",
-            "doc_cv": "cv",
-            "doc_comprobante_domicilio": "comprobante_domicilio",
-            "doc_carta1": "carta_recomendacion1",
-            "doc_carta2": "carta_recomendacion2",
-            "doc_titulo": "titulo",
-            "doc_cedula": "cedula",
-            "doc_situacion_fiscal": "constancia_situacion_fiscal",
-        }
-        documentos_mongo = {}
-        uploaded_files = request.files
-        for form_field, mongo_key in file_mapping.items():
-            file = uploaded_files.get(form_field)
-            if file and file.filename:
-                ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
-                filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                documentos_mongo[mongo_key] = filepath
-            else:
-                documentos_mongo[mongo_key] = None
-        # ... (Fin de lógica de manejo de archivos) ...
-
-        # -------------------------------------------------------------
-        # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
-        # -------------------------------------------------------------
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        if tipo_personal == 'maestro':
+        if form_data['tipo_personal'] == 'maestro':
             table_name = "profesores"
-            id_column = "id_profesor"
             query = """
                 INSERT INTO profesores 
                 (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            # El HASH de la contraseña temporal se guarda en DB
-            params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada, genero)
+            params = (form_data['nombre'], apellido_p, apellido_m, email, form_data['telefono'], form_data['fecha_nacimiento'], password_encriptada, form_data['genero'])
         
-        elif tipo_personal == 'staff':
+        elif form_data['tipo_personal'] == 'staff':
             table_name = "staff"
-            id_column = "id_staff"
             query = """
                 INSERT INTO staff 
-                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            # El HASH de la contraseña temporal se guarda en DB
-            params = (nombre, apellido_p, apellido_m, email, telefono, fecha_nacimiento, password_encriptada) 
+            params = (form_data['nombre'], apellido_p, apellido_m, email, form_data['telefono'], form_data['fecha_nacimiento'], password_encriptada, form_data['genero'])
         
         else:
             return jsonify({'status': 'error', 'message': 'Error: Tipo de personal no válido.'}), 400
 
         cursor.execute(query, params)
         id_personal = cursor.lastrowid
-        
-        # -------------------------------------------------------------
-        # 3. Guardar Expediente en MongoDB y actualizar MySQL
-        # -------------------------------------------------------------
-        expediente_doc = {
-            "tipo": tipo_personal, 
-            "id_relacional": id_personal,
-            "documentos": documentos_mongo, 
-            "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_admin" }
-        }
-        mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
-        update_query = f"UPDATE {table_name} SET id_expediente_mongo = %s WHERE {id_column} = %s"
-        cursor.execute(update_query, (str(mongo_id), id_personal))
         conn.commit()
         
         # -------------------------------------------------------------
-        # 4. ENVÍO DE CORREO CON CONTRASEÑA TEMPORAL
+        # 3. INICIAR TAREA ASÍNCRONA (OFFLOADING)
         # -------------------------------------------------------------
+        
+        # Pasamos los datos necesarios a la función que se ejecutará en segundo plano
+        import threading
+        thread = threading.Thread(
+            target=process_personal_registration_async, 
+            args=(
+                id_personal, 
+                form_data['tipo_personal'],
+                email, 
+                contrasena_temporal, 
+                uploaded_files_data, 
+                form_data['nombre'],
+                apellido_p,
+                apellido_m
+            )
+        )
+        thread.start()
 
-        if yag:
-            nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
-            
-            subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
-            
-            contents = [
-                f"Hola {nombre_completo},",
-                "<p>¡Te damos la más cordial bienvenida! Tu cuenta ha sido creada. A continuación, encontrarás tus credenciales:</p>",
-                
-                "<ul>",
-                f"<li>**Usuario (Correo):** <b>{email}</b></li>",
-                f"<li>**Contraseña TEMPORAL:** <b>{contrasena_temporal}</b></li>",
-                "</ul>",
-                
-                f"<p>Por favor, utiliza este enlace para ingresar: <a href=\"{url_for('login', _external=True)}\">Acceder al Sistema CIUTR</a></p>",
-                "<p>Te recomendamos **cambiar tu contraseña inmediatamente** después de iniciar sesión.</p>",
-                "<p>Atentamente,<br>Equipo de Administración CIUTR</p>"
-            ]
-            
-            yag.send(to=email, subject=subject, contents=contents)
-            
-            logs_col.insert_one({
-                "tipo_entidad": "sistema",
-                "id_entidad": id_personal,
-                "accion": "correo_bienvenida_enviado",
-                "detalle": f"Correo de bienvenida enviado con credenciales a {email}.", 
-                "usuario": "sistema_auto", 
-                "fecha": datetime.utcnow()
-            })
-
-        return jsonify({'status': 'success', 'message': f'¡{tipo_personal.capitalize()} guardado exitosamente y credenciales enviadas!'}), 200
+        # Respuesta inmediata al usuario
+        return jsonify({'status': 'success', 'message': f'¡{form_data["tipo_personal"].capitalize()} creado. Expediente y correo se están procesando en segundo plano.'}), 202
 
     except mysql.connector.Error as err:
         if conn: conn.rollback()
@@ -383,6 +353,98 @@ def guardar_personal():
     finally:
         if 'cursor' in locals() and cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
+
+# -------------------------------------------------------------
+# NUEVA FUNCIÓN: PROCESO ASÍNCRONO DE TAREAS PESADAS
+# -------------------------------------------------------------
+
+# NOTA: Esta función DEBE recibir todas las variables que necesita, NO debe
+# acceder a variables globales de Flask/Request como `db_config`, etc.
+def process_personal_registration_async(id_personal, tipo_personal, email, contrasena_temporal, uploaded_files_data, nombre, apellido_p, apellido_m):
+    """
+    Función que se ejecuta en un hilo separado (asíncrono) para manejar
+    la subida de archivos grandes, la actualización de MySQL y el envío de correos.
+    """
+    
+    # 1. Re-inicializar conexiones (porque estamos en un hilo separado)
+    conn_async = None
+    cursor_async = None
+    
+    try:
+        # --- A. SUBIR ARCHIVOS A GRIDFS Y CONSTRUIR EXPEDIENTE ---
+        documentos_mongo = {}
+        
+        for mongo_key, file_content, original_filename, content_type in uploaded_files_data:
+            from io import BytesIO
+            file_stream = BytesIO(file_content)
+            
+            # Subir archivo a GridFS
+            grid_fs_id = fs.put(
+                file_stream, 
+                filename=original_filename,
+                content_type=content_type,
+                alias=mongo_key,
+                usuario_registro=email,
+                tipo_personal=tipo_personal
+            )
+            documentos_mongo[mongo_key] = str(grid_fs_id) 
+
+        # --- B. GUARDAR EXPEDIENTE EN MONGODB Y ACTUALIZAR MYSQL ---
+        expediente_doc = {
+            "tipo": tipo_personal, 
+            "id_relacional": id_personal,
+            "documentos": documentos_mongo, 
+            "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_admin_async" }
+        }
+        mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
+        
+        # Reconexión a MySQL para la actualización final
+        conn_async = mysql.connector.connect(**db_config)
+        cursor_async = conn_async.cursor()
+        
+        table_name = "profesores" if tipo_personal == 'maestro' else "staff"
+        id_column = "id_profesor" if tipo_personal == 'maestro' else "id_staff"
+        
+        update_query = f"UPDATE {table_name} SET id_expediente_mongo = %s WHERE {id_column} = %s"
+        cursor_async.execute(update_query, (str(mongo_id), id_personal))
+        conn_async.commit()
+        
+        # --- C. ENVÍO DE CORREO (LENTO) ---
+        if yag:
+             nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
+             subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
+             contents = [
+                 f"Hola {nombre_completo}, tu cuenta ha sido creada. Tu contraseña temporal es: <b>{contrasena_temporal}</b>. Tus documentos han sido subidos con éxito."
+             ]
+             yag.send(to=email, subject=subject, contents=contents)
+
+             logs_col.insert_one({
+                 "tipo_entidad": "sistema",
+                 "id_entidad": id_personal,
+                 "accion": "correo_bienvenida_enviado_async",
+                 "detalle": f"Correo de bienvenida enviado con credenciales y expediente subido.", 
+                 "usuario": "sistema_auto_async", 
+                 "fecha": datetime.utcnow()
+             })
+             
+        print(f"INFO: Registro asíncrono de {tipo_personal} ID {id_personal} completado con éxito.")
+        
+    except Exception as e:
+        # Registrar el error en los logs para auditoría de fallos asíncronos
+        print(f"ERROR ASÍNCRONO al procesar el registro de {tipo_personal} ID {id_personal}: {e}")
+        logs_col.insert_one({
+            "tipo_entidad": tipo_personal,
+            "id_entidad": id_personal,
+            "accion": "error_registro_async",
+            "detalle": f"Fallo en la tarea asíncrona (Subida/Correo). Error: {e}",
+            "usuario": "sistema_auto_async", 
+            "fecha": datetime.utcnow()
+        })
+        if conn_async: conn_async.rollback()
+        
+    finally:
+        if 'cursor_async' in locals() and cursor_async: cursor_async.close()
+        if conn_async and conn_async.is_connected(): conn_async.close()
 
 # =================================================================
 # === RUTAS DE RESTABLECIMIENTO DE CONTRASEÑA ===
@@ -710,25 +772,33 @@ def inicio():
 
 @app.route("/registro")
 def registro():
-    """Muestra el formulario de registro de alumnos con opciones ENUM."""
+    """Muestra el formulario de registro de alumnos con catálogos actualizados."""
+    conn = None
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
+        # 1. Obtener valores ENUM para campos fijos (género, tipo_inscripcion)
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'genero'")
         genero = parse_enum(cursor.fetchone())
 
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'tipo_inscripcion'")
         tipodeinscripcion = parse_enum(cursor.fetchone())
 
-        cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'horario'")
-        horarios = parse_enum(cursor.fetchone())
+        # 2. Obtener Catálogo de IDIOMAS (id y nombre)
+        cursor.execute("SELECT id_idioma, nombre FROM idioma ORDER BY nombre")
+        idiomas = cursor.fetchall()
+        
+        # 3. Obtener Catálogo de HORARIOS (id y detalle)
+        query_horarios = "SELECT id_horario, CONCAT(dias, ' - ', hora, ' (', sede, ')') AS detalle FROM horario ORDER BY dias, hora"
+        cursor.execute(query_horarios)
+        horarios = cursor.fetchall()
 
     except mysql.connector.Error as err:
         print("Error:", err)
-        genero, tipodeinscripcion, horarios = [], [], []
+        genero, tipodeinscripcion, idiomas, horarios = [], [], [], []
     finally:
-        if 'conn' in locals() and conn.is_connected():
+        if 'conn' in locals() and conn and conn.is_connected():
             cursor.close()
             conn.close()
 
@@ -736,12 +806,14 @@ def registro():
         "registro.html",
         genero=genero,
         tipodeinscripcion=tipodeinscripcion,
-        horarios=horarios
+        idiomas=idiomas,      # Lista de idiomas disponibles
+        horarios=horarios     # Lista de horarios disponibles
     )
 
 @app.route("/guardar", methods=["POST"])
 def guardar():
     conn = None
+    cursor = None
     try:
         datos = {
             "correo": request.form["correo_electronico"],
@@ -749,13 +821,24 @@ def guardar():
             "apellido_p": request.form["apellido_p"],
             "apellido_m": request.form["apellido_m"],
             "telefono": request.form["telefono"],
-            "fecha_nacimiento": datetime.strptime(request.form["fecha_n"], "%Y-%m-%d"),
+            "fecha_nacimiento": datetime.strptime(request.form["fecha_nacimiento"], "%Y-%m-%d").date(),
             "domicilio": request.form["domicilio"],
             "genero": request.form["genero"],
-            "tipo_inscripcion": request.form["tipodeinscripcion"],
-            "horario": request.form["horario"]
+            "tipo_inscripcion": request.form["tipo_inscripcion"],
         }
+        
+        # 1. Capturar las listas de Idiomas y Horarios
+        idiomas_seleccionados = request.form.getlist('idiomas[]')
+        horarios_seleccionados = request.form.getlist('horarios[]')
+        
+        # Validar y filtrar pares idioma/horario
+        inscripciones_validas = list(zip(idiomas_seleccionados, horarios_seleccionados))
+        inscripciones_validas = [(i, h) for i, h in inscripciones_validas if i and h]
+        
+        if not inscripciones_validas:
+             return "<h1>Error: Debe seleccionar al menos un idioma y su horario correspondiente.</h1><a href='/registro'>Volver</a>", 400
 
+        # --- Lógica de Manejo de Archivos (GridFS) ---
         file_fields = {
             "acta_n": "acta_nacimiento",
             "identificacion": "identificacion",
@@ -768,44 +851,62 @@ def guardar():
         for form_field, mongo_key in file_fields.items():
             file = request.files.get(form_field) 
             if file and file.filename:
+                # Subir archivo a GridFS
                 original_filename_secure = secure_filename(file.filename)
-                name, ext = os.path.splitext(original_filename_secure)
                 
-                # Nombre único con correo, tipo de documento y timestamp
-                filename = f"{secure_filename(datos['correo'])}_{form_field}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                documentos_mongo[mongo_key] = filepath 
+                # Guarda el archivo y devuelve su ObjectId
+                grid_fs_id = fs.put(
+                    file, 
+                    filename=original_filename_secure,
+                    content_type=file.content_type,
+                    alias=mongo_key,
+                    usuario_registro=datos["correo"]
+                )
+                
+                # Almacenar el ObjectId de GridFS (como string)
+                documentos_mongo[mongo_key] = str(grid_fs_id) 
             else:
-                # Si el archivo no fue enviado (porque era opcional/oculto), se guarda como None
                 documentos_mongo[mongo_key] = None
 
-
+        # --- Inserción en MySQL ---
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-
-        cursor.execute("SELECT COALESCE(MAX(matricula),1000)+1 FROM alumnos")
+        
+        # Calcular la matrícula
+        cursor.execute("SELECT COALESCE(MAX(matricula),16446)+1 FROM alumnos")
         matricula = cursor.fetchone()[0]
 
-        # La contraseña se deja NULL por defecto en el registro inicial
+        # Inserción en alumnos (sin id_idioma/id_horario)
         cursor.execute("""
             INSERT INTO alumnos 
             (matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono,
-             fecha_nacimiento, domicilio, genero, tipo_inscripcion, horario)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+             fecha_nacimiento, domicilio, genero, tipo_inscripcion)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
             matricula, datos["nombre"], datos["apellido_p"], datos["apellido_m"], datos["correo"],
             datos["telefono"], datos["fecha_nacimiento"], datos["domicilio"], datos["genero"],
-            datos["tipo_inscripcion"], datos["horario"]
+            datos["tipo_inscripcion"]
         ))
 
         id_alumno = cursor.lastrowid
+        
+        # Inserción en inscripciones_idioma (Múltiples Registros)
+        inscripcion_query = """
+            INSERT INTO inscripciones_idioma 
+            (id_alumno, id_idioma, id_horario)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE id_alumno = id_alumno;
+        """
+        for id_idioma, id_horario in inscripciones_validas:
+             # Se convierten a int para asegurar el tipo de dato de MySQL
+            cursor.execute(inscripcion_query, (id_alumno, int(id_idioma), int(id_horario)))
 
-        # Guardar Expediente en MongoDB
+
+        # Guardar Expediente en MongoDB (Documentos) y actualizar alumno
         expediente_doc = {
             "tipo": "alumno",
             "id_relacional": id_alumno,
-            "documentos": documentos_mongo, # Usamos el diccionario completo con todos los campos
+            "documentos": documentos_mongo, # Contiene ObjectIds de GridFS
             "metadata": {
                 "fecha_subida": datetime.utcnow(),
                 "actualizado_por": "sistema_auto"
@@ -820,29 +921,35 @@ def guardar():
 
         conn.commit()
 
-        # Guardar Log
+        # ... (Resto de la función para logs y retorno) ...
         logs_col.insert_one({
             "tipo_entidad": "alumno",
             "id_entidad": id_alumno,
             "accion": "registro",
-            "detalle": "Alumno registrado y expediente creado.",
+            "detalle": "Alumno registrado y expediente creado con documentos en GridFS.",
             "usuario": datos["correo"],
             "fecha": datetime.utcnow()
         })
 
         return render_template("registro_exitoso.html", matricula=matricula)
 
+    except mysql.connector.Error as err:
+        mensaje = f"Error de Base de Datos: {err.msg}"
+        print(f"Error de MySQL: {err}")
+        if conn and conn.is_connected():
+             conn.rollback() 
+        return f"<h1>Error en el registro: {mensaje}</h1><a href='/registro'>Volver</a>", 500
+        
     except Exception as e:
-        mensaje = f"Error: {e}"
-        print(e)
-        if 'conn' in locals() and conn.is_connected():
-            conn.rollback() 
-        return f"<h1>Error en el registro: {e}</h1><a href='/'>Volver</a>"
+        mensaje = f"Error General: {e}"
+        print(f"Error general en guardar: {e}")
+        if conn and conn.is_connected():
+             conn.rollback() 
+        return f"<h1>Error en el registro: {mensaje}</h1><a href='/registro'>Volver</a>", 500
 
     finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

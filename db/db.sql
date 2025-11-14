@@ -15,9 +15,7 @@ CREATE TABLE alumnos (
         'INSCRIPCIÓN ADULTOS REGULAR','INSCRIPCIÓN ADULTO DESCUENTO',
         'INSCRIPCIÓN MENORES REGULAR','INSCRIPCIÓN MENORES DESCUENTO'
     ),
-    id_horario INT,
     id_curso INT,
-    id_idioma INT,
     id_grupo INT,
     id_expediente_mongo CHAR(24),
     contraseña VARCHAR(255),
@@ -86,8 +84,6 @@ CREATE TABLE staff (
 
 alter table cursos add constraint foreign key (id_horario) references horario (id_horario);
 alter table cursos add constraint foreign key (id_idioma) references idioma (id_idioma);
-alter table alumnos add constraint foreign key (id_horario) references horario (id_horario);
-alter table alumnos add constraint foreign key (id_idioma) references idioma (id_idioma);
 alter table alumnos add constraint foreign key (id_curso) references cursos (id_curso);
 alter table alumnos add constraint foreign key (id_grupo) references grupos (id_grupo);
 alter table grupos add constraint foreign key (id_profesor) references profesores(id_profesor);
@@ -286,3 +282,16 @@ CREATE TABLE permisos_temporales (
 alter table permisos_temporales add constraint foreign key (id_profesor) references profesores (id_profesor);
 alter table permisos_temporales add constraint foreign key (id_profesor_sustituto) references profesores (id_profesor);
 alter table permisos_temporales add constraint foreign key (id_grupo) references grupos (id_grupo);
+
+CREATE TABLE inscripciones_idioma (
+    id_inscripcion INT not null AUTO_INCREMENT PRIMARY KEY,
+    id_alumno INT NOT NULL,
+    id_idioma INT NOT NULL,
+    id_horario INT NOT NULL,
+    fecha_inscripcion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_alumno_idioma_horario (id_alumno, id_idioma, id_horario)
+);
+
+alter table inscripciones_idioma add constraint foreign key (id_alumno) references alumnos (id_alumno);
+alter table inscripciones_idioma add constraint foreign key (id_idioma) references idioma (id_idioma);
+alter table inscripciones_idioma add constraint foreign key (id_horario) references horario (id_horario);
