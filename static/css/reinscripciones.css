@@ -40,18 +40,26 @@ th, td {
     text-align: left; 
     border-bottom: 1px solid #ddd; 
     white-space: nowrap; 
-    /* MEJORA: Borde derecho sutil para separar visualmente las columnas */
     border-right: 1px solid #eee; 
 }
-td:last-child, th:last-child { border-right: none; } /* Remueve el borde derecho de la última columna */
+td:last-child, th:last-child { border-right: none; }
 
-/* Estilos específicos para la columna de Expediente (columna 7) */
-td:nth-child(7) { display: flex; flex-wrap: nowrap; gap: 5px; align-items: center; padding: 10px 5px; }
+/* Estilo para la nueva columna Datos Faltantes (columna 7) */
+td:nth-child(7) { 
+    font-weight: bold;
+    padding: 10px 15px; 
+}
+/* Estilos específicos para la columna de Expediente (columna 8) */
+td:nth-child(8) { display: flex; flex-wrap: nowrap; gap: 5px; align-items: center; padding: 10px 5px; }
+
+
 tbody tr:hover { background-color: #f1f1f1; }
 
 /* Colores de texto dentro de la tabla */
 .green { color: #27ae60; } .purple { color: #8e44ad; } .blue { color: #2980b9; } 
-.lightblue { color: #3498db; } .lightred { color: #c0392b; } .lila { color: #9b59b6; }
+.lightblue { color: #3498db; } 
+.lightred { color: #c0392b; } /* Color para advertencia de Faltantes */
+.lila { color: #9b59b6; }
 .btn-blue-text { color: #3498db; } .btn-red-text { color: #e74c3c; } 
 .btn-orange-text { color: #e67e22; } .btn-pink-text { color: #ff7eb9; } 
 .btn-green-text { color: #2ecc71; } .btn-purple-text { color: #9b59b6; }
@@ -105,7 +113,18 @@ tbody tr:hover { background-color: #f1f1f1; }
 @keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
 .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; position: absolute; top: 10px; right: 20px; line-height: 20px; }
 .descuento-options { display: flex; flex-direction: column; gap: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; background-color: #f9f9f9; }
-.descuento-checkbox { display: flex; align-items: center; font-weight: 500; cursor: pointer; padding: 5px 0; }
+
+/* AJUSTE CLAVE: Aplica estilo tanto a checkbox como a radio buttons */
+.descuento-checkbox,
+.descuento-radio { 
+    display: flex; 
+    align-items: center; 
+    font-weight: 500; 
+    cursor: pointer; 
+    padding: 5px 0; 
+    gap: 8px; 
+}
+
 .cobro-summary { background-color: #ecf0f1; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 1.1em; font-weight: bold; text-align: center; border: 1px solid #bdc3c7; }
 .cobro-summary .original { color: #e74c3c; text-decoration: line-through; margin-right: 10px; }
 .cobro-summary .final { color: #2ecc71; font-size: 1.3em; }
@@ -129,12 +148,12 @@ tbody tr:hover { background-color: #f1f1f1; }
 
 /* Estilos de iconos sociales */
 .social-icon-2, .social-icon-3, .social-icon-5, .social-icon-6 {
-     transition-duration: 0.4s;
-     transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-     width: 30px; height: 30px; 
+      transition-duration: 0.4s;
+      transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+      width: 30px; height: 30px; 
 }
 .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-     background-color: rgba(0, 0, 0, 0); 
+      background-color: rgba(0, 0, 0, 0); 
 }
 /* Colores de iconos (Añadidos para consistencia) */
 .social-icon-2 { background: linear-gradient( 72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69% ); }
