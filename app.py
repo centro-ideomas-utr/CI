@@ -18,25 +18,18 @@ load_dotenv()
 
 app = Flask(__name__)
 
-
-# --- Configuración de Clave Secreta ---!
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 if not app.config['SECRET_KEY']:
     raise ValueError("No se encontró SECRET_KEY. Define la variable de entorno.")
 
-# --- Configuración de Jinja2 y Filtros ---
 def format_currency_mxn(value):
-    """Formatea un valor numérico a la representación de moneda MXN."""
     if value is None:
         return "0.00"
     try:
-        # Usa formateo simple para evitar problemas de locale en el servidor, 
-        # reemplazando puntos por comas en el separador de miles.
         return f"{float(value):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
     except (TypeError, ValueError):
         return str(value)
 
-# Registra la función de formato de moneda como un filtro Jinja2
 app.jinja_env.filters['format_currency'] = format_currency_mxn
 # ----------------------------------------
 
@@ -747,9 +740,6 @@ def registro():
 
 @app.route("/guardar", methods=["POST"])
 def guardar():
-    """
-    Guarda los datos del alumno en MySQL, documentos en /uploads y referencia en Mongo.
-    """
     conn = None
     try:
         datos = {
@@ -765,7 +755,6 @@ def guardar():
             "horario": request.form["horario"]
         }
 
-        # --- Definición de campos de archivo y sus claves en MongoDB ---
         file_fields = {
             "acta_n": "acta_nacimiento",
             "identificacion": "identificacion",
@@ -915,9 +904,13 @@ def login():
             cursor.close()
             conn.close()
 
+<<<<<<< HEAD
 # --- Demás rutas académicas y de navegación ---
 
 @app.route("/asistencias_estudiantes") #hacerlo responsi estudiante
+=======
+@app.route("/asistencias_estudiantes")
+>>>>>>> 1e0030327116c10211f425bd011f29e4d58907e8
 def listas():
     return render_template("asistenciasestudiantes.html")
 
@@ -954,7 +947,7 @@ def tablero():
     return render_template(
         'tableroestudiantes.html',
         avisos_publicados=avisos_ordenados,
-        calendar_events=calendar_events  # ← Pasa los eventos
+        calendar_events=calendar_events
     )
 
 @app.route('/publicar_aviso', methods=['POST']) #maestros
@@ -1260,8 +1253,6 @@ def enviar_cobro_factura():
     """
     Recibe la información de cobro y descuento, genera credenciales de acceso 
     para el alumno, renderiza la factura HTML y envía el correo electrónico.
-    
-    MODIFICADO para adjuntar el HTML de la factura como un archivo descargable.
     """
     conn = None
     temp_file_path = None
@@ -1316,7 +1307,6 @@ def enviar_cobro_factura():
                 <p>Le recomendamos **cambiar su contraseña inmediatamente** después de iniciar sesión.</p>
             """
         else:
-            # Mensaje solo recordatorio de portal si ya tiene cuenta
             credenciales_msg = f"""
                 <p>Puede acceder con sus credenciales ya existentes al Portal de Alumnos para consultar sus documentos:</p>
                 <p><a href="{url_for('login', _external=True)}">Acceder al Portal de Alumnos</a></p>
