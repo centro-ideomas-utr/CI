@@ -406,6 +406,34 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
+        file_mapping = {
+            "doc_acta": "acta_nacimiento",
+            "doc_identificacion": "identificacion",
+            "doc_estado": "estado_de_cuenta",
+            "doc_cv": "cv",
+            "doc_comprobante_domicilio": "comprobante_domicilio",
+            "doc_carta1": "carta_recomendacion1",
+            "doc_carta2": "carta_recomendacion2",
+            "doc_titulo": "titulo",
+            "doc_cedula": "cedula",
+            "doc_situacion_fiscal": "constancia_situacion_fiscal",
+        }
+        documentos_mongo = {}
+        uploaded_files = request.files
+        for form_field, mongo_key in file_mapping.items():
+            file = uploaded_files.get(form_field)
+            if file and file.filename:
+                ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
+                filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                documentos_mongo[mongo_key] = filepath
+            else:
+                documentos_mongo[mongo_key] = None
+
+        # -------------------------------------------------------------
+        # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
+        # -------------------------------------------------------------
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
@@ -1040,9 +1068,7 @@ def login():
             cursor.close()
             conn.close()
 
-# --- Demás rutas académicas y de navegación ---
-
-@app.route("/asistencias_estudiantes") #hacerlo responsi estudiante
+@app.route("/asistencias_estudiantes")
 def listas():
     return render_template("asistenciasestudiantes.html")
 
