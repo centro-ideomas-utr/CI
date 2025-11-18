@@ -48,7 +48,8 @@ CREATE TABLE grupos (
     id_grupo INT not null AUTO_INCREMENT PRIMARY KEY,
     numero_salon VARCHAR (100),
     grupo VARCHAR(100),
-    id_profesor INT
+    id_profesor INT,
+    id_curso INT not null
 );
 
 CREATE TABLE profesores (
