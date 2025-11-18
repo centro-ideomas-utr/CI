@@ -1,94 +1,77 @@
-
-    const teachers = ["Laura Martínez", "John Smith", "Emily Jones", "Carlos Rodríguez"];
-    const languages = ["Inglés", "Francés", "Alemán", "Italiano"];
-    const levels = ["A1 - Principiante", "A2 - Básico", "B1 - Intermedio", "B2 - Avanzado"];
-    const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    const container = document.getElementById("schedule-container");
-
-    teachers.forEach((teacher) => {
-      const id = teacher.replace(/\s/g, "");
-      const card = document.createElement("div");
-      card.classList.add("teacher-card");
-      card.innerHTML = `
-        <h2>${teacher}</h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Idioma:</label>
-            <select id="language-${id}" class="styled-select">
-              ${languages.map((l) => `<option value="${l}">${l}</option>`).join("")}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Nivel:</label>
-            <select id="level-${id}" class="styled-select">
-              ${levels.map((l) => `<option value="${l}">${l}</option>`).join("")}
-            </select>
-          </div>
-          <div class="form-group full-width">
-            <label>Días:</label>
-            <div class="days-group">
-              ${days.map((d) => `
-                <label><input type="checkbox" name="days-${id}" value="${d}"> ${d}</label>
-              `).join("")}
-            </div>
-          </div>
-          <div class="form-group full-width">
-            <label>Horario:</label>
-            <input type="text" id="time-${id}" class="styled-input" placeholder="Ej: 16:00 - 18:00">
-          </div>
-        </div>
-        <button class="btn save-btn" data-teacher="${teacher}">Guardar Horario</button>
-      `;
-      container.appendChild(card);
-    });
-
-    document.querySelectorAll(".save-btn").forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const teacherName = e.target.dataset.teacher;
-        const teacherId = teacherName.replace(/\s/g, "");
-        const language = document.getElementById(`language-${teacherId}`).value;
-        const level = document.getElementById(`level-${teacherId}`).value;
-        const time = document.getElementById(`time-${teacherId}`).value;
-        const selectedDays = Array.from(document.querySelectorAll(`input[name="days-${teacherId}"]:checked`)).map(
-          (c) => c.value
-        );
-
-        if (!language || !level || !time || selectedDays.length === 0) {
-          alert("Por favor, completa todos los campos.");
-          return;
+        function toggleMenu() {
+            document.getElementById("sidebar").classList.toggle("active");
         }
 
-        const scheduleData = {
-          teacherName,
-          language,
-          level,
-          days: selectedDays,
-          time,
-          id: Date.now(),
-        };
-
-        try {
-          let schedules = JSON.parse(localStorage.getItem("classSchedules")) || [];
-          schedules.push(scheduleData);
-          localStorage.setItem("classSchedules", JSON.stringify(schedules));
-          alert(`Horario para ${teacherName} guardado correctamente.`);
-        } catch (error) {
-          console.error("Error al guardar en localStorage:", error);
-          alert("Hubo un error al guardar el horario.");
+        function addSede() {
+            const name = prompt("Nombre de la nueva sede:");
+            if (name) {
+                const container = document.getElementById('sedes-container');
+                const addButton = container.querySelector('.add-sede-btn');
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'sede-wrapper';
+                wrapper.innerHTML = `
+                    <button class="sede-btn" onclick="selectSede('${name}', this)">${name}</button>
+                    <button class="delete-sede-btn" onclick="deleteSede(this)"><i class="fas fa-times"></i></button>
+                `;
+                
+                container.insertBefore(wrapper, addButton);
+            }
         }
-      });
-    });
 
-  const menuIcon = document.getElementById("menu-icon");
-    const sidebar = document.getElementById("sidebar");
-    const pageContent = document.querySelector(".page-content"); // Es el <main>
+        function deleteSede(btn) {
+            if(confirm("¿Seguro que quieres eliminar esta sede?")) {
+                btn.parentElement.remove();
+                document.getElementById('workspace').classList.remove('active');
+            }
+        }
 
-    // Asegurarse de que los elementos existen antes de añadir el evento
-    if (menuIcon && sidebar && pageContent) {
-        menuIcon.addEventListener("click", function() {
-            // Muestra/oculta el menú
-            sidebar.classList.toggle("active");
-            // Empuja/retrae el contenido
-            pageContent.classList.toggle("active");
+        function selectSede(name, btn) {
+            document.querySelectorAll('.sede-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+
+            const ws = document.getElementById('workspace');
+            ws.classList.add('active');
+            document.getElementById('panel-title').innerText = "Asignar en " + name;
+        }
+
+        // --- Lógica para Asignar (MULTIPLE) ---
+        document.getElementById('assign-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const salon = document.getElementById('salon').value;
+            const idioma = document.getElementById('idioma').value;
+            const maestro = document.getElementById('maestro').value;
+            const dia = document.getElementById('dia').value;
+            const hora = document.getElementById('hora').value;
+            
+            const cellId = `cell-${dia}-${hora}`;
+            const cell = document.getElementById(cellId);
+            
+            if(cell) {
+                const classCard = document.createElement('div');
+                classCard.className = 'slot-occupied';
+                classCard.innerHTML = `
+                    <strong>${salon}</strong>
+                    <span>${idioma}</span><br>
+                    <small>${maestro}</small>
+                `;
+                
+                cell.appendChild(classCard);
+                
+                // Animación suave
+                classCard.style.animation = "highlight 0.5s ease";
+            } else {
+                alert("Horario no encontrado en la vista.");
+            }
         });
-    }
+        
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes highlight {
+                0% { background-color: #e8f4fc; }
+                50% { background-color: #F7B801; }
+                100% { background-color: #e8f4fc; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
