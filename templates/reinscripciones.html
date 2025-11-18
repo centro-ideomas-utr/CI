@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla de Reinscripciones</title>
-    <!-- Incluimos Font Awesome y la referencia al archivo CSS externo -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla de Reinscripciones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
 </head>
-<body>
 <body>
     <div class="navbar">
         <div class="menu-icon" id="menu-icon">
@@ -33,138 +31,164 @@
     </nav>
 
 <main class="page-content"> 
-    <div class="buttons-container">
-        <!-- Botones de filtro de tipo de inscripción -->
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}" class="btn blue">REINSCRIPCIÓN ADULTOS REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}" class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS DESCUENTO') }}" class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTO DESCUENTO') }}" class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</a>
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES REGULAR') }}" class="btn green">REINSCRIPCIÓN MENORES REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES REGULAR') }}" class="btn purple">INSCRIPCIÓN MENORES REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES DESCUENTO') }}" class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}" class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</a>
-    </div>
+    <div class="buttons-container">
+                <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}" class="btn blue">REINSCRIPCIÓN ADULTOS REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}" class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS DESCUENTO') }}" class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTO DESCUENTO') }}" class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</a>
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES REGULAR') }}" class="btn green">REINSCRIPCIÓN MENORES REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES REGULAR') }}" class="btn purple">INSCRIPCIÓN MENORES REGULAR</a>
+        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES DESCUENTO') }}" class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</a>
+        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}" class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</a>
+    </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Correo Electrónico</th>
-                    <th>Edad</th>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Correo Electrónico</th>
+                    <th>Edad</th>
+                    <th>Datos Faltantes</th>                     
                     <th>Expediente</th>
-                    <th>Tipo de Inscripión</th>
-                    <th>Horario Inicial</th>
-                    <th>Nivel Actual</th>
-                    <th>Grupo Actual</th>
-                    <th>Maestro Actual</th>
-                    <th>ASIGNAR NIVEL</th>
-                    <th>ASIGNAR GRUPO</th>
-                    <th>GUARDAR</th>
-                    <th>Enviar Cobro</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for alumno in alumnos %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td><span class="lila">{{ alumno.matricula }}</span></td>
-                    <td>{{ alumno.nombre }}</td>
-                    <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
-                    <td>{{ alumno.correo_electronico }}</td>
-                    <td><span class="blue">{{ alumno.edad }}</span></td>
+                    <th>Tipo de Inscripión</th>
+                    <th>Horario Inicial</th>
+                    <th>Nivel Actual</th>
+                    <th>Grupo Actual</th>
+                    <th>Maestro Actual</th>
+                    <th>ASIGNAR NIVEL</th>
+                    <th>ASIGNAR GRUPO</th>
+                    <th>GUARDAR</th>
+                    <th>Enviar Cobro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alumno in alumnos %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><span class="lila">{{ alumno.matricula }}</span></td>
+                    <td>{{ alumno.nombre }}</td>
+                    <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
+                    <td>{{ alumno.correo_electronico }}</td>
+                    <td><span class="blue">{{ alumno.edad }}</span></td>
+
+                    {% set docs = alumno.documentos_urls %} 
+                    {% set missing_data = [] %}
                     
-                    <td>
-                        <!-- Enlaces de Expediente -->
-                        {% set docs = alumno.documentos_urls %} 
-                        {% if docs.comprobante_pago %}
-                            <a href="{{ docs.comprobante_pago }}" target="_blank" class="btn-expediente" title="Ver Comprobante de Pago"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button></a>
-                        {% endif %}
-                        {% if docs.identificacion %}
-                            <a href="{{ docs.identificacion }}" target="_blank" class="btn-expediente" title="Ver Identificación Oficial"><button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button></a>
-                        {% endif %}
-                        {% if docs.acta_nacimiento %} 
-                            <a href="{{ docs.acta_nacimiento }}" target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento"><button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button></a>
-                        {% endif %}
-                        {% if docs.formato_descuento %} 
-                            <a href="{{ docs.formato_descuento }}" target="_blank" class="btn-expediente" title="Ver Formato de Descuento"><button class="btn-expediente-small"><i class="fas fa-percent"></i> Desc.</button></a>
-                        {% endif %}
-                        {% if docs.documentos_comprobatorios %} 
-                            <a href="{{ docs.documentos_comprobatorios }}" target="_blank" class="btn-expediente" title="Ver Documentos Comprobatorios Adicionales"><button class="btn-expediente-small"><i class="fas fa-file-pdf"></i> Comp.</button></a>
-                        {% endif %}
-                        {% set documentos_presentes = docs.comprobante_pago or docs.identificacion or docs.acta_nacimiento or docs.formato_descuento %} 
-                        {% if not documentos_presentes %}<span class="lightred">---</span>{% endif %}
-                    </td>
-
-                    <td>
-                        {% set tipo_inscripcion_clase = "" %}
-                        {% if alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS REGULARES' %}{% set tipo_inscripcion_clase = "btn-blue-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTOS REGULAR' %}{% set tipo_inscripcion_clase = "btn-orange-text" %}
-                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-red-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTO DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-pink-text" %}
-                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-green-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-purple-text" %}
-                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-yellow-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-magenta-text" %}{% endif %}
-                        <span class="{{ tipo_inscripcion_clase }}">{{ alumno.tipo_inscripcion }}</span>
-                    </td>
-
-                    <td>{{ alumno.horario or '---' }}</td>
-                    <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td>
-                    <td>{{ alumno.nombre_grupo or 'N/A' }}</td>
-                    <td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
-
-                    <td>
-                        <select class="form-control select-curso" data-alumno-id="{{ alumno.id_alumno }}">
-                            <option value="">-- Seleccionar Nivel --</option>
-                            {% for curso in cursos %}
-                                <option value="{{ curso.id_curso }}" {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>
-                                    {{ curso.nombre_completo }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </td>
+                    {% if not alumno.correo_electronico %}
+                        {% set missing_data = missing_data + ['Correo'] %}
+                    {% endif %}
                     
-                    <td>
-                        <select class="form-control select-grupo" data-alumno-id="{{ alumno.id_alumno }}">
-                            <option value="">-- Seleccionar Grupo --</option>
-                            {% for grupo in grupos %}
-                                <option value="{{ grupo.id_grupo }}" {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>
-                                    {{ grupo.grupo }} (Prof: {{ grupo.nombre_profesor }})
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </td>
-
-                    <td>
-                        <button class="btn green btn-guardar-asignacion" 
-                                data-id="{{ alumno.id_alumno }}" 
-                                style="padding: 6px 10px;">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </td>
+                    {% set required_docs = {
+                        'comprobante_pago': 'Pago',
+                        'identificacion': 'ID'
+                    } %} 
                     
-                    <td>
-                        <!-- Botón "Cobrar" que abre el modal -->
-                        <button class="btn magenta btn-cobrar" 
-                                data-id="{{ alumno.id_alumno }}" 
-                                data-nombre="{{ alumno.nombre }} {{ alumno.apellido_p }}" 
-                                data-email="{{ alumno.correo_electronico }}" 
-                                style="padding: 6px 10px;">
-                            <i class="fas fa-envelope-open-text"></i> Cobrar
-                        </button>
-                    </td>
+                    {% for doc_key, display_name in required_docs.items() %}
+                        {% if not docs[doc_key] %}
+                            {% set missing_data = missing_data + [display_name] %}
+                        {% endif %}
+                    {% endfor %}
 
-                </tr>
-                {% else %}
-                <tr><td colspan="16" style="text-align:center;"><i class="fas fa-exclamation-triangle"></i> No hay alumnos registrados para este tipo de inscripción.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    <td>
+                        {% if missing_data %}
+                            <span class="lightred" title="Datos/Documentos Requeridos Faltantes">
+                                <i class="fas fa-exclamation-circle"></i> {{ missing_data|join(', ') }}
+                            </span>
+                        {% else %}
+                            <span class="green"><i class="fas fa-check-circle"></i> Completo</span>
+                        {% endif %}
+                    </td>
+                                        
+                    <td>
+                                                {% set docs = alumno.documentos_urls %} 
+                        {% if docs.comprobante_pago %}
+                            <a href="{{ docs.comprobante_pago }}" target="_blank" class="btn-expediente" title="Ver Comprobante de Pago"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button></a>
+                        {% endif %}
+                        {% if docs.identificacion %}
+                            <a href="{{ docs.identificacion }}" target="_blank" class="btn-expediente" title="Ver Identificación Oficial"><button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button></a>
+                        {% endif %}
+                        {% if docs.acta_nacimiento %} 
+                            <a href="{{ docs.acta_nacimiento }}" target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento"><button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button></a>
+                        {% endif %}
+                        {% if docs.formato_descuento %} 
+                            <a href="{{ docs.formato_descuento }}" target="_blank" class="btn-expediente" title="Ver Formato de Descuento"><button class="btn-expediente-small"><i class="fas fa-percent"></i> Desc.</button></a>
+                        {% endif %}
+                        {% if docs.documentos_comprobatorios %} 
+                            <a href="{{ docs.documentos_comprobatorios }}" target="_blank" class="btn-expediente" title="Ver Documentos Comprobatorios Adicionales"><button class="btn-expediente-small"><i class="fas fa-file-pdf"></i> Comp.</button></a>
+                        {% endif %}
+                        {% set documentos_presentes_todos = docs.comprobante_pago or docs.identificacion or docs.acta_nacimiento or docs.formato_descuento or docs.documentos_comprobatorios %}
+                        {% if not documentos_presentes_todos %}<span class="lightred">N/A</span>{% endif %}
+                    </td>
+
+                    <td>
+                        {% set tipo_inscripcion_clase = "" %}
+                        {% if alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS REGULARES' %}{% set tipo_inscripcion_clase = "btn-blue-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTOS REGULAR' %}{% set tipo_inscripcion_clase = "btn-orange-text" %}
+                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-red-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTO DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-pink-text" %}
+                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-green-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-purple-text" %}
+                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-yellow-text" %}
+                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-magenta-text" %}{% endif %}
+                        <span class="{{ tipo_inscripcion_clase }}">{{ alumno.tipo_inscripcion }}</span>
+                    </td>
+
+                    <td>{{ alumno.horario or '---' }}</td>
+                    <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td>
+                    <td>{{ alumno.nombre_grupo or 'N/A' }}</td>
+                    <td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
+
+                    <td>
+                        <select class="form-control select-curso" data-alumno-id="{{ alumno.id_alumno }}">
+                            <option value="">-- Seleccionar Nivel --</option>
+                            {% for curso in cursos %}
+                                <option value="{{ curso.id_curso }}" {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>
+                                    {{ curso.nombre_completo }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    
+                    <td>
+                        <select class="form-control select-grupo" data-alumno-id="{{ alumno.id_alumno }}">
+                            <option value="">-- Seleccionar Grupo --</option>
+                            {% for grupo in grupos %}
+                                <option value="{{ grupo.id_grupo }}" {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>
+                                    {{ grupo.grupo }} (Prof: {{ grupo.nombre_profesor }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+
+                    <td>
+                        <button class="btn green btn-guardar-asignacion" 
+                                data-id="{{ alumno.id_alumno }}" 
+                                style="padding: 6px 10px;">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </td>
+                    
+                    <td>
+                                                <button class="btn magenta btn-cobrar" 
+                                data-id="{{ alumno.id_alumno }}" 
+                                data-nombre="{{ alumno.nombre }} {{ alumno.apellido_p }}" 
+                                data-email="{{ alumno.correo_electronico }}" 
+                                style="padding: 6px 10px;">
+                            <i class="fas fa-envelope-open-text"></i> Cobrar
+                        </button>
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr><td colspan="17" style="text-align:center;"><i class="fas fa-exclamation-triangle"></i> No hay alumnos registrados para este tipo de inscripción.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </main>
     
        <footer class="main-footer">
@@ -239,143 +263,244 @@
             <p><strong>Alumno:</strong> <span id="modalAlumnoNombre"></span></p>
             <p><strong>Email:</strong> <span id="modalAlumnoEmail"></span></p>
 
-            <div class="descuento-options">
-                <h3>Descuentos Disponibles ($1,870.00 MXN base)</h3>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.10" data-nombre="FAM 10%">
-                    FAM 10%
-                </label>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.10" data-nombre="IDIOMAS 10%">
-                    IDIOMAS 10%
-                </label>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.00" data-nombre="REGULAR">
-                    REGULAR (Sin descuento)
-                </label>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.20" data-nombre="20% (EGRESADOS, ACTIVOS, FAM)">
-                    20% (EGRESADOS, ACTIVOS, FAM)
-                </label>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.50" data-nombre="50% AUTORI">
-                    50% AUTORI
-                </label>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.15" data-nombre="FAM 15%">
-                    FAM 15%
-                </label>
-                <label class="descuento-checkbox">
-                    <input type="checkbox" name="descuento" value="0.00" data-nombre="CONV">
-                    CONV (Sin descuento)
-                </label>
-            </div>
-            
-            <!-- Resumen de Cálculo -->
-            <div class="cobro-summary">
-                Costo Base: <span class="original">$1,870.00</span>
-                Total a Cobrar: <span class="final" id="totalACobrar">$1,870.00</span>
-            </div>
+            <div class="descuento-options">
+                <h3>Descuentos Disponibles ($1,870.00 MXN base)</h3>
+                                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.00" data-nombre="REGULAR" checked>
+                    REGULAR (Sin descuento)
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.10" data-nombre="FAM 10%">
+                    FAM 10%
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.10" data-nombre="IDIOMAS 10%">
+                    IDIOMAS 10%
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.20" data-nombre="20% (EGRESADOS, ACTIVOS, FAM)">
+                    20% (EGRESADOS, ACTIVOS, FAM)
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.50" data-nombre="50% AUTORI">
+                    50% AUTORI
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.15" data-nombre="FAM 15%">
+                    FAM 15%
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.00" data-nombre="CONV">
+                    CONV (Sin descuento)
+                </label>
+            </div>
+            
+                        <div class="cobro-summary">
+                Costo Base: <span class="original">$1,870.00</span>
+                Total a Cobrar: <span class="final" id="totalACobrar">$1,870.00</span>
+            </div>
 
-            <div id="cobroMessage" class="message info hidden"></div>
+            <div id="cobroMessage" class="message info hidden"></div>
 
-            <div class="modal-actions">
-                <button id="btnEnviarCobro" class="btn green" style="padding: 10px 20px;">
-                    <i class="fas fa-paper-plane"></i> Enviar Cobro y Contraseña
-                </button>
-            </div>
-        </div>
-    </div>
+            <div class="modal-actions">
+                <button id="btnEnviarCobro" class="btn green" style="padding: 10px 20px;">
+                    <i class="fas fa-paper-plane"></i> Enviar Cobro y Contraseña
+                </button>
+            </div>
+        </div>
+    </div>
 
-    <!-- MODAL DE NOTIFICACIÓN (Para reemplazar alertas) -->
-    <div id="notificationModal" class="modal">
-        <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <span class="close-btn" data-modal-target="notificationModal">&times;</span>
-            <div id="notificationContent">
-                <!-- El mensaje de éxito o error se inserta aquí -->
-            </div>
-            <button class="btn blue mt-4" onclick="document.getElementById('notificationModal').style.display='none'">Aceptar</button>
-        </div>
-    </div>
-    
-    <script>
-    const COSTO_BASE = 1870.00; // $1870.00 MXN
+        <div id="notificationModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <span class="close-btn" data-modal-target="notificationModal">&times;</span>
+            <div id="notificationContent">
+                            </div>
+            <button class="btn blue mt-4" onclick="document.getElementById('notificationModal').style.display='none'">Aceptar</button>
+        </div>
+    </div>
+    
+    <script>
+    const COSTO_BASE = 1870.00; // $1870.00 MXN
 
-    // Variables globales para el modal de cobro
-    let currentAlumnoId = null;
-    let currentAlumnoEmail = null;
+    // Variables globales para el modal de cobro
+    let currentAlumnoId = null;
+    let currentAlumnoEmail = null;
 
-    // Función para mostrar el modal de notificación (Reemplaza alert/confirm)
-    function showNotification(type, message, reload = false) {
-        const modal = document.getElementById('notificationModal');
-        const content = document.getElementById('notificationContent');
+    // Función para mostrar el modal de notificación (Reemplaza alert/confirm)
+    function showNotification(type, message, reload = false) {
+        const modal = document.getElementById('notificationModal');
+        const content = document.getElementById('notificationContent');
+        
+        let icon = '';
+        let colorClass = '';
+
+        if (type === 'success') {
+            icon = '<i class="fas fa-check-circle fa-2x mb-2 text-green-600"></i>';
+            colorClass = 'message success';
+        } else if (type === 'error') {
+            icon = '<i class="fas fa-times-circle fa-2x mb-2 text-red-600"></i>';
+            colorClass = 'message error';
+        } else {
+            icon = '<i class="fas fa-info-circle fa-2x mb-2 text-blue-600"></i>';
+            colorClass = 'message info';
+        }
+
+        content.innerHTML = `
+            ${icon}
+            <div class="${colorClass}" style="margin-top: 10px; border: none;">${message}</div>
+        `;
+
+        const acceptButton = modal.querySelector('.btn.blue');
+        acceptButton.onclick = function() {
+            modal.style.display = 'none';
+            if (reload) {
+                window.location.reload();
+            }
+        };
+
+        modal.style.display = 'block';
+    }
+
+
+    // Función para calcular el total a cobrar (Toma el descuento máximo del radio button)
+    function calcularTotal() {
+        const radioSelected = document.querySelector('#cobroModal input[name="descuento_aplicado"]:checked');
         
-        let icon = '';
-        let colorClass = '';
-
-        if (type === 'success') {
-            icon = '<i class="fas fa-check-circle fa-2x mb-2 text-green-600"></i>';
-            colorClass = 'message success';
-        } else if (type === 'error') {
-            icon = '<i class="fas fa-times-circle fa-2x mb-2 text-red-600"></i>';
-            colorClass = 'message error';
-        } else {
-            icon = '<i class="fas fa-info-circle fa-2x mb-2 text-blue-600"></i>';
-            colorClass = 'message info';
+        if (!radioSelected) {
+            // Debería ser imposible si 'REGULAR' está checked por defecto
+            return {
+                total_a_cobrar: COSTO_BASE,
+                descuentos_aplicados: 'N/A',
+                porcentaje_aplicado: 0.0
+            };
         }
 
-        content.innerHTML = `
-            ${icon}
-            <div class="${colorClass}" style="margin-top: 10px; border: none;">${message}</div>
-        `;
+        const nombreDescuento = radioSelected.getAttribute('data-nombre');
+        const maxDescuentoPorcentaje = parseFloat(radioSelected.value);
+        
+        // Calculamos el costo final y lo redondeamos
+        const total = COSTO_BASE * (1.0 - maxDescuentoPorcentaje);
+        const totalRedondeado = Math.round(total * 100) / 100;
+        
+        // Formatear para visualización
+        const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+        
+        document.getElementById('totalACobrar').textContent = formatter.format(totalRedondeado);
+        
+        // Retornamos el total y los detalles para enviarlos al servidor
+        return {
+            total_a_cobrar: totalRedondeado,
+            descuentos_aplicados: nombreDescuento,
+            porcentaje_aplicado: maxDescuentoPorcentaje * 100
+        };
+    }
 
-        const acceptButton = modal.querySelector('.btn.blue');
-        acceptButton.onclick = function() {
-            modal.style.display = 'none';
-            if (reload) {
-                window.location.reload();
-            }
-        };
+    // Lógica principal de la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Setup de Modales y Eventos de Cierre ---
+        const cobroModal = document.getElementById('cobroModal');
+        const notificationModal = document.getElementById('notificationModal');
+        
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.onclick = function() {
+                const targetId = this.getAttribute('data-modal-target');
+                if (targetId) {
+                    document.getElementById(targetId).style.display = 'none';
+                }
+            }
+        });
 
-        modal.style.display = 'block';
-    }
+        window.onclick = function(event) {
+            if (event.target == cobroModal) { cobroModal.style.display = 'none'; }
+            if (event.target == notificationModal) { notificationModal.style.display = 'none'; }
+        }
+
+        // --- Manejo de Radio Buttons de Descuento (Ajustado) ---
+        document.querySelectorAll('#cobroModal input[name="descuento_aplicado"]').forEach(radio => {
+            radio.addEventListener('change', calcularTotal);
+        });
+
+        // --- Botón Cobrar (Abre Modal) ---
+        document.querySelectorAll('.btn-cobrar').forEach(button => {
+            button.addEventListener('click', function() {
+                // 1. Obtener datos del alumno
+                currentAlumnoId = this.getAttribute('data-id');
+                currentAlumnoEmail = this.getAttribute('data-email');
+                const nombre = this.getAttribute('data-nombre');
+
+                // 2. Limpiar/Resetear el modal
+                document.getElementById('modalAlumnoNombre').textContent = nombre;
+                document.getElementById('modalAlumnoEmail').textContent = currentAlumnoEmail;
+                document.getElementById('cobroMessage').classList.add('hidden');
+                document.getElementById('btnEnviarCobro').disabled = false;
+                
+                // Marcar "REGULAR" por defecto
+                const regularRadio = document.querySelector('input[data-nombre="REGULAR"]');
+                if(regularRadio) regularRadio.checked = true;
+
+                calcularTotal();
+                cobroModal.style.display = 'block';
+            });
+        });
+
+        // --- Botón ENVIAR COBRO (Lógica AJAX) ---
+        document.getElementById('btnEnviarCobro').addEventListener('click', function() {
+            const cobroDetails = calcularTotal();
+            const originalButtonText = this.innerHTML;
+
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            
+            fetch("{{ url_for('enviar_cobro_factura') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_alumno: currentAlumnoId,
+                    total_a_cobrar: cobroDetails.total_a_cobrar,
+                    descuentos_aplicados: cobroDetails.descuentos_aplicados,
+                    porcentaje_aplicado: cobroDetails.porcentaje_aplicado
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                cobroModal.style.display = 'none';
+                if (data.status === 'success') {
+                    showNotification('success', data.message, true); // Recargar al guardar con éxito
+                } else {
+                    showNotification('error', data.message);
+                }
+            })
+            .catch(error => {
+                cobroModal.style.display = 'none';
+                console.error('Error:', error);
+                showNotification('error', 'Ocurrió un error de conexión con el servidor al enviar el cobro.');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = originalButtonText;
+            });
+        });
 
 
-    // Función para calcular el total a cobrar (Toma el descuento máximo)
-    function calcularTotal() {
-        const checkboxes = document.querySelectorAll('#cobroModal input[name="descuento"]:checked');
-        let maxDescuentoPorcentaje = 0.0;
-        let descuentosAplicados = [];
+        // --- Botón de Guardar Asignación (Modificado para usar Modal) ---
+        document.querySelectorAll('.btn-guardar-asignacion').forEach(button => {
+            button.addEventListener('click', function() {
+                const id_alumno = this.getAttribute('data-id');
+                const row = this.closest('tr');
+                const cursoSelect = row.querySelector('.select-curso');
+                const grupoSelect = row.querySelector('.select-grupo');
+                
+                const id_curso = cursoSelect.value;
+                const id_grupo = grupoSelect.value;
+                const originalText = this.innerHTML;
 
-        checkboxes.forEach(checkbox => {
-            const nombre = checkbox.getAttribute('data-nombre');
-            const porcentaje = parseFloat(checkbox.value);
-            
-            // Usamos el mayor descuento si se seleccionan varios
-            if (porcentaje > maxDescuentoPorcentaje) {
-                maxDescuentoPorcentaje = porcentaje;
-            }
-            descuentosAplicados.push(nombre);
-        });
+                if (!id_curso || !id_grupo) {
+                    showNotification('error', 'Por favor, selecciona tanto el Nivel (Curso) como el Grupo antes de guardar.');
+                    return;
+                }
 
-        // Si no se selecciona ningún descuento, el descuento máximo es 0.0, lo cual es correcto.
-        
-        // Calculamos el costo final y lo redondeamos
-        const total = COSTO_BASE * (1.0 - maxDescuentoPorcentaje);
-        const totalRedondeado = Math.round(total * 100) / 100;
-        
-        // Formatear para visualización
-        const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-        
-        document.getElementById('totalACobrar').textContent = formatter.format(totalRedondeado);
-        
-        // Retornamos el total y los detalles para enviarlos al servidor
-        return {
-            total_a_cobrar: totalRedondeado,
-            descuentos_aplicados: descuentosAplicados.length > 0 ? descuentosAplicados.join(', ') : 'REGULAR',
-            porcentaje_aplicado: maxDescuentoPorcentaje * 100
-        };
-    }
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
     // Lógica principal de la página
     document.addEventListener('DOMContentLoaded', function() {

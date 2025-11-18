@@ -221,9 +221,12 @@ def gestion_personal():
 
     # Pasa la lista y el término de búsqueda al template
     return render_template("añadiradmin.html", personal=personal, busqueda=busqueda)
-
 @app.route('/guardar-personal', methods=['POST'])
 def guardar_personal():
+    """
+    Ruta optimizada. Guarda los datos básicos de MySQL y delega la subida de 
+    documentos (GridFS) y el envío de correo (yagmail) a un hilo secundario.
+    """
     conn = None
     email = request.form.get('email')
     
@@ -245,8 +248,8 @@ def guardar_personal():
         'genero': request.form.get('genero')
     }
     
-    # Preparar datos de archivos para pasarlos al hilo.
-    # Se pasa una lista de tuplas (nombre del campo, contenido binario, nombre del archivo, tipo de contenido)
+    # Preparar datos de archivos para pasarlos al hilo. 
+    # Capturamos el contenido binario y la metadata ANTES de cerrar la solicitud.
     uploaded_files_data = []
     file_mapping = {
         "doc_acta": "acta_nacimiento",
@@ -264,16 +267,15 @@ def guardar_personal():
     for form_field, mongo_key in file_mapping.items():
         file = request.files.get(form_field)
         if file and file.filename:
-            # Capturamos el contenido binario y la información para el hilo
+            # Capturamos el contenido binario y la información necesaria
             file_content = file.read()
             uploaded_files_data.append((mongo_key, file_content, secure_filename(file.filename), file.content_type))
     
-    # Inicializar cursor a None
     cursor = None
     
     try:
         # -------------------------------------------------------------
-        # 2. INSERCIÓN EN MYSQL (RÁPIDA) - Se guarda sin id_expediente_mongo al inicio
+        # 2. INSERCIÓN EN MYSQL (RÁPIDA) - Solo datos básicos
         # -------------------------------------------------------------
         
         # Separar apellidos
@@ -338,13 +340,14 @@ def guardar_personal():
         conn.commit()
         
         # -------------------------------------------------------------
-        # 3. INICIAR TAREA ASÍNCRONA (OFFLOADING)
+        # 3. INICIAR TAREA ASÍNCRONA (Subida de documentos y correo)
         # -------------------------------------------------------------
         
         # Pasamos los datos necesarios a la función que se ejecutará en segundo plano
         import threading
         thread = threading.Thread(
             target=process_personal_registration_async, 
+            # Los argumentos deben ser serializables y no referenciar objetos de Flask
             args=(
                 id_personal, 
                 form_data['tipo_personal'],
@@ -358,7 +361,7 @@ def guardar_personal():
         )
         thread.start()
 
-        # Respuesta inmediata al usuario
+        # Respuesta inmediata al usuario (202 Accepted)
         return jsonify({'status': 'success', 'message': f'¡{form_data["tipo_personal"].capitalize()} creado. Expediente y correo se están procesando en segundo plano.'}), 202
 
     except mysql.connector.Error as err:
@@ -383,18 +386,15 @@ def guardar_personal():
         if conn and conn.is_connected(): conn.close()
 
 # -------------------------------------------------------------
-# NUEVA FUNCIÓN: PROCESO ASÍNCRONO DE TAREAS PESADAS
+# FUNCIÓN ASÍNCRONA (Añadir al final del archivo o cerca de otras funciones auxiliares)
 # -------------------------------------------------------------
 
-# NOTA: Esta función DEBE recibir todas las variables que necesita, NO debe
-# acceder a variables globales de Flask/Request como `db_config`, etc.
 def process_personal_registration_async(id_personal, tipo_personal, email, contrasena_temporal, uploaded_files_data, nombre, apellido_p, apellido_m):
     """
-    Función que se ejecuta en un hilo separado (asíncrono) para manejar
-    la subida de archivos grandes, la actualización de MySQL y el envío de correos.
+    Función que se ejecuta en un hilo separado para manejar tareas pesadas:
+    subida de archivos a GridFS, actualización de MySQL y envío de correos.
     """
     
-    # 1. Re-inicializar conexiones (porque estamos en un hilo separado)
     conn_async = None
     cursor_async = None
     
@@ -404,7 +404,7 @@ def process_personal_registration_async(id_personal, tipo_personal, email, contr
         
         for mongo_key, file_content, original_filename, content_type in uploaded_files_data:
             from io import BytesIO
-            file_stream = BytesIO(file_content)
+            file_stream = BytesIO(file_content) # Crear stream a partir del binario capturado
             
             # Subir archivo a GridFS
             grid_fs_id = fs.put(
@@ -440,17 +440,45 @@ def process_personal_registration_async(id_personal, tipo_personal, email, contr
         # --- C. ENVÍO DE CORREO (LENTO) ---
         if yag:
              nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
+             # NOTA: url_for requiere un contexto de aplicación. La alternativa es usar una URL codificada.
+             # Para simplificar y evitar dependencias de Flask en el hilo:
+             portal_url = "https://tudominio.com/login" 
+             
              subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
-             contents = [
-                 f"Hola {nombre_completo}, tu cuenta ha sido creada. Tu contraseña temporal es: <b>{contrasena_temporal}</b>. Tus documentos han sido subidos con éxito."
-             ]
-             yag.send(to=email, subject=subject, contents=contents)
+             
+             # Estructura del correo en HTML
+             html_body = f"""
+                 <html>
+                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                     <div style="max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                         <h2 style="color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                             ¡Bienvenido/a {nombre_completo}!
+                         </h2>
+                         <p>Te damos la más cordial bienvenida al equipo del Centro de Idiomas UTR como <b>{tipo_personal.capitalize()}</b>.</p>
+                         <p>Tu cuenta ha sido creada y tus documentos se han subido exitosamente a tu expediente digital. En breve podrás acceder a tu portal.</p>
+                         
+                         <h3 style="color: #28a745;">Tus Credenciales de Acceso:</h3>
+                         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 5px solid #28a745;">
+                             <p><strong>Portal de Acceso:</strong> <a href="{portal_url}" style="color: #007bff; text-decoration: none;">Acceder al Sistema CIUTR</a></p>
+                             <p><strong>Usuario (Correo):</strong> <code>{email}</code></p>
+                             <p><strong>Contraseña TEMPORAL:</strong> <strong style="font-size: 1.1em; color: #dc3545;">{contrasena_temporal}</strong></p>
+                         </div>
+                         
+                         <p><strong>Importante:</strong> Por seguridad, te recomendamos **cambiar tu contraseña inmediatamente** después de tu primer inicio de sesión.</p>
+                         <p>Si tienes alguna duda o necesitas asistencia, no dudes en contactar al equipo de administración.</p>
+                         <p>Atentamente,<br>Equipo de Administración CIUTR</p>
+                     </div>
+                 </body>
+                 </html>
+             """
+             
+             yag.send(to=email, subject=subject, contents=[html_body])
 
              logs_col.insert_one({
                  "tipo_entidad": "sistema",
                  "id_entidad": id_personal,
                  "accion": "correo_bienvenida_enviado_async",
-                 "detalle": f"Correo de bienvenida enviado con credenciales y expediente subido.", 
+                 "detalle": f"Correo de bienvenida HTML enviado con credenciales y expediente subido.", 
                  "usuario": "sistema_auto_async", 
                  "fecha": datetime.utcnow()
              })
@@ -458,7 +486,6 @@ def process_personal_registration_async(id_personal, tipo_personal, email, contr
         print(f"INFO: Registro asíncrono de {tipo_personal} ID {id_personal} completado con éxito.")
         
     except Exception as e:
-        # Registrar el error en los logs para auditoría de fallos asíncronos
         print(f"ERROR ASÍNCRONO al procesar el registro de {tipo_personal} ID {id_personal}: {e}")
         logs_col.insert_one({
             "tipo_entidad": tipo_personal,
@@ -1224,6 +1251,8 @@ def perfil():
 def Horario():
     return render_template("registromaestro.html")
 
+# ... (código anterior) ...
+
 @app.route("/reinscripciones") #encabezados, inconos staff
 def reinscripciones():
     """
@@ -1242,9 +1271,17 @@ def reinscripciones():
         cursor = conn.cursor(dictionary=True)
 
         # 1. Obtener Cursos, Grupos y Profesores
-        cursor.execute("SELECT id_curso, CONCAT(idioma, ' - Nivel ', nivel) AS nombre_completo FROM cursos")
+        cursor.execute("""
+            SELECT 
+                c.id_curso, 
+                CONCAT(i.nombre, ' - Nivel ', c.nivel) AS nombre_completo 
+            FROM cursos c
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            ORDER BY i.nombre, c.nivel
+        """)
         cursos = cursor.fetchall()
 
+        # ... (obtener grupos y profesores, sin cambios) ...
         query_grupos = """
             SELECT 
                 g.id_grupo, 
@@ -1260,20 +1297,32 @@ def reinscripciones():
         cursor.execute("SELECT id_profesor, CONCAT(nombre, ' ', apellido_p, ' ', apellido_m) AS nombre_completo FROM profesores")
         profesores = cursor.fetchall()
 
+        # 2. Obtener Alumnos con información académica y Horario Inicial
         query_alumnos = """
              SELECT 
                 a.*,
                 TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, CURDATE()) AS edad,
                 g.grupo AS nombre_grupo,
                 CONCAT(p.nombre, ' ', p.apellido_p) AS maestro,
-                c.nivel AS nivel_curso
+                c.nivel AS nivel_curso,
+                -- Subconsulta para obtener el primer horario de inscripción:
+                (
+                    SELECT CONCAT(h.dias, ' | ', h.hora, ' (', h.sede, ')')
+                    FROM inscripciones_idioma ia
+                    JOIN horario h ON ia.id_horario = h.id_horario
+                    WHERE ia.id_alumno = a.id_alumno
+                    ORDER BY ia.fecha_inscripcion ASC
+                    LIMIT 1
+                ) AS horario
              FROM alumnos a
              LEFT JOIN grupos g ON a.id_grupo = g.id_grupo
              LEFT JOIN profesores p ON g.id_profesor = p.id_profesor
              LEFT JOIN cursos c ON a.id_curso = c.id_curso
         """
+        where_clause = ""
         if filtro:
-            query_alumnos += " WHERE a.tipo_inscripcion = %s" 
+            where_clause = " WHERE a.tipo_inscripcion = %s "
+            query_alumnos += where_clause
             cursor.execute(query_alumnos, (filtro,))
         else:
             cursor.execute(query_alumnos) 
