@@ -1,4 +1,4 @@
-        function toggleMenu() {
+ function toggleMenu() {
             document.getElementById("sidebar").classList.toggle("active");
         }
 
@@ -35,35 +35,49 @@
             document.getElementById('panel-title').innerText = "Asignar en " + name;
         }
 
-        // --- Lógica para Asignar (MULTIPLE) ---
+        // --- Lógica para Asignar (MULTIPLE DÍAS) ---
         document.getElementById('assign-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const salon = document.getElementById('salon').value;
             const idioma = document.getElementById('idioma').value;
             const maestro = document.getElementById('maestro').value;
-            const dia = document.getElementById('dia').value;
             const hora = document.getElementById('hora').value;
             
-            const cellId = `cell-${dia}-${hora}`;
-            const cell = document.getElementById(cellId);
+            // Obtener días seleccionados
+            const diasCheckboxes = document.querySelectorAll('input[name="dias"]:checked');
             
-            if(cell) {
-                const classCard = document.createElement('div');
-                classCard.className = 'slot-occupied';
-                classCard.innerHTML = `
-                    <strong>${salon}</strong>
-                    <span>${idioma}</span><br>
-                    <small>${maestro}</small>
-                `;
-                
-                cell.appendChild(classCard);
-                
-                // Animación suave
-                classCard.style.animation = "highlight 0.5s ease";
-            } else {
-                alert("Horario no encontrado en la vista.");
+            if (diasCheckboxes.length === 0) {
+                alert("Por favor selecciona al menos un día.");
+                return;
             }
+            
+            if (!salon || !idioma || !maestro || !hora) {
+                 alert("Por favor completa todos los campos.");
+                 return;
+            }
+
+            // Iterar sobre cada día seleccionado
+            diasCheckboxes.forEach(checkbox => {
+                const dia = checkbox.value;
+                const cellId = `cell-${dia}-${hora}`;
+                const cell = document.getElementById(cellId);
+                
+                if(cell) {
+                    const classCard = document.createElement('div');
+                    classCard.className = 'slot-occupied';
+                    classCard.innerHTML = `
+                        <strong>${salon}</strong>
+                        <span>${idioma}</span><br>
+                        <small>${maestro}</small>
+                    `;
+                    
+                    cell.appendChild(classCard);
+                    
+                    // Animación
+                    classCard.style.animation = "highlight 0.5s ease";
+                }
+            });
         });
         
         const styleSheet = document.createElement("style");
