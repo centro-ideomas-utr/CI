@@ -406,31 +406,6 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        file_mapping = {
-            "doc_acta": "acta_nacimiento",
-            "doc_identificacion": "identificacion",
-            "doc_estado": "estado_de_cuenta",
-            "doc_cv": "cv",
-            "doc_comprobante_domicilio": "comprobante_domicilio",
-            "doc_carta1": "carta_recomendacion1",
-            "doc_carta2": "carta_recomendacion2",
-            "doc_titulo": "titulo",
-            "doc_cedula": "cedula",
-            "doc_situacion_fiscal": "constancia_situacion_fiscal",
-        }
-        documentos_mongo = {}
-        uploaded_files = request.files
-        for form_field, mongo_key in file_mapping.items():
-            file = uploaded_files.get(form_field)
-            if file and file.filename:
-                ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
-                filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                documentos_mongo[mongo_key] = filepath
-            else:
-                documentos_mongo[mongo_key] = None
-
         # -------------------------------------------------------------
         # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
         # -------------------------------------------------------------
@@ -709,7 +684,7 @@ def solicitar_restablecimiento():
         if not table_name:
             # Mensaje genérico para no revelar si el correo existe
             return render_template('solicitar_restablecimiento.html', 
-                                   message="Si el correo existe en nuestro sistema, se ha enviado un enlace.")
+                                    message="Si el correo existe en nuestro sistema, se ha enviado un enlace.")
 
         # 2. Generar un token seguro y establecer la caducidad (ej: 1 hora)
         reset_token = secrets.token_urlsafe(32)
@@ -737,12 +712,12 @@ def solicitar_restablecimiento():
             yag.send(to=email, subject=subject, contents=contents)
 
         return render_template('solicitar_restablecimiento.html', 
-                               message="Si el correo existe en nuestro sistema, se ha enviado un enlace para restablecer la contraseña.")
+                                message="Si el correo existe en nuestro sistema, se ha enviado un enlace para restablecer la contraseña.")
         
     except Exception as e:
         print(f"Error en solicitud de restablecimiento: {e}")
         return render_template('solicitar_restablecimiento.html', 
-                               error="Error interno del servidor. Intente más tarde.")
+                                error="Error interno del servidor. Intente más tarde.")
     finally:
         if conn and conn.is_connected():
             cursor.close()
@@ -780,8 +755,8 @@ def restablecer_contrasena(token):
         # 2. Validar token y expiración
         if not user_data or user_data['token_expiration'] < datetime.now():
             return render_template('form_restablecer.html', 
-                                   error="El enlace de restablecimiento es inválido o ha expirado.", 
-                                   token=token)
+                                    error="El enlace de restablecimiento es inválido o ha expirado.", 
+                                    token=token)
 
         if request.method == 'GET':
             # Muestra el formulario de cambio de contraseña
@@ -793,8 +768,8 @@ def restablecer_contrasena(token):
         
         if not nueva_contrasena or nueva_contrasena != confirmar_contrasena or len(nueva_contrasena) < 8:
             return render_template('form_restablecer.html', 
-                                   error="Las contraseñas no coinciden o no cumplen con la longitud mínima (8 caracteres).", 
-                                   token=token)
+                                    error="Las contraseñas no coinciden o no cumplen con la longitud mínima (8 caracteres).", 
+                                    token=token)
 
         hashed_password = generate_password_hash(nueva_contrasena)
         
@@ -813,8 +788,8 @@ def restablecer_contrasena(token):
     except Exception as e:
         print(f"Error en restablecimiento de contraseña: {e}")
         return render_template('form_restablecer.html', 
-                               error="Error interno del servidor al procesar el cambio.", 
-                               token=token)
+                                error="Error interno del servidor al procesar el cambio.", 
+                                token=token)
     finally:
         if conn and conn.is_connected():
             cursor.close()
@@ -836,7 +811,7 @@ def registro():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # 1. Obtener valores ENUM para campos fijos (género, tipo_inscripcion)
+        # 1. Obtener valores ENUM para campos fijos (genero, tipo_inscripcion)
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'genero'")
         genero = parse_enum(cursor.fetchone())
 
@@ -894,7 +869,7 @@ def guardar():
         inscripciones_validas = [(i, h) for i, h in inscripciones_validas if i and h]
         
         if not inscripciones_validas:
-              return "<h1>Error: Debe seleccionar al menos un idioma y su horario correspondiente.</h1><a href='/registro'>Volver</a>", 400
+             return "<h1>Error: Debe seleccionar al menos un idioma y su horario correspondiente.</h1><a href='/registro'>Volver</a>", 400
 
         # --- Lógica de Manejo de Archivos (GridFS) ---
         file_fields = {
@@ -956,7 +931,7 @@ def guardar():
             ON DUPLICATE KEY UPDATE id_alumno = id_alumno;
         """
         for id_idioma, id_horario in inscripciones_validas:
-              # Se convierten a int para asegurar el tipo de dato de MySQL
+             # Se convierten a int para asegurar el tipo de dato de MySQL
             cursor.execute(inscripcion_query, (id_alumno, int(id_idioma), int(id_horario)))
 
 
@@ -1091,11 +1066,11 @@ def tablero():
     # Formatear avisos para FullCalendar
     calendar_events = []
     for aviso in global_avisos:
-        if 'start' in aviso:  # Solo los que tienen fecha_evento
+        if 'start' in aviso: # Solo los que tienen fecha_evento
             calendar_events.append({
                 'title': aviso['title'],
                 'start': aviso['start'],
-                'display': 'dot',  # ← Esto crea el PUNTO
+                'display': 'dot', # ← Esto crea el PUNTO
                 'backgroundColor': '#566a93',
                 'borderColor': '#566a93'
             })
@@ -1129,7 +1104,7 @@ def publicar_aviso():
             "mensaje": mensaje_recibido,
             
             # --- CAMPOS PARA FULLCALENDAR ---
-            "title": mensaje_recibido,  # El 'título' del evento es el mensaje
+            "title": mensaje_recibido, # El 'título' del evento es el mensaje
             "start": fecha_iso_cal      # La 'fecha' del evento es hoy
         }
         
@@ -1140,184 +1115,9 @@ def publicar_aviso():
         return redirect(request.referrer or url_for('avisos'))
 
 
-@app.route("/cursos") #alumono inicio
+@app.route("/cursos") #alumno inicio
 def cursos():
     return render_template("cursos.html")
-
-@app.route("/salon") # staff
-def salon():
-    """
-    Muestra la vista de asignación de salones/grupos y carga los catálogos
-    necesarios para el modal de creación de grupo.
-    (Implementación simplificada)
-    """
-    conn = None
-    profesores = []
-    idiomas = []
-    niveles = []
-    grupos_existentes = []
-    # Aseguramos que success_message esté definida al inicio
-    success_message = request.args.get('success_message')
-
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-
-        # 1. Obtener la lista de Profesores
-        cursor.execute("SELECT id_profesor, CONCAT(nombre, ' ', apellido_p) AS nombre_completo FROM profesores ORDER BY nombre")
-        profesores = cursor.fetchall()
-        
-        # 2. Obtener la lista de Idiomas (Se mantienen para el futuro modal de edición)
-        cursor.execute("SELECT id_idioma, nombre FROM idioma ORDER BY nombre")
-        idiomas = cursor.fetchall()
-        
-        # 3. Obtener los valores ENUM para Nivel (Se mantienen para el futuro modal de edición)
-        cursor.execute("SHOW COLUMNS FROM cursos LIKE 'nivel'")
-        niveles = parse_enum(cursor.fetchone())
-        
-        # 4. Obtener GRUPOS EXISTENTES (Solo de la tabla grupos y profesores)
-        query_grupos = """
-            SELECT 
-                G.id_grupo, G.grupo AS nombre_grupo, G.numero_salon, 
-                P.nombre AS nombre_profesor, P.apellido_p AS ap_profesor, 
-                NULL AS idioma, NULL AS nivel, G.numero_salon AS horario_detallado,
-                (
-                    SELECT COUNT(id_alumno) 
-                    FROM alumnos A 
-                    WHERE A.id_grupo = G.id_grupo
-                ) AS numero_alumnos
-            FROM grupos G
-            JOIN profesores P ON G.id_profesor = P.id_profesor
-            ORDER BY G.grupo
-        """
-        cursor.execute(query_grupos)
-        grupos_existentes = cursor.fetchall()
-
-    except mysql.connector.Error as err:
-        print(f"Error de base de datos al cargar catálogos en /salon: {err}")
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-    # EL RETURN ES COMPLETO Y CORREGIDO
-    return render_template(
-        "salon.html", 
-        grupos_existentes=grupos_existentes,
-        profesores=profesores,
-        idiomas=idiomas,
-        niveles=niveles,
-        success_message=success_message # <--- Aseguramos que se pase el mensaje
-    )
-
-@app.route("/crear_grupo", methods=["POST"])
-def crear_grupo():
-    """
-    Recibe los datos del modal y crea un nuevo registro en la tabla grupos.
-    (Implementación simplificada)
-    """
-    conn = None
-    try:
-        data = {
-            'grupo': request.form.get('grupo'),
-            'id_profesor': request.form.get('id_profesor'),
-            'numero_salon': request.form.get('numero_salon'),
-        }
-
-        # Validación básica de datos obligatorios
-        if not data['grupo'] or not data['id_profesor']:
-            return "Error: Faltan campos obligatorios (Nombre de Grupo y Docente).", 400
-
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-
-        # 1. OMITIR LÓGICA DE CURSOS/HORARIOS
-
-        # 2. Crear el nuevo Grupo (Solo con los datos básicos)
-        # Asumiendo que numero_salon es NULLable en la DB.
-        query_grupo = """
-            INSERT INTO grupos (numero_salon, grupo, id_profesor) 
-            VALUES (%s, %s, %s)
-        """
-        # Usamos el valor del formulario o None si está vacío para MySQL NULL
-        numero_salon = data['numero_salon'] if data['numero_salon'] else None
-
-        cursor.execute(query_grupo, (numero_salon, data['grupo'], data['id_profesor']))
-        id_grupo = cursor.lastrowid
-
-        # 3. Registrar Log 
-        logs_col.insert_one({
-            "tipo_entidad": "grupo",
-            "id_entidad": id_grupo,
-            "accion": "creacion_grupo_basico",
-            "detalle": f"Grupo '{data['grupo']}' creado. Asignado a Prof ID {data['id_profesor']}.",
-            "usuario": "admin_logueado", 
-            "fecha": datetime.utcnow()
-        })
-        
-        conn.commit()
-        return redirect(url_for('salon', success_message=f"Grupo {data['grupo']} creado exitosamente."))
-
-    except mysql.connector.Error as err:
-        if conn: conn.rollback()
-        print(f"Error de MySQL al crear grupo: {err}")
-        return f"Error al crear el grupo: {err.msg}", 500
-    except Exception as e:
-        if conn: conn.rollback()
-        print(f"Error general al crear grupo: {e}")
-        return f"Error interno del servidor: {e}", 500
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-@app.route('/eliminar_grupo/<int:id_grupo>', methods=['POST'])
-def eliminar_grupo(id_grupo):
-    """
-    Elimina un grupo de MySQL. Fallará si tiene alumnos asignados (FK constraint).
-    """
-    conn = None
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-
-        # Intenta eliminar el grupo
-        cursor.execute("DELETE FROM grupos WHERE id_grupo = %s", (id_grupo,))
-        
-        if cursor.rowcount == 0:
-            return jsonify({'status': 'error', 'message': f'No se encontró grupo con ID {id_grupo}.'}), 404
-
-        conn.commit()
-
-        logs_col.insert_one({
-            "tipo_entidad": "grupo",
-            "id_entidad": id_grupo,
-            "accion": "eliminacion_grupo",
-            "detalle": f"Grupo ID {id_grupo} eliminado.",
-            "usuario": "admin_logueado", 
-            "fecha": datetime.utcnow()
-        })
-
-        return jsonify({'status': 'success', 'message': 'Grupo eliminado exitosamente.'})
-
-    except mysql.connector.Error as err:
-        if conn: conn.rollback()
-        # Error 1451: Cannot delete or update a parent row: a foreign key constraint fails
-        if err.errno == 1451:
-            error_msg = "Error: El grupo tiene alumnos, asistencias o comentarios asignados. Por favor, desasigne a los alumnos antes de eliminar el grupo."
-            return jsonify({'status': 'error', 'message': error_msg}), 400
-        
-        print(f"Error de MySQL al eliminar grupo: {err}")
-        return jsonify({'status': 'error', 'message': f'Error en la DB: {err.msg}'}), 500
-    except Exception as e:
-        if conn: conn.rollback()
-        print(f"Error general al eliminar grupo: {e}")
-        return jsonify({'status': 'error', 'message': f'Error del servidor: {e}'}), 500
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
 
 @app.route("/evidencias") #maetsro
 def evidencias():
@@ -1425,7 +1225,454 @@ def perfil():
 
 @app.route("/Horario")
 def Horario():
-    return render_template("crearhorario.html")
+    return redirect(url_for('gestion_horarios_base'))
+
+def get_horarios_data():
+    conn = None
+    horarios_data = []
+    unique_sedes = set()
+    
+    # Mapeo de la cadena de días de la DB (Lun, Mar, etc.) a un índice (1, 2, etc.)
+    day_map_frontend = {'Lun': 1, 'Mar': 2, 'Mié': 3, 'Jue': 4, 'Vie': 5, 'Sáb': 6}
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        query = "SELECT id_horario, sede, dias, hora FROM horario"
+        cursor.execute(query)
+        db_horarios = cursor.fetchall()
+        
+        for row in db_horarios:
+            unique_sedes.add(row['sede'])
+            
+            # 1. Split the time string (e.g., "09:00 - 11:00")
+            try:
+                hora_parts = row['hora'].split(' - ')
+                hora_inicio = hora_parts[0].strip()
+                hora_fin = hora_parts[1].strip()
+            except:
+                hora_inicio = "00:00"
+                hora_fin = "00:00"
+
+            # 2. Split the days string (e.g., "Lun, Mié, Vie")
+            dias_list = [d.strip() for d in row['dias'].split(',')]
+
+            # 3. Create a separate entry for *each day* for easier rendering on the frontend grid
+            for dia_str in dias_list:
+                day_index = day_map_frontend.get(dia_str)
+                if day_index is not None:
+                    horarios_data.append({
+                        'id': row['id_horario'],
+                        'sede': row['sede'],
+                        'dias_str': row['dias'], # Cadena completa para el modal de edición
+                        'day': day_index,         # 1=Lun, 2=Mar...
+                        'time': hora_inicio,
+                        'end_time': hora_fin
+                    })
+
+    except mysql.connector.Error as err:
+        print(f"Error en get_horarios_data: {err}")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+            
+    return sorted(list(unique_sedes)), horarios_data
+
+@app.route("/gestion_horarios_base")
+def gestion_horarios_base():
+    """Ruta para la gestión de horarios base (sedes, dias, hora)."""
+    sedes, _ = get_horarios_data()
+    # CORRECCIÓN: Usando el nombre de archivo correcto: crearhorario.html
+    return render_template("crearhorario.html", sedes=sedes)
+
+@app.route("/api/horarios_base", methods=["GET"])
+def api_horarios_base():
+    """Endpoint AJAX para obtener los horarios base en formato JSON (usado por el frontend)."""
+    _, horarios_data = get_horarios_data()
+    return jsonify(horarios_data)
+
+@app.route("/api/horario_detail/<int:id_horario>", methods=["GET"])
+def api_horario_detail(id_horario):
+    """
+    Endpoint AJAX para obtener los detalles de un solo horario por ID
+    para rellenar el formulario de edición.
+    """
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        query = "SELECT id_horario, sede, dias, hora FROM horario WHERE id_horario = %s"
+        cursor.execute(query, (id_horario,))
+        horario = cursor.fetchone()
+        
+        if not horario:
+            return jsonify({'status': 'error', 'message': 'Horario no encontrado.'}), 404
+            
+        # Preparar datos para el frontend
+        hora_parts = horario['hora'].split(' - ')
+        
+        return jsonify({
+            'status': 'success',
+            'id_horario': horario['id_horario'],
+            'sede': horario['sede'],
+            'dias': horario['dias'].split(', '), # Lista de strings de días (e.g., ['Lun', 'Mié'])
+            'hora_inicio': hora_parts[0].strip(),
+            'hora_fin': hora_parts[1].strip()
+        })
+        
+    except Exception as e:
+        print(f"Error al obtener detalle de horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/guardar_horario_base", methods=["POST"])
+def guardar_horario_base():
+    conn = None
+    try:
+        # Los datos vienen del formulario del frontend (crearhorario.html)
+        sede = request.form.get('sede')
+        selected_days = request.form.getlist('dias[]') # Se espera una lista de valores numéricos (1=Lun, 2=Mar...)
+        hora_inicio = request.form.get('hora_inicio')
+        hora_fin = request.form.get('hora_fin')
+        
+        # 1. Validación de datos esenciales
+        if not sede or not selected_days or not hora_inicio or not hora_fin:
+            return jsonify({'status': 'error', 'message': 'Faltan datos de Sede, Días u Horario.'}), 400
+
+        day_map = {'1': 'Lun', '2': 'Mar', '3': 'Mié', '4': 'Jue', '5': 'Vie', '6': 'Sáb'}
+        
+        # Convertir los IDs de días seleccionados a nombres y unirlos
+        dias_list = [day_map.get(d) for d in selected_days if day_map.get(d) is not None]
+        dias_str = ', '.join(dias_list)
+        
+        # Formato de la hora para la columna `hora` (ej: '09:00 - 11:00')
+        hora_str = f"{hora_inicio} - {hora_fin}"
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 2. Inserción en la tabla `horario`
+        query_horario = """
+            INSERT INTO horario (sede, dias, hora) 
+            VALUES (%s, %s, %s)
+        """
+
+        cursor.execute(query_horario, (sede, dias_str, hora_str))
+        id_horario = cursor.lastrowid
+        
+        conn.commit()
+
+        # 3. Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "horario",
+            "id_entidad": id_horario,
+            "accion": "creacion_horario_base",
+            "detalle": f"Horario base creado: {sede} - {dias_str} | {hora_str}.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        # Devolver el horario creado para que el front-end pueda actualizar la lista.
+        return jsonify({
+            'status': 'success', 
+            'message': f'Horario base registrado con ID {id_horario} en {sede}.',
+            'id_horario': id_horario,
+            'sede': sede,
+            'dias': dias_str,
+            'hora': hora_str
+        }), 201
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        print(f"Error de MySQL al guardar horario: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al guardar horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/editar_horario_base", methods=["POST"])
+def editar_horario_base():
+    conn = None
+    try:
+        # Los datos vienen del formulario de edición (JSON)
+        data = request.get_json()
+        id_horario = data.get('id_horario', type=int)
+        sede = data.get('sede')
+        selected_days = data.get('dias', []) # Lista de nombres de días (ej: ['Lun', 'Mar'])
+        hora_inicio = data.get('hora_inicio')
+        hora_fin = data.get('hora_fin')
+        
+        if not id_horario or not sede or not selected_days or not hora_inicio or not hora_fin:
+            return jsonify({'status': 'error', 'message': 'Faltan datos esenciales para la edición.'}), 400
+
+        dias_str = ', '.join(selected_days)
+        hora_str = f"{hora_inicio} - {hora_fin}"
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 2. Actualización en la tabla `horario`
+        query = """
+            UPDATE horario 
+            SET sede = %s, dias = %s, hora = %s
+            WHERE id_horario = %s
+        """
+        cursor.execute(query, (sede, dias_str, hora_str, id_horario))
+        
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'status': 'error', 'message': f'Horario ID {id_horario} no encontrado para actualizar.'}), 404
+
+        conn.commit()
+
+        # 3. Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "horario",
+            "id_entidad": id_horario,
+            "accion": "edicion_horario_base",
+            "detalle": f"Horario base ID {id_horario} editado: {sede} - {dias_str} | {hora_str}.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({
+            'status': 'success', 
+            'message': f'Horario base ID {id_horario} actualizado correctamente.',
+            'id_horario': id_horario,
+            'sede': sede,
+            'dias': dias_str,
+            'hora': hora_str
+        }), 200
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al editar horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor al editar: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+
+@app.route("/eliminar_horario_base/<int:id_horario>", methods=["POST"])
+def eliminar_horario_base(id_horario):
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 1. Eliminar el horario de la tabla `horario`
+        query = "DELETE FROM horario WHERE id_horario = %s"
+        cursor.execute(query, (id_horario,))
+        
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'status': 'error', 'message': f'Horario ID {id_horario} no encontrado.'}), 404
+
+        conn.commit()
+
+        # 2. Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "horario",
+            "id_entidad": id_horario,
+            "accion": "eliminacion_horario_base",
+            "detalle": f"Horario base ID {id_horario} eliminado.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': f'Horario ID {id_horario} eliminado exitosamente.'}), 200
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        # Manejo de error de clave foránea (el horario tiene cursos asignados)
+        if err.errno == 1451:
+            return jsonify({'status': 'error', 'message': 'No se puede eliminar el horario. Está siendo utilizado por uno o más Cursos.'}), 400
+        print(f"Error de MySQL al eliminar horario: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al eliminar horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+# --- FIN RUTAS DE GESTIÓN DE HORARIOS BASE ---
+
+
+# --- NUEVAS RUTAS DE GESTIÓN DE CURSOS ---
+
+@app.route("/gestion_cursos")
+def gestion_cursos():
+    """
+    Ruta para la gestión de Cursos (idioma, nivel, horario_base).
+    Obtiene los catálogos de idiomas y horarios para llenar el formulario.
+    """
+    conn = None
+    idiomas = []
+    horarios = []
+    cursos_list = []
+    
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Obtener valores ENUM para Niveles
+        cursor.execute("SHOW COLUMNS FROM cursos LIKE 'nivel'")
+        niveles = parse_enum(cursor.fetchone())
+
+        # 2. Obtener Catálogo de IDIOMAS (id y nombre)
+        cursor.execute("SELECT id_idioma, nombre FROM idioma ORDER BY nombre")
+        idiomas = cursor.fetchall()
+        
+        # 3. Obtener Catálogo de HORARIOS BASE (id y detalle)
+        query_horarios = "SELECT id_horario, CONCAT(dias, ' - ', hora, ' (', sede, ')') AS detalle FROM horario ORDER BY dias, hora"
+        cursor.execute(query_horarios)
+        horarios = cursor.fetchall()
+        
+        # 4. Obtener todos los Cursos existentes
+        query_cursos = """
+            SELECT 
+                c.id_curso,
+                i.nombre AS idioma_nombre,
+                c.nivel,
+                h.dias,
+                h.hora,
+                h.sede,
+                c.club
+            FROM cursos c
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            JOIN horario h ON c.id_horario = h.id_horario
+            ORDER BY i.nombre, c.nivel
+        """
+        cursor.execute(query_cursos)
+        cursos_list = cursor.fetchall()
+
+    except mysql.connector.Error as err:
+        print(f"Error de MySQL en gestion_cursos: {err}")
+        niveles, idiomas, horarios, cursos_list = [], [], [], []
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template(
+        "curso.html",
+        niveles=niveles,
+        idiomas=idiomas,
+        horarios=horarios,
+        cursos=cursos_list
+    )
+
+@app.route("/guardar_curso", methods=["POST"])
+def guardar_curso():
+    conn = None
+    try:
+        id_idioma = request.form.get('id_idioma', type=int)
+        id_horario = request.form.get('id_horario', type=int)
+        nivel = request.form.get('nivel')
+        club = request.form.get('club')
+
+        if not id_idioma or not id_horario or not nivel:
+            return jsonify({'status': 'error', 'message': 'Faltan datos esenciales (Idioma, Horario o Nivel).'}), 400
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Inserción en la tabla `cursos`
+        query = """
+            INSERT INTO cursos (id_idioma, id_horario, nivel, club)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (id_idioma, id_horario, nivel, club))
+        id_curso = cursor.lastrowid
+        
+        conn.commit()
+
+        # Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "curso",
+            "id_entidad": id_curso,
+            "accion": "creacion_curso",
+            "detalle": f"Curso creado. ID_Idioma: {id_idioma}, Nivel: {nivel}, ID_Horario: {id_horario}.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': f'Curso (ID: {id_curso}) registrado exitosamente.'}), 201
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        print(f"Error de MySQL al guardar curso: {err}")
+        # Error 1062 es duplicado. Podría ser una combinación de FKs única si se definiera
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos al guardar curso: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al guardar curso: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/eliminar_curso/<int:id_curso>", methods=["POST"])
+def eliminar_curso(id_curso):
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Eliminación del curso
+        query = "DELETE FROM cursos WHERE id_curso = %s"
+        cursor.execute(query, (id_curso,))
+
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'status': 'error', 'message': f'Curso ID {id_curso} no encontrado.'}), 404
+
+        conn.commit()
+
+        # Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "curso",
+            "id_entidad": id_curso,
+            "accion": "eliminacion_curso",
+            "detalle": f"Curso ID {id_curso} eliminado.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': f'Curso ID {id_curso} eliminado exitosamente.'}), 200
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        # Manejo de error de clave foránea (el curso tiene grupos asociados)
+        if err.errno == 1451:
+            return jsonify({'status': 'error', 'message': 'No se puede eliminar el curso, tiene grupos o alumnos asignados.'}), 400
+        print(f"Error de MySQL al eliminar curso: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al eliminar curso: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# --- FIN RUTAS DE GESTIÓN DE CURSOS ---
 
 @app.route("/reinscripciones") #encabezados, inconos staff
 def reinscripciones():
@@ -1766,8 +2013,8 @@ def portal_facturacion(id_profesor):
         
         if not profesor_data or not profesor_data.get('rfc'):
             return render_template("Portal_Error.html", 
-                                   message="Datos fiscales incompletos. Por favor, complete su RFC y Régimen Fiscal.",
-                                   id_profesor=id_profesor), 400
+                                    message="Datos fiscales incompletos. Por favor, complete su RFC y Régimen Fiscal.",
+                                    id_profesor=id_profesor), 400
             
         # 2. Obtener HORAS TRABAJADAS (SIMULACIÓN)
         horas_trabajadas = 27.0
@@ -1917,7 +2164,6 @@ def descargar_archivo_prueba(uuid, tipo):
     
 @app.route("/Cerrar")
 def cerrar():
-    # En una aplicación real, esta ruta manejaría el cierre de sesión (logout)
     return redirect(url_for('inicio')) 
 
 if __name__ == "__main__":
