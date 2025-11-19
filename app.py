@@ -12,6 +12,9 @@ import json
 from dotenv import load_dotenv
 import secrets
 import string
+import threading 
+from io import BytesIO 
+from gridfs import GridFS
 import locale
 
 load_dotenv()
@@ -22,36 +25,37 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 if not app.config['SECRET_KEY']:
     raise ValueError("No se encontró SECRET_KEY. Define la variable de entorno.")
 
+# --- Filtros y Context Processors ---
 def format_currency_mxn(value):
     if value is None:
         return "0.00"
     try:
+        # Usa el método de la cadena para dar formato de moneda MXN
         return f"{float(value):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
     except (TypeError, ValueError):
         return str(value)
 
 app.jinja_env.filters['format_currency'] = format_currency_mxn
-# ----------------------------------------
 
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow()}
+
+# --- Configuración de Conexiones ---
 try:
     YAG_USER = os.getenv('YAG_USER')
     YAG_TOKEN = os.getenv('YAG_TOKEN')
     
     if not YAG_USER or not YAG_TOKEN:
-        raise ValueError("Credenciales de Yagmail no encontradas en .env")
-        
-    yag = yagmail.SMTP(YAG_USER, YAG_TOKEN)
-    
+        print("Advertencia: Credenciales de Yagmail no encontradas. El envío de correos estará deshabilitado.")
+        yag = None
+    else:
+        yag = yagmail.SMTP(YAG_USER, YAG_TOKEN)
 except Exception as e:
     print(f"Error al inicializar yagmail: {e}")
     yag = None
 
-# Permite usar {{ now.year }} en las plantillas sin pasarlo en cada ruta
-@app.context_processor
-def inject_now():
-    return {'now': datetime.utcnow()}
 
-# --- Configuración de MySQL ---
 db_config = {
     "host": os.getenv('DB_HOST'),
     "user": os.getenv('DB_USER'),
@@ -59,7 +63,6 @@ db_config = {
     "database": os.getenv('DB_DATABASE')
 }
 
-# --- Configuración de MongoDB ---
 MONGO_URI = os.getenv('MONGO_URI')
 if not MONGO_URI:
     raise ValueError("No se encontró MONGO_URI. Define la variable de entorno.")
@@ -67,10 +70,6 @@ mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client["ci_prueba"]
 expedientes_col = mongo_db["expedientes"]
 logs_col = mongo_db["logs"]
-# Se asume una colección para logs de evidencias si la necesitas
-# logs_evidencias_col = mongo_db["logs_evidencias"] 
-
-from gridfs import GridFS
 fs = GridFS(mongo_db) 
 
 global_avisos = []
@@ -121,15 +120,129 @@ def parse_enum(row):
         return []
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
 
-def obtener_profesor_id_simulado():
+# -------------------------------------------------------------
+# FUNCIÓN ASÍNCRONA PARA REGISTRO DE PERSONAL
+# -------------------------------------------------------------
+
+def process_personal_registration_async(id_personal, tipo_personal, email, contrasena_temporal, uploaded_files_data, nombre, apellido_p, apellido_m):
     """
-    Función de utilidad SIMULADA para obtener el ID del profesor logueado.
-    Esto debe ser reemplazado por la lógica de sesión real (ej: session.get('user_id')).
+    Función que se ejecuta en un hilo separado para manejar tareas pesadas:
+    subida de archivos a GridFS, actualización de MySQL y envío de correos.
+    """
     
-    **IMPORTANTE**: Retorna un ID fijo para pruebas. Asegúrate de tener un profesor
-    con id_profesor = 1 en tu DB.
-    """
-    return 1 
+    conn_async = None
+    cursor_async = None
+    
+    # Necesitamos recrear la conexión de yagmail en este hilo si queremos usarla
+    try:
+        YAG_USER = os.getenv('YAG_USER')
+        YAG_TOKEN = os.getenv('YAG_TOKEN')
+        yag_async = yagmail.SMTP(YAG_USER, YAG_TOKEN)
+    except Exception as e:
+        print(f"Error al inicializar yagmail en hilo: {e}")
+        yag_async = None
+    
+    try:
+        # --- A. SUBIR ARCHIVOS A GRIDFS Y CONSTRUIR EXPEDIENTE ---
+        documentos_mongo = {}
+        
+        for mongo_key, file_content, original_filename, content_type in uploaded_files_data:
+            file_stream = BytesIO(file_content) 
+            
+            # Subir archivo a GridFS
+            grid_fs_id = fs.put(
+                file_stream, 
+                filename=original_filename,
+                content_type=content_type,
+                alias=mongo_key,
+                usuario_registro=email,
+                tipo_personal=tipo_personal
+            )
+            documentos_mongo[mongo_key] = str(grid_fs_id) 
+
+        # --- B. GUARDAR EXPEDIENTE EN MONGODB Y ACTUALIZAR MYSQL ---
+        expediente_doc = {
+            "tipo": tipo_personal, 
+            "id_relacional": id_personal,
+            "documentos": documentos_mongo, 
+            "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_admin_async" }
+        }
+        mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
+        
+        # Reconexión a MySQL para la actualización final
+        conn_async = mysql.connector.connect(**db_config)
+        cursor_async = conn_async.cursor()
+        
+        table_name = "profesores" if tipo_personal == 'maestro' else "staff"
+        id_column = "id_profesor" if tipo_personal == 'maestro' else "id_staff"
+        
+        update_query = f"UPDATE {table_name} SET id_expediente_mongo = %s WHERE {id_column} = %s"
+        cursor_async.execute(update_query, (str(mongo_id), id_personal))
+        conn_async.commit()
+        
+        # --- C. ENVÍO DE CORREO (LENTO) ---
+        if yag_async:
+            nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
+            # Usar un contexto de aplicación para generar url_for, o usar URL codificada
+            with app.app_context():
+                portal_url = url_for('login', _external=True) 
+            
+            subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
+            
+            # Estructura del correo en HTML
+            html_body = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                        <h2 style="color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                            ¡Bienvenido/a {nombre_completo}!
+                        </h2>
+                        <p>Te damos la más cordial bienvenida al equipo del Centro de Idiomas UTR como <b>{tipo_personal.capitalize()}</b>.</p>
+                        <p>Tu cuenta ha sido creada y tus documentos se han subido exitosamente a tu expediente digital. En breve podrás acceder a tu portal.</p>
+                        
+                        <h3 style="color: #28a745;">Tus Credenciales de Acceso:</h3>
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 5px solid #28a745;">
+                            <p><strong>Portal de Acceso:</strong> <a href="{portal_url}" style="color: #007bff; text-decoration: none;">Acceder al Sistema CIUTR</a></p>
+                            <p><strong>Usuario (Correo):</strong> <code>{email}</code></p>
+                            <p><strong>Contraseña TEMPORAL:</strong> <strong style="font-size: 1.1em; color: #dc3545;">{contrasena_temporal}</strong></p>
+                        </div>
+                        
+                        <p><strong>Importante:</strong> Por seguridad, te recomendamos **cambiar tu contraseña inmediatamente** después de tu primer inicio de sesión.</p>
+                        <p>Si tienes alguna duda o necesitas asistencia, no dudes en contactar al equipo de administración.</p>
+                        <p>Atentamente,<br>Equipo de Administración CIUTR</p>
+                    </div>
+                </body>
+                </html>
+            """
+            
+            yag_async.send(to=email, subject=subject, contents=[html_body])
+
+            logs_col.insert_one({
+                "tipo_entidad": "sistema",
+                "id_entidad": id_personal,
+                "accion": "correo_bienvenida_enviado_async",
+                "detalle": f"Correo de bienvenida HTML enviado con credenciales y expediente subido.", 
+                "usuario": "sistema_auto_async", 
+                "fecha": datetime.utcnow()
+            })
+            
+        print(f"INFO: Registro asíncrono de {tipo_personal} ID {id_personal} completado con éxito.")
+        
+    except Exception as e:
+        print(f"ERROR ASÍNCRONO al procesar el registro de {tipo_personal} ID {id_personal}: {e}")
+        logs_col.insert_one({
+            "tipo_entidad": tipo_personal,
+            "id_entidad": id_personal,
+            "accion": "error_registro_async",
+            "detalle": f"Fallo en la tarea asíncrona (Subida/Correo). Error: {e}",
+            "usuario": "sistema_auto_async", 
+            "fecha": datetime.utcnow()
+        })
+        if conn_async: conn_async.rollback()
+        
+    finally:
+        if 'cursor_async' in locals() and cursor_async: cursor_async.close()
+        if conn_async and conn_async.is_connected(): conn_async.close()
 
 # =================================================================
 # === RUTAS DE DOCUMENTOS Y AUXILIARES ===
@@ -221,7 +334,6 @@ def gestion_personal():
 
     except mysql.connector.Error as err:
         print(f"ERROR DE BASE DE DATOS: {err}")
-        # Si la base de datos falla, devolvemos una lista vacía y registramos el error.
         
     except Exception as e:
         print(f"ERROR GENERAL al cargar personal: {e}")
@@ -233,6 +345,7 @@ def gestion_personal():
 
     # Pasa la lista y el término de búsqueda al template
     return render_template("añadiradmin.html", personal=personal, busqueda=busqueda)
+    
 @app.route('/guardar-personal', methods=['POST'])
 def guardar_personal():
     """
@@ -261,7 +374,6 @@ def guardar_personal():
     }
     
     # Preparar datos de archivos para pasarlos al hilo. 
-    # Capturamos el contenido binario y la metadata ANTES de cerrar la solicitud.
     uploaded_files_data = []
     file_mapping = {
         "doc_acta": "acta_nacimiento",
@@ -279,8 +391,7 @@ def guardar_personal():
     for form_field, mongo_key in file_mapping.items():
         file = request.files.get(form_field)
         if file and file.filename:
-            # Capturamos el contenido binario y la información necesaria
-            file_content = file.read()
+            file_content = file.read() # Capturar el contenido binario
             uploaded_files_data.append((mongo_key, file_content, secure_filename(file.filename), file.content_type))
     
     cursor = None
@@ -295,22 +406,6 @@ def guardar_personal():
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        file_mapping = {
-            "doc_acta": "acta_nacimiento",
-            "doc_identificacion": "identificacion",
-            "doc_estado": "estado_de_cuenta",
-            "doc_cv": "cv",
-            "doc_comprobante_domicilio": "comprobante_domicilio",
-            "doc_carta1": "carta_recomendacion1",
-            "doc_carta2": "carta_recomendacion2",
-            "doc_titulo": "titulo",
-            "doc_cedula": "cedula",
-            "doc_situacion_fiscal": "constancia_situacion_fiscal",
-        }
-        documentos_mongo = {}
-        uploaded_files = request.files
-        # Código innecesario aquí ya que se maneja en el thread. Se deja la estructura por si acaso.
-        
         # -------------------------------------------------------------
         # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
         # -------------------------------------------------------------
@@ -346,11 +441,8 @@ def guardar_personal():
         # 3. INICIAR TAREA ASÍNCRONA (Subida de documentos y correo)
         # -------------------------------------------------------------
         
-        # Pasamos los datos necesarios a la función que se ejecutará en segundo plano
-        import threading
         thread = threading.Thread(
             target=process_personal_registration_async, 
-            # Los argumentos deben ser serializables y no referenciar objetos de Flask
             args=(
                 id_personal, 
                 form_data['tipo_personal'],
@@ -364,7 +456,7 @@ def guardar_personal():
         )
         thread.start()
 
-        # Respuesta inmediata al usuario (202 Accepted)
+        # Respuesta inmediata al usuario
         return jsonify({'status': 'success', 'message': f'¡{form_data["tipo_personal"].capitalize()} creado. Expediente y correo se están procesando en segundo plano.'}), 202
 
     except mysql.connector.Error as err:
@@ -387,265 +479,7 @@ def guardar_personal():
     finally:
         if 'cursor' in locals() and cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
-
-# -------------------------------------------------------------
-# FUNCIÓN ASÍNCRONA 
-# -------------------------------------------------------------
-
-def process_personal_registration_async(id_personal, tipo_personal, email, contrasena_temporal, uploaded_files_data, nombre, apellido_p, apellido_m):
-    """
-    Función que se ejecuta en un hilo separado para manejar tareas pesadas:
-    subida de archivos a GridFS, actualización de MySQL y envío de correos.
-    """
-    
-    conn_async = None
-    cursor_async = None
-    
-    try:
-        # --- A. SUBIR ARCHIVOS A GRIDFS Y CONSTRUIR EXPEDIENTE ---
-        documentos_mongo = {}
         
-        for mongo_key, file_content, original_filename, content_type in uploaded_files_data:
-            from io import BytesIO
-            file_stream = BytesIO(file_content) # Crear stream a partir del binario capturado
-            
-            # Subir archivo a GridFS
-            grid_fs_id = fs.put(
-                file_stream, 
-                filename=original_filename,
-                content_type=content_type,
-                alias=mongo_key,
-                usuario_registro=email,
-                tipo_personal=tipo_personal
-            )
-            documentos_mongo[mongo_key] = str(grid_fs_id) 
-
-        # --- B. GUARDAR EXPEDIENTE EN MONGODB Y ACTUALIZAR MYSQL ---
-        expediente_doc = {
-            "tipo": tipo_personal, 
-            "id_relacional": id_personal,
-            "documentos": documentos_mongo, 
-            "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_admin_async" }
-        }
-        mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
-        
-        # Reconexión a MySQL para la actualización final
-        conn_async = mysql.connector.connect(**db_config)
-        cursor_async = conn_async.cursor()
-        
-        table_name = "profesores" if tipo_personal == 'maestro' else "staff"
-        id_column = "id_profesor" if tipo_personal == 'maestro' else "id_staff"
-        
-        update_query = f"UPDATE {table_name} SET id_expediente_mongo = %s WHERE {id_column} = %s"
-        cursor_async.execute(update_query, (str(mongo_id), id_personal))
-        conn_async.commit()
-        
-        # --- C. ENVÍO DE CORREO (LENTO) ---
-        if yag:
-             nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
-             # NOTA: url_for requiere un contexto de aplicación. Se usa una URL codificada.
-             portal_url = "https://tudominio.com/login" 
-             
-             subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
-             
-             # Estructura del correo en HTML
-             html_body = f"""
-                 <html>
-                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                     <div style="max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                         <h2 style="color: #007bff; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                             ¡Bienvenido/a {nombre_completo}!
-                         </h2>
-                         <p>Te damos la más cordial bienvenida al equipo del Centro de Idiomas UTR como <b>{tipo_personal.capitalize()}</b>.</p>
-                         <p>Tu cuenta ha sido creada y tus documentos se han subido exitosamente a tu expediente digital. En breve podrás acceder a tu portal.</p>
-                         
-                         <h3 style="color: #28a745;">Tus Credenciales de Acceso:</h3>
-                         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 5px solid #28a745;">
-                             <p><strong>Portal de Acceso:</strong> <a href="{portal_url}" style="color: #007bff; text-decoration: none;">Acceder al Sistema CIUTR</a></p>
-                             <p><strong>Usuario (Correo):</strong> <code>{email}</code></p>
-                             <p><strong>Contraseña TEMPORAL:</strong> <strong style="font-size: 1.1em; color: #dc3545;">{contrasena_temporal}</strong></p>
-                         </div>
-                         
-                         <p><strong>Importante:</strong> Por seguridad, te recomendamos **cambiar tu contraseña inmediatamente** después de tu primer inicio de sesión.</p>
-                         <p>Si tienes alguna duda o necesitas asistencia, no dudes en contactar al equipo de administración.</p>
-                         <p>Atentamente,<br>Equipo de Administración CIUTR</p>
-                     </div>
-                 </body>
-                 </html>
-             """
-             
-             yag.send(to=email, subject=subject, contents=[html_body])
-
-             logs_col.insert_one({
-                 "tipo_entidad": "sistema",
-                 "id_entidad": id_personal,
-                 "accion": "correo_bienvenida_enviado_async",
-                 "detalle": f"Correo de bienvenida HTML enviado con credenciales y expediente subido.", 
-                 "usuario": "sistema_auto_async", 
-                 "fecha": datetime.utcnow()
-             })
-             
-        print(f"INFO: Registro asíncrono de {tipo_personal} ID {id_personal} completado con éxito.")
-        
-    except Exception as e:
-        print(f"ERROR ASÍNCRONO al procesar el registro de {tipo_personal} ID {id_personal}: {e}")
-        logs_col.insert_one({
-            "tipo_entidad": tipo_personal,
-            "id_entidad": id_personal,
-            "accion": "error_registro_async",
-            "detalle": f"Fallo en la tarea asíncrona (Subida/Correo). Error: {e}",
-            "usuario": "sistema_auto_async", 
-            "fecha": datetime.utcnow()
-        })
-        if conn_async: conn_async.rollback()
-        
-    finally:
-        if 'cursor_async' in locals() and cursor_async: cursor_async.close()
-        if conn_async and conn_async.is_connected(): conn_async.close()
-
-# =================================================================
-# === RUTAS DE RESTABLECIMIENTO DE CONTRASEÑA ===
-# =================================================================
-
-@app.route('/solicitar-restablecimiento', methods=['GET', 'POST'])
-def solicitar_restablecimiento():
-    """Muestra el formulario para solicitar el correo o envía el enlace."""
-    if request.method == 'GET':
-        # La plantilla que acabamos de crear
-        return render_template('solicitar_restablecimiento.html') 
-    
-    email = request.form.get('correo_electronico')
-    conn = None
-    
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        # 1. Buscar el usuario en ambas tablas (Staff y Profesores)
-        table_name = None
-        
-        cursor.execute("SELECT id_profesor FROM profesores WHERE correo_electronico = %s", (email,))
-        if cursor.fetchone():
-            table_name = "profesores"
-        else:
-            cursor.execute("SELECT id_staff FROM staff WHERE correo_electronico = %s", (email,))
-            if cursor.fetchone():
-                table_name = "staff"
-        
-        if not table_name:
-            # Mensaje genérico para no revelar si el correo existe
-            return render_template('solicitar_restablecimiento.html', 
-                                   message="Si el correo existe en nuestro sistema, se ha enviado un enlace.")
-
-        # 2. Generar un token seguro y establecer la caducidad (ej: 1 hora)
-        reset_token = secrets.token_urlsafe(32)
-        expiration = datetime.now() + timedelta(hours=1)
-        
-        # 3. Guardar el token en la base de datos
-        query = f"""
-            UPDATE {table_name} 
-            SET reset_token = %s, token_expiration = %s 
-            WHERE correo_electronico = %s
-        """
-        cursor.execute(query, (reset_token, expiration, email))
-        conn.commit()
-
-        # 4. Enviar el correo con el enlace de restablecimiento
-        if yag:
-            reset_url = url_for('restablecer_contrasena', token=reset_token, _external=True)
-            subject = "Solicitud de Restablecimiento de Contraseña UTR"
-            contents = [
-                "<p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.</p>",
-                f"<p>Haz clic en el siguiente enlace para continuar:</p>",
-                f"<p><a href='{reset_url}'>Restablecer Contraseña Ahora</a></p>",
-                "<p>Este enlace caducará en 1 hora. Si no solicitaste este cambio, por favor ignora este correo.</p>"
-            ]
-            yag.send(to=email, subject=subject, contents=contents)
-
-        return render_template('solicitar_restablecimiento.html', 
-                               message="Si el correo existe en nuestro sistema, se ha enviado un enlace para restablecer la contraseña.")
-        
-    except Exception as e:
-        print(f"Error en solicitud de restablecimiento: {e}")
-        return render_template('solicitar_restablecimiento.html', 
-                               error="Error interno del servidor. Intente más tarde.")
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-
-@app.route('/restablecer-contrasena/<token>', methods=['GET', 'POST'])
-def restablecer_contrasena(token):
-    """Verifica el token y permite al usuario establecer una nueva contraseña."""
-    conn = None
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-        
-        # 1. Buscar usuario por token en ambas tablas
-        user_data = None
-        table_name = None
-        id_column = None
-        
-        # Intentar buscar en profesores
-        cursor.execute("SELECT id_profesor AS id, reset_token, token_expiration FROM profesores WHERE reset_token = %s", (token,))
-        user_data = cursor.fetchone()
-        if user_data:
-            table_name = "profesores"
-            id_column = "id_profesor"
-        
-        # Si no está en profesores, buscar en staff
-        if not user_data:
-            cursor.execute("SELECT id_staff AS id, reset_token, token_expiration FROM staff WHERE reset_token = %s", (token,))
-            user_data = cursor.fetchone()
-            if user_data:
-                table_name = "staff"
-                id_column = "id_staff"
-
-        # 2. Validar token y expiración
-        if not user_data or user_data['token_expiration'] < datetime.now():
-            return render_template('form_restablecer.html', 
-                                   error="El enlace de restablecimiento es inválido o ha expirado.", 
-                                   token=token)
-
-        if request.method == 'GET':
-            # Muestra el formulario de cambio de contraseña
-            return render_template('form_restablecer.html', token=token)
-
-        # Si es POST, procesar nueva contraseña
-        nueva_contrasena = request.form.get('nueva_contrasena')
-        confirmar_contrasena = request.form.get('confirmar_contrasena')
-        
-        if not nueva_contrasena or nueva_contrasena != confirmar_contrasena or len(nueva_contrasena) < 8:
-            return render_template('form_restablecer.html', 
-                                   error="Las contraseñas no coinciden o no cumplen con la longitud mínima (8 caracteres).", 
-                                   token=token)
-
-        hashed_password = generate_password_hash(nueva_contrasena)
-        
-        # 3. Actualizar contraseña y limpiar token
-        query = f"""
-            UPDATE {table_name} 
-            SET contraseña = %s, reset_token = NULL, token_expiration = NULL 
-            WHERE {id_column} = %s
-        """
-        cursor.execute(query, (hashed_password, user_data['id']))
-        conn.commit()
-
-        # Redirigir al login con mensaje de éxito
-        return redirect(url_for('login', message="Contraseña restablecida con éxito. Ya puede iniciar sesión."))
-        
-    except Exception as e:
-        print(f"Error en restablecimiento de contraseña: {e}")
-        return render_template('form_restablecer.html', 
-                               error="Error interno del servidor al procesar el cambio.", 
-                               token=token)
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
-
 @app.route("/editar-personal/<string:tipo>/<int:id>", methods=['POST'])
 def editar_personal(tipo, id):
     """
@@ -818,6 +652,148 @@ def eliminar_personal(tipo, id_relacional):
             cursor.close()
             conn.close()
 
+# =================================================================
+# === RUTAS DE RESTABLECIMIENTO DE CONTRASEÑA ===
+# =================================================================
+
+@app.route('/solicitar-restablecimiento', methods=['GET', 'POST'])
+def solicitar_restablecimiento():
+    """Muestra el formulario para solicitar el correo o envía el enlace."""
+    if request.method == 'GET':
+        # La plantilla que acabamos de crear
+        return render_template('solicitar_restablecimiento.html') 
+    
+    email = request.form.get('correo_electronico')
+    conn = None
+    
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # 1. Buscar el usuario en ambas tablas (Staff y Profesores)
+        table_name = None
+        
+        cursor.execute("SELECT id_profesor FROM profesores WHERE correo_electronico = %s", (email,))
+        if cursor.fetchone():
+            table_name = "profesores"
+        else:
+            cursor.execute("SELECT id_staff FROM staff WHERE correo_electronico = %s", (email,))
+            if cursor.fetchone():
+                table_name = "staff"
+        
+        if not table_name:
+            # Mensaje genérico para no revelar si el correo existe
+            return render_template('solicitar_restablecimiento.html', 
+                                    message="Si el correo existe en nuestro sistema, se ha enviado un enlace.")
+
+        # 2. Generar un token seguro y establecer la caducidad (ej: 1 hora)
+        reset_token = secrets.token_urlsafe(32)
+        expiration = datetime.now() + timedelta(hours=1)
+        
+        # 3. Guardar el token en la base de datos
+        query = f"""
+            UPDATE {table_name} 
+            SET reset_token = %s, token_expiration = %s 
+            WHERE correo_electronico = %s
+        """
+        cursor.execute(query, (reset_token, expiration, email))
+        conn.commit()
+
+        # 4. Enviar el correo con el enlace de restablecimiento
+        if yag:
+            reset_url = url_for('restablecer_contrasena', token=reset_token, _external=True)
+            subject = "Solicitud de Restablecimiento de Contraseña UTR"
+            contents = [
+                "<p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.</p>",
+                f"<p>Haz clic en el siguiente enlace para continuar:</p>",
+                f"<p><a href='{reset_url}'>Restablecer Contraseña Ahora</a></p>",
+                "<p>Este enlace caducará en 1 hora. Si no solicitaste este cambio, por favor ignora este correo.</p>"
+            ]
+            yag.send(to=email, subject=subject, contents=contents)
+
+        return render_template('solicitar_restablecimiento.html', 
+                                message="Si el correo existe en nuestro sistema, se ha enviado un enlace para restablecer la contraseña.")
+        
+    except Exception as e:
+        print(f"Error en solicitud de restablecimiento: {e}")
+        return render_template('solicitar_restablecimiento.html', 
+                                error="Error interno del servidor. Intente más tarde.")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+
+@app.route('/restablecer-contrasena/<token>', methods=['GET', 'POST'])
+def restablecer_contrasena(token):
+    """Verifica el token y permite al usuario establecer una nueva contraseña."""
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Buscar usuario por token en ambas tablas
+        user_data = None
+        table_name = None
+        id_column = None
+        
+        # Intentar buscar en profesores
+        cursor.execute("SELECT id_profesor AS id, reset_token, token_expiration FROM profesores WHERE reset_token = %s", (token,))
+        user_data = cursor.fetchone()
+        if user_data:
+            table_name = "profesores"
+            id_column = "id_profesor"
+        
+        # Si no está en profesores, buscar en staff
+        if not user_data:
+            cursor.execute("SELECT id_staff AS id, reset_token, token_expiration FROM staff WHERE reset_token = %s", (token,))
+            user_data = cursor.fetchone()
+            if user_data:
+                table_name = "staff"
+                id_column = "id_staff"
+
+        # 2. Validar token y expiración
+        if not user_data or user_data['token_expiration'] < datetime.now():
+            return render_template('form_restablecer.html', 
+                                    error="El enlace de restablecimiento es inválido o ha expirado.", 
+                                    token=token)
+
+        if request.method == 'GET':
+            # Muestra el formulario de cambio de contraseña
+            return render_template('form_restablecer.html', token=token)
+
+        # Si es POST, procesar nueva contraseña
+        nueva_contrasena = request.form.get('nueva_contrasena')
+        confirmar_contrasena = request.form.get('confirmar_contrasena')
+        
+        if not nueva_contrasena or nueva_contrasena != confirmar_contrasena or len(nueva_contrasena) < 8:
+            return render_template('form_restablecer.html', 
+                                    error="Las contraseñas no coinciden o no cumplen con la longitud mínima (8 caracteres).", 
+                                    token=token)
+
+        hashed_password = generate_password_hash(nueva_contrasena)
+        
+        # 3. Actualizar contraseña y limpiar token
+        query = f"""
+            UPDATE {table_name} 
+            SET contraseña = %s, reset_token = NULL, token_expiration = NULL 
+            WHERE {id_column} = %s
+        """
+        cursor.execute(query, (hashed_password, user_data['id']))
+        conn.commit()
+
+        # Redirigir al login con mensaje de éxito
+        return redirect(url_for('login', message="Contraseña restablecida con éxito. Ya puede iniciar sesión."))
+        
+    except Exception as e:
+        print(f"Error en restablecimiento de contraseña: {e}")
+        return render_template('form_restablecer.html', 
+                                error="Error interno del servidor al procesar el cambio.", 
+                                token=token)
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 # =================================================================
 # === RUTAS ACADÉMICAS Y DE ALUMNOS ===
@@ -835,7 +811,7 @@ def registro():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # 1. Obtener valores ENUM para campos fijos (género, tipo_inscripcion)
+        # 1. Obtener valores ENUM para campos fijos (genero, tipo_inscripcion)
         cursor.execute("SHOW COLUMNS FROM alumnos LIKE 'genero'")
         genero = parse_enum(cursor.fetchone())
 
@@ -864,7 +840,7 @@ def registro():
         genero=genero,
         tipodeinscripcion=tipodeinscripcion,
         idiomas=idiomas,      # Lista de idiomas disponibles
-        horarios=horarios     # Lista de horarios disponibles
+        horarios=horarios      # Lista de horarios disponibles
     )
 
 @app.route("/guardar", methods=["POST"])
@@ -1109,6 +1085,7 @@ def tablero():
 
 @app.route('/publicar_aviso', methods=['POST']) #maestros
 def publicar_aviso():
+    # Nota: Esta función usa una lista global simple. Se recomienda usar la tabla `avisos` de MySQL.
     if request.method == 'POST':
         mensaje_recibido = request.form['mensaje']
         fecha_iso_cal = request.form['fecha_evento']
@@ -1128,18 +1105,17 @@ def publicar_aviso():
             
             # --- CAMPOS PARA FULLCALENDAR ---
             "title": mensaje_recibido, # El 'título' del evento es el mensaje
-            "start": fecha_iso_cal     # La 'fecha' del evento es hoy
+            "start": fecha_iso_cal      # La 'fecha' del evento es hoy
         }
         
         # 6. Guardar el aviso en nuestra "base de datos"
         global_avisos.append(nuevo_aviso)
         
         # 7. Redirigir al usuario DE VUELTA a la página de avisos
-        # (Usamos request.referrer para volver a la página donde estaba)
         return redirect(request.referrer or url_for('avisos'))
 
 
-@app.route("/cursos") #alumono inicio
+@app.route("/cursos") #alumno inicio
 def cursos():
     return render_template("cursos.html")
 
@@ -1466,11 +1442,456 @@ def nomina():
 def perfil():
     return render_template("Perfil.html")
 
-@app.route("/Horario") #no me carga staff
+@app.route("/Horario")
 def Horario():
-    return render_template("registromaestro.html")
+    return redirect(url_for('gestion_horarios_base'))
 
-# ... (código anterior) ...
+def get_horarios_data():
+    conn = None
+    horarios_data = []
+    unique_sedes = set()
+    
+    # Mapeo de la cadena de días de la DB (Lun, Mar, etc.) a un índice (1, 2, etc.)
+    day_map_frontend = {'Lun': 1, 'Mar': 2, 'Mié': 3, 'Jue': 4, 'Vie': 5, 'Sáb': 6}
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        query = "SELECT id_horario, sede, dias, hora FROM horario"
+        cursor.execute(query)
+        db_horarios = cursor.fetchall()
+        
+        for row in db_horarios:
+            unique_sedes.add(row['sede'])
+            
+            # 1. Split the time string (e.g., "09:00 - 11:00")
+            try:
+                hora_parts = row['hora'].split(' - ')
+                hora_inicio = hora_parts[0].strip()
+                hora_fin = hora_parts[1].strip()
+            except:
+                hora_inicio = "00:00"
+                hora_fin = "00:00"
+
+            # 2. Split the days string (e.g., "Lun, Mié, Vie")
+            dias_list = [d.strip() for d in row['dias'].split(',')]
+
+            # 3. Create a separate entry for *each day* for easier rendering on the frontend grid
+            for dia_str in dias_list:
+                day_index = day_map_frontend.get(dia_str)
+                if day_index is not None:
+                    horarios_data.append({
+                        'id': row['id_horario'],
+                        'sede': row['sede'],
+                        'dias_str': row['dias'], # Cadena completa para el modal de edición
+                        'day': day_index,         # 1=Lun, 2=Mar...
+                        'time': hora_inicio,
+                        'end_time': hora_fin
+                    })
+
+    except mysql.connector.Error as err:
+        print(f"Error en get_horarios_data: {err}")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+            
+    return sorted(list(unique_sedes)), horarios_data
+
+@app.route("/gestion_horarios_base")
+def gestion_horarios_base():
+    """Ruta para la gestión de horarios base (sedes, dias, hora)."""
+    sedes, _ = get_horarios_data()
+    # CORRECCIÓN: Usando el nombre de archivo correcto: crearhorario.html
+    return render_template("crearhorario.html", sedes=sedes)
+
+@app.route("/api/horarios_base", methods=["GET"])
+def api_horarios_base():
+    """Endpoint AJAX para obtener los horarios base en formato JSON (usado por el frontend)."""
+    _, horarios_data = get_horarios_data()
+    return jsonify(horarios_data)
+
+@app.route("/api/horario_detail/<int:id_horario>", methods=["GET"])
+def api_horario_detail(id_horario):
+    """
+    Endpoint AJAX para obtener los detalles de un solo horario por ID
+    para rellenar el formulario de edición.
+    """
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        query = "SELECT id_horario, sede, dias, hora FROM horario WHERE id_horario = %s"
+        cursor.execute(query, (id_horario,))
+        horario = cursor.fetchone()
+        
+        if not horario:
+            return jsonify({'status': 'error', 'message': 'Horario no encontrado.'}), 404
+            
+        # Preparar datos para el frontend
+        hora_parts = horario['hora'].split(' - ')
+        
+        return jsonify({
+            'status': 'success',
+            'id_horario': horario['id_horario'],
+            'sede': horario['sede'],
+            'dias': horario['dias'].split(', '), # Lista de strings de días (e.g., ['Lun', 'Mié'])
+            'hora_inicio': hora_parts[0].strip(),
+            'hora_fin': hora_parts[1].strip()
+        })
+        
+    except Exception as e:
+        print(f"Error al obtener detalle de horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/guardar_horario_base", methods=["POST"])
+def guardar_horario_base():
+    conn = None
+    try:
+        # Los datos vienen del formulario del frontend (crearhorario.html)
+        sede = request.form.get('sede')
+        selected_days = request.form.getlist('dias[]') # Se espera una lista de valores numéricos (1=Lun, 2=Mar...)
+        hora_inicio = request.form.get('hora_inicio')
+        hora_fin = request.form.get('hora_fin')
+        
+        # 1. Validación de datos esenciales
+        if not sede or not selected_days or not hora_inicio or not hora_fin:
+            return jsonify({'status': 'error', 'message': 'Faltan datos de Sede, Días u Horario.'}), 400
+
+        day_map = {'1': 'Lun', '2': 'Mar', '3': 'Mié', '4': 'Jue', '5': 'Vie', '6': 'Sáb'}
+        
+        # Convertir los IDs de días seleccionados a nombres y unirlos
+        dias_list = [day_map.get(d) for d in selected_days if day_map.get(d) is not None]
+        dias_str = ', '.join(dias_list)
+        
+        # Formato de la hora para la columna `hora` (ej: '09:00 - 11:00')
+        hora_str = f"{hora_inicio} - {hora_fin}"
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 2. Inserción en la tabla `horario`
+        query_horario = """
+            INSERT INTO horario (sede, dias, hora) 
+            VALUES (%s, %s, %s)
+        """
+
+        cursor.execute(query_horario, (sede, dias_str, hora_str))
+        id_horario = cursor.lastrowid
+        
+        conn.commit()
+
+        # 3. Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "horario",
+            "id_entidad": id_horario,
+            "accion": "creacion_horario_base",
+            "detalle": f"Horario base creado: {sede} - {dias_str} | {hora_str}.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        # Devolver el horario creado para que el front-end pueda actualizar la lista.
+        return jsonify({
+            'status': 'success', 
+            'message': f'Horario base registrado con ID {id_horario} en {sede}.',
+            'id_horario': id_horario,
+            'sede': sede,
+            'dias': dias_str,
+            'hora': hora_str
+        }), 201
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        print(f"Error de MySQL al guardar horario: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al guardar horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/editar_horario_base", methods=["POST"])
+def editar_horario_base():
+    conn = None
+    try:
+        # Los datos vienen del formulario de edición (JSON)
+        data = request.get_json()
+        id_horario = data.get('id_horario', type=int)
+        sede = data.get('sede')
+        selected_days = data.get('dias', []) # Lista de nombres de días (ej: ['Lun', 'Mar'])
+        hora_inicio = data.get('hora_inicio')
+        hora_fin = data.get('hora_fin')
+        
+        if not id_horario or not sede or not selected_days or not hora_inicio or not hora_fin:
+            return jsonify({'status': 'error', 'message': 'Faltan datos esenciales para la edición.'}), 400
+
+        dias_str = ', '.join(selected_days)
+        hora_str = f"{hora_inicio} - {hora_fin}"
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 2. Actualización en la tabla `horario`
+        query = """
+            UPDATE horario 
+            SET sede = %s, dias = %s, hora = %s
+            WHERE id_horario = %s
+        """
+        cursor.execute(query, (sede, dias_str, hora_str, id_horario))
+        
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'status': 'error', 'message': f'Horario ID {id_horario} no encontrado para actualizar.'}), 404
+
+        conn.commit()
+
+        # 3. Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "horario",
+            "id_entidad": id_horario,
+            "accion": "edicion_horario_base",
+            "detalle": f"Horario base ID {id_horario} editado: {sede} - {dias_str} | {hora_str}.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({
+            'status': 'success', 
+            'message': f'Horario base ID {id_horario} actualizado correctamente.',
+            'id_horario': id_horario,
+            'sede': sede,
+            'dias': dias_str,
+            'hora': hora_str
+        }), 200
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al editar horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor al editar: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+
+@app.route("/eliminar_horario_base/<int:id_horario>", methods=["POST"])
+def eliminar_horario_base(id_horario):
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 1. Eliminar el horario de la tabla `horario`
+        query = "DELETE FROM horario WHERE id_horario = %s"
+        cursor.execute(query, (id_horario,))
+        
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'status': 'error', 'message': f'Horario ID {id_horario} no encontrado.'}), 404
+
+        conn.commit()
+
+        # 2. Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "horario",
+            "id_entidad": id_horario,
+            "accion": "eliminacion_horario_base",
+            "detalle": f"Horario base ID {id_horario} eliminado.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': f'Horario ID {id_horario} eliminado exitosamente.'}), 200
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        # Manejo de error de clave foránea (el horario tiene cursos asignados)
+        if err.errno == 1451:
+            return jsonify({'status': 'error', 'message': 'No se puede eliminar el horario. Está siendo utilizado por uno o más Cursos.'}), 400
+        print(f"Error de MySQL al eliminar horario: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al eliminar horario: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+# --- FIN RUTAS DE GESTIÓN DE HORARIOS BASE ---
+
+
+# --- NUEVAS RUTAS DE GESTIÓN DE CURSOS ---
+
+@app.route("/gestion_cursos")
+def gestion_cursos():
+    """
+    Ruta para la gestión de Cursos (idioma, nivel, horario_base).
+    Obtiene los catálogos de idiomas y horarios para llenar el formulario.
+    """
+    conn = None
+    idiomas = []
+    horarios = []
+    cursos_list = []
+    
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Obtener valores ENUM para Niveles
+        cursor.execute("SHOW COLUMNS FROM cursos LIKE 'nivel'")
+        niveles = parse_enum(cursor.fetchone())
+
+        # 2. Obtener Catálogo de IDIOMAS (id y nombre)
+        cursor.execute("SELECT id_idioma, nombre FROM idioma ORDER BY nombre")
+        idiomas = cursor.fetchall()
+        
+        # 3. Obtener Catálogo de HORARIOS BASE (id y detalle)
+        query_horarios = "SELECT id_horario, CONCAT(dias, ' - ', hora, ' (', sede, ')') AS detalle FROM horario ORDER BY dias, hora"
+        cursor.execute(query_horarios)
+        horarios = cursor.fetchall()
+        
+        # 4. Obtener todos los Cursos existentes
+        query_cursos = """
+            SELECT 
+                c.id_curso,
+                i.nombre AS idioma_nombre,
+                c.nivel,
+                h.dias,
+                h.hora,
+                h.sede,
+                c.club
+            FROM cursos c
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            JOIN horario h ON c.id_horario = h.id_horario
+            ORDER BY i.nombre, c.nivel
+        """
+        cursor.execute(query_cursos)
+        cursos_list = cursor.fetchall()
+
+    except mysql.connector.Error as err:
+        print(f"Error de MySQL en gestion_cursos: {err}")
+        niveles, idiomas, horarios, cursos_list = [], [], [], []
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template(
+        "curso.html",
+        niveles=niveles,
+        idiomas=idiomas,
+        horarios=horarios,
+        cursos=cursos_list
+    )
+
+@app.route("/guardar_curso", methods=["POST"])
+def guardar_curso():
+    conn = None
+    try:
+        id_idioma = request.form.get('id_idioma', type=int)
+        id_horario = request.form.get('id_horario', type=int)
+        nivel = request.form.get('nivel')
+        club = request.form.get('club')
+
+        if not id_idioma or not id_horario or not nivel:
+            return jsonify({'status': 'error', 'message': 'Faltan datos esenciales (Idioma, Horario o Nivel).'}), 400
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Inserción en la tabla `cursos`
+        query = """
+            INSERT INTO cursos (id_idioma, id_horario, nivel, club)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (id_idioma, id_horario, nivel, club))
+        id_curso = cursor.lastrowid
+        
+        conn.commit()
+
+        # Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "curso",
+            "id_entidad": id_curso,
+            "accion": "creacion_curso",
+            "detalle": f"Curso creado. ID_Idioma: {id_idioma}, Nivel: {nivel}, ID_Horario: {id_horario}.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': f'Curso (ID: {id_curso}) registrado exitosamente.'}), 201
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        print(f"Error de MySQL al guardar curso: {err}")
+        # Error 1062 es duplicado. Podría ser una combinación de FKs única si se definiera
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos al guardar curso: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al guardar curso: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/eliminar_curso/<int:id_curso>", methods=["POST"])
+def eliminar_curso(id_curso):
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Eliminación del curso
+        query = "DELETE FROM cursos WHERE id_curso = %s"
+        cursor.execute(query, (id_curso,))
+
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'status': 'error', 'message': f'Curso ID {id_curso} no encontrado.'}), 404
+
+        conn.commit()
+
+        # Registrar Log
+        logs_col.insert_one({
+            "tipo_entidad": "curso",
+            "id_entidad": id_curso,
+            "accion": "eliminacion_curso",
+            "detalle": f"Curso ID {id_curso} eliminado.",
+            "usuario": "admin_logueado", 
+            "fecha": datetime.utcnow()
+        })
+
+        return jsonify({'status': 'success', 'message': f'Curso ID {id_curso} eliminado exitosamente.'}), 200
+
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        # Manejo de error de clave foránea (el curso tiene grupos asociados)
+        if err.errno == 1451:
+            return jsonify({'status': 'error', 'message': 'No se puede eliminar el curso, tiene grupos o alumnos asignados.'}), 400
+        print(f"Error de MySQL al eliminar curso: {err}")
+        return jsonify({'status': 'error', 'message': f'Error en la base de datos: {err.msg}'}), 500
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error general al eliminar curso: {e}")
+        return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# --- FIN RUTAS DE GESTIÓN DE CURSOS ---
 
 @app.route("/reinscripciones") #encabezados, inconos staff
 def reinscripciones():
@@ -1500,7 +1921,6 @@ def reinscripciones():
         """)
         cursos = cursor.fetchall()
 
-        # ... (obtener grupos y profesores, sin cambios) ...
         query_grupos = """
             SELECT 
                 g.id_grupo, 
@@ -1812,8 +2232,8 @@ def portal_facturacion(id_profesor):
         
         if not profesor_data or not profesor_data.get('rfc'):
             return render_template("Portal_Error.html", 
-                                   message="Datos fiscales incompletos. Por favor, complete su RFC y Régimen Fiscal.",
-                                   id_profesor=id_profesor), 400
+                                    message="Datos fiscales incompletos. Por favor, complete su RFC y Régimen Fiscal.",
+                                    id_profesor=id_profesor), 400
             
         # 2. Obtener HORAS TRABAJADAS (SIMULACIÓN)
         horas_trabajadas = 27.0
@@ -1875,8 +2295,9 @@ def timbrar_factura():
         uuid_cfdi = str(uuid.uuid4()).upper() 
         
         # Generar las URLs que apuntan a nuestro endpoint de simulación
-        url_pdf_prueba = url_for('descargar_archivo_prueba', uuid=uuid_cfdi, tipo='pdf', _external=True)
-        url_xml_prueba = url_for('descargar_archivo_prueba', uuid=uuid_cfdi, tipo='xml', _external=True)
+        with app.app_context():
+            url_pdf_prueba = url_for('descargar_archivo_prueba', uuid=uuid_cfdi, tipo='pdf', _external=True)
+            url_xml_prueba = url_for('descargar_archivo_prueba', uuid=uuid_cfdi, tipo='xml', _external=True)
 
         
         # 4. Registrar el CFDI timbrado en MySQL
