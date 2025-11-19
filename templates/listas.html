@@ -33,6 +33,19 @@
 
 <div class="page-content">
 
+    <div class="selector-grupo" style="padding: 20px 20px 0; max-width: 400px;">
+        <label for="group-select" style="font-weight: bold; display: block; margin-bottom: 5px;">Seleccionar Grupo:</label>
+        <select id="group-select" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em;">
+            {% if grupos %}
+                {% for grupo in grupos %}
+                    <option value="{{ grupo.id_grupo }}">{{ grupo.nombre_completo }}</option>
+                {% endfor %}
+            {% else %}
+                <option value="" disabled selected>No tienes grupos asignados.</option>
+            {% endif %}
+        </select>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
@@ -40,44 +53,16 @@
                     <th>No.</th>
                     <th>Matrícula</th>
                     <th>Nombre</th>
-                    <th>Observaciones</th> <th>Enero</th>
-                    <th>Febrero</th>
-                    <th>Marzo</th>
-                    <th>Abril</th>
-                    <th>ABS</th>
+                    <th>Observaciones</th> 
+                    <th>Clase 1</th>
+                    <th>Clase 2</th>
+                    <th>Clase 3</th>
+                    <th>Clase 4</th>
+                    <th>FALTAS TOTALES (ABS)</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>2024-001</td>
-                    <td>Juan Pérez</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-001"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-001"> Añadir</button>
-                    </td>
-                    <td>P</td><td>P</td><td>F</td><td>P</td><td>1</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>2024-002</td>
-                    <td>Maria García</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-002"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-002"> Añadir</button>
-                    </td>
-                    <td>P</td><td>P</td><td>P</td><td>P</td><td>0</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>2024-003</td>
-                    <td>Carlos López</td>
-                    <td>
-                        <button class="btn-obs ver-obs" data-matricula="2024-003"> Ver</button>
-                        <button class="btn-obs anadir-obs" data-matricula="2024-003"> Añadir</button>
-                    </td>
-                    <td>F</td><td>F</td><td>P</td><td>P</td><td>2</td>
-                </tr>
+                <tr><td colspan="9" style="text-align: center;">Selecciona un grupo para cargar la lista de alumnos.</td></tr>
             </tbody>
         </table>
     </div>
@@ -85,8 +70,6 @@
     <div class="buttons">
         <button class="btn" id="print-btn">Imprimir</button>
     </div>
-
- 
     
     <div id="observation-modal" class="modal">
         <div class="modal-content">
@@ -96,7 +79,7 @@
             <div id="observation-history" class="history-section">
                 <h3 class="section-title">Historial (Comentarios de Maestros)</h3>
                 <div id="history-list">
-                    <p class="no-data-msg">No hay observaciones registradas aún.</p>
+                    <p class="no-data-msg">Cargando historial...</p>
                 </div>
             </div>
             

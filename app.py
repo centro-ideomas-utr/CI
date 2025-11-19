@@ -67,6 +67,8 @@ mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client["ci_prueba"]
 expedientes_col = mongo_db["expedientes"]
 logs_col = mongo_db["logs"]
+# Se asume una colección para logs de evidencias si la necesitas
+# logs_evidencias_col = mongo_db["logs_evidencias"] 
 
 from gridfs import GridFS
 fs = GridFS(mongo_db) 
@@ -118,6 +120,16 @@ def parse_enum(row):
     if not row or "Type" not in row:
         return []
     return row["Type"].replace("enum(", "").replace(")", "").replace("'", "").split(",")
+
+def obtener_profesor_id_simulado():
+    """
+    Función de utilidad SIMULADA para obtener el ID del profesor logueado.
+    Esto debe ser reemplazado por la lógica de sesión real (ej: session.get('user_id')).
+    
+    **IMPORTANTE**: Retorna un ID fijo para pruebas. Asegúrate de tener un profesor
+    con id_profesor = 1 en tu DB.
+    """
+    return 1 
 
 # =================================================================
 # === RUTAS DE DOCUMENTOS Y AUXILIARES ===
@@ -297,17 +309,8 @@ def guardar_personal():
         }
         documentos_mongo = {}
         uploaded_files = request.files
-        for form_field, mongo_key in file_mapping.items():
-            file = uploaded_files.get(form_field)
-            if file and file.filename:
-                ext = os.path.splitext(secure_filename(file.filename))[1] or '.pdf'
-                filename = f"{secure_filename(email)}_{mongo_key}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{ext}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
-                documentos_mongo[mongo_key] = filepath
-            else:
-                documentos_mongo[mongo_key] = None
-
+        # Código innecesario aquí ya que se maneja en el thread. Se deja la estructura por si acaso.
+        
         # -------------------------------------------------------------
         # 2. Inserción en MySQL (USANDO LA CONTRASEÑA ENCRIPTADA)
         # -------------------------------------------------------------
@@ -386,7 +389,7 @@ def guardar_personal():
         if conn and conn.is_connected(): conn.close()
 
 # -------------------------------------------------------------
-# FUNCIÓN ASÍNCRONA (Añadir al final del archivo o cerca de otras funciones auxiliares)
+# FUNCIÓN ASÍNCRONA 
 # -------------------------------------------------------------
 
 def process_personal_registration_async(id_personal, tipo_personal, email, contrasena_temporal, uploaded_files_data, nombre, apellido_p, apellido_m):
@@ -440,8 +443,7 @@ def process_personal_registration_async(id_personal, tipo_personal, email, contr
         # --- C. ENVÍO DE CORREO (LENTO) ---
         if yag:
              nombre_completo = f"{nombre} {apellido_p} {apellido_m}".strip()
-             # NOTA: url_for requiere un contexto de aplicación. La alternativa es usar una URL codificada.
-             # Para simplificar y evitar dependencias de Flask en el hilo:
+             # NOTA: url_for requiere un contexto de aplicación. Se usa una URL codificada.
              portal_url = "https://tudominio.com/login" 
              
              subject = f"¡Bienvenido/a {nombre} al Centro de Idiomas UTR - Portal de {tipo_personal.capitalize()}!"
@@ -992,14 +994,14 @@ def guardar():
         mensaje = f"Error de Base de Datos: {err.msg}"
         print(f"Error de MySQL: {err}")
         if conn and conn.is_connected():
-             conn.rollback() 
+              conn.rollback() 
         return f"<h1>Error en el registro: {mensaje}</h1><a href='/registro'>Volver</a>", 500
         
     except Exception as e:
         mensaje = f"Error General: {e}"
         print(f"Error general en guardar: {e}")
         if conn and conn.is_connected():
-             conn.rollback() 
+              conn.rollback() 
         return f"<h1>Error en el registro: {mensaje}</h1><a href='/registro'>Volver</a>", 500
 
     finally:
@@ -1044,8 +1046,6 @@ def login():
         # Verificar contraseña (solo si hay hash almacenado)
         stored_password = usuario.get('contraseña')
         if stored_password and not check_password_hash(stored_password, contrasena):
-            # Nota: Si el alumno no tiene contraseña (NULL), el login fallará aquí o por
-            # no cumplir con el hash. Para alumnos nuevos, la contraseña se genera en el cobro.
              return render_template("login.html", error="Contraseña incorrecta.")
         
         # Redirigir según el tipo de usuario
@@ -1090,11 +1090,11 @@ def tablero():
     # Formatear avisos para FullCalendar
     calendar_events = []
     for aviso in global_avisos:
-        if 'start' in aviso:  # Solo los que tienen fecha_evento
+        if 'start' in aviso: # Solo los que tienen fecha_evento
             calendar_events.append({
                 'title': aviso['title'],
                 'start': aviso['start'],
-                'display': 'dot',  # ← Esto crea el PUNTO
+                'display': 'dot', # ← Esto crea el PUNTO
                 'backgroundColor': '#566a93',
                 'borderColor': '#566a93'
             })
@@ -1127,8 +1127,8 @@ def publicar_aviso():
             "mensaje": mensaje_recibido,
             
             # --- CAMPOS PARA FULLCALENDAR ---
-            "title": mensaje_recibido,  # El 'título' del evento es el mensaje
-            "start": fecha_iso_cal      # La 'fecha' del evento es hoy
+            "title": mensaje_recibido, # El 'título' del evento es el mensaje
+            "start": fecha_iso_cal     # La 'fecha' del evento es hoy
         }
         
         # 6. Guardar el aviso en nuestra "base de datos"
@@ -1163,9 +1163,228 @@ def Maestros():
 def clasesprofe():
     return render_template("clasesprofe.html")
 
+# --- RUTA PRINCIPAL DE ASISTENCIA (MODIFICADA) ---
 @app.route("/asistencia") #maestros
 def asistencia():
-    return render_template("listas.html")
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        # Simulación: Obtener grupos del profesor logueado
+        # En un sistema real usarías: WHERE id_profesor = obtener_profesor_id_simulado()
+        query_grupos = """
+            SELECT g.id_grupo, CONCAT(g.grupo, ' - ', p.nombre) AS nombre_completo
+            FROM grupos g
+            JOIN profesores p ON g.id_profesor = p.id_profesor
+            WHERE g.id_profesor = %s
+            ORDER BY g.grupo
+        """
+        id_profesor_actual = obtener_profesor_id_simulado()
+        cursor.execute(query_grupos, (id_profesor_actual,))
+        grupos = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error al cargar grupos para asistencia: {e}")
+        grupos = []
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    # Pasa los grupos al template de listas.html para el select
+    return render_template("listas.html", grupos=grupos)
+
+
+# --- NUEVAS RUTAS DE ASISTENCIA Y COMENTARIOS ---
+
+@app.route("/obtener_alumnos_grupo/<int:id_grupo>")
+def obtener_alumnos_grupo(id_grupo):
+    """
+    Ruta AJAX para obtener la lista de alumnos de un grupo específico 
+    y su asistencia más reciente para el mes en curso.
+    """
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Obtener los alumnos del grupo
+        query_alumnos = """
+            SELECT 
+                a.id_alumno, a.matricula, a.nombre, a.apellido_p, a.apellido_m
+            FROM alumnos a
+            WHERE a.id_grupo = %s
+            ORDER BY a.apellido_p, a.nombre
+        """
+        cursor.execute(query_alumnos, (id_grupo,))
+        alumnos = cursor.fetchall()
+        
+        # 2. Obtener el total de inasistencias (FALTAS) en la historia (columna ABS)
+        # NOTA: En tu diseño, la columna ABS es el total de faltas. 
+        # La columna 'ABS' en el HTML original es la última.
+        query_faltas = """
+            SELECT 
+                id_alumno, COUNT(id_asistencias) as total_faltas
+            FROM asistencias
+            WHERE id_alumno IN (SELECT id_alumno FROM alumnos WHERE id_grupo = %s) AND asistencia = 0
+            GROUP BY id_alumno
+        """
+        cursor.execute(query_faltas, (id_grupo,))
+        faltas_data = {item['id_alumno']: item['total_faltas'] for item in cursor.fetchall()}
+
+        # 3. Consolidar los datos
+        alumnos_list = []
+        for alumno in alumnos:
+            nombre_completo = f"{alumno['nombre']} {alumno['apellido_p']} {alumno['apellido_m']}"
+            alumnos_list.append({
+                'id_alumno': alumno['id_alumno'],
+                'matricula': alumno['matricula'],
+                'nombre_completo': nombre_completo,
+                'faltas': faltas_data.get(alumno['id_alumno'], 0)
+                # La asistencia por mes (Enero, Febrero...) se simulará en JS,
+                # ya que tu esquema de DB registra la asistencia por día, no por mes.
+            })
+
+        return jsonify({'status': 'success', 'alumnos': alumnos_list}), 200
+
+    except Exception as e:
+        print(f"Error al obtener alumnos y asistencias: {e}")
+        return jsonify({'status': 'error', 'message': f'Error en el servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/guardar_asistencia", methods=['POST'])
+def guardar_asistencia():
+    """
+    Ruta AJAX para guardar la asistencia de un alumno para HOY.
+    """
+    conn = None
+    try:
+        data = request.get_json()
+        id_alumno = data.get('id_alumno')
+        id_grupo = data.get('id_grupo')
+        es_asistencia = data.get('asistencia') # True/False
+        
+        id_profesor = obtener_profesor_id_simulado() 
+        
+        if not id_alumno or not id_grupo or id_profesor is None or es_asistencia is None:
+            return jsonify({'status': 'error', 'message': 'Faltan datos requeridos (alumno, grupo, asistencia).'}), 400
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 1. Eliminar registro previo de asistencia/falta para HOY (para evitar duplicados)
+        query_delete = """
+            DELETE FROM asistencias 
+            WHERE id_alumno = %s AND id_grupo = %s 
+            AND DATE(fecha_registro) = CURDATE()
+        """
+        cursor.execute(query_delete, (id_alumno, id_grupo))
+        conn.commit()
+        
+        # 2. Insertar el nuevo registro. 
+        # (True = 1/Presente, False = 0/Ausente)
+        asistencia_valor = 1 if es_asistencia else 0 
+
+        query_insert = """
+            INSERT INTO asistencias 
+            (asistencia, id_grupo, id_alumno, id_profesor) 
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query_insert, (asistencia_valor, id_grupo, id_alumno, id_profesor))
+        conn.commit()
+
+        return jsonify({'status': 'success', 'message': 'Asistencia guardada.'}), 200
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al guardar asistencia: {e}")
+        return jsonify({'status': 'error', 'message': f'Error en el servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@app.route("/comentarios", methods=['GET', 'POST'])
+def gestionar_comentarios():
+    """
+    Ruta AJAX para obtener el historial de comentarios de un alumno o guardar uno nuevo.
+    """
+    conn = None
+    try:
+        id_profesor_actual = obtener_profesor_id_simulado()
+        
+        if request.method == 'GET':
+            id_alumno = request.args.get('id_alumno', type=int)
+            if not id_alumno:
+                return jsonify({'status': 'error', 'message': 'ID de alumno es requerido.'}), 400
+
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor(dictionary=True)
+            
+            # Obtener historial de comentarios
+            query_historial = """
+                SELECT 
+                    c.descripcion, c.fecha_registro, p.nombre, p.apellido_p
+                FROM comentarios c
+                JOIN profesores p ON c.id_profesor = p.id_profesor
+                WHERE c.id_alumno = %s
+                ORDER BY c.fecha_registro DESC
+            """
+            cursor.execute(query_historial, (id_alumno,))
+            historial = cursor.fetchall()
+            
+            # Formatear la fecha para el frontend
+            for c in historial:
+                c['fecha_registro'] = c['fecha_registro'].strftime('%d/%b/%Y %H:%M')
+                c['maestro_nombre'] = f"{c.pop('nombre')} {c.pop('apellido_p')}"
+
+            return jsonify({'status': 'success', 'historial': historial}), 200
+
+        elif request.method == 'POST':
+            data = request.get_json()
+            id_alumno = data.get('id_alumno')
+            descripcion = data.get('descripcion')
+            
+            if not id_alumno or not descripcion:
+                return jsonify({'status': 'error', 'message': 'Faltan datos de alumno o descripción.'}), 400
+                
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            
+            # Insertar nuevo comentario
+            query_insert = """
+                INSERT INTO comentarios 
+                (descripcion, id_alumno, id_profesor) 
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(query_insert, (descripcion, id_alumno, id_profesor_actual))
+            conn.commit()
+
+            # Opcional: Registrar Log en MongoDB
+            logs_col.insert_one({
+                "tipo_entidad": "alumno",
+                "id_entidad": id_alumno,
+                "accion": "comentario_guardado",
+                "detalle": f"Comentario del profesor {id_profesor_actual}: {descripcion[:50]}...",
+                "usuario": f"profesor_{id_profesor_actual}",
+                "fecha": datetime.utcnow()
+            })
+            
+            return jsonify({'status': 'success', 'message': 'Comentario guardado con éxito.'}), 201
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al gestionar comentarios: {e}")
+        return jsonify({'status': 'error', 'message': f'Error en el servidor: {e}'}), 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# --- FIN NUEVAS RUTAS ---
 
 @app.route("/maestroinfo/<string:tipo>/<int:id>")
 def maestroinfo(tipo, id):
