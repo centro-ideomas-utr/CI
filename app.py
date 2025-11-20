@@ -1155,8 +1155,7 @@ def asistencia():
             WHERE g.id_profesor = %s
             ORDER BY g.grupo
         """
-        id_profesor_actual = obtener_profesor_id_simulado()
-        cursor.execute(query_grupos, (id_profesor_actual,))
+        cursor.execute(query_grupos)
         grupos = cursor.fetchall()
 
     except Exception as e:
@@ -1243,7 +1242,7 @@ def guardar_asistencia():
         id_grupo = data.get('id_grupo')
         es_asistencia = data.get('asistencia') # True/False
         
-        id_profesor = obtener_profesor_id_simulado() 
+        id_profesor = id_profesor() 
         
         if not id_alumno or not id_grupo or id_profesor is None or es_asistencia is None:
             return jsonify({'status': 'error', 'message': 'Faltan datos requeridos (alumno, grupo, asistencia).'}), 400
@@ -1290,7 +1289,7 @@ def gestionar_comentarios():
     """
     conn = None
     try:
-        id_profesor_actual = obtener_profesor_id_simulado()
+        id_profesor_actual = id_profesor()
         
         if request.method == 'GET':
             id_alumno = request.args.get('id_alumno', type=int)
