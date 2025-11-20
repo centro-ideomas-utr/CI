@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Académica Unificada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crearhorario.css') }}">
+    <style>
+        .tab-btn { padding: 12px 20px; font-weight: bold; color: #666; border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { color: #3D348B; border-bottom-color: #7678ED; background-color: #f0f4ff; }
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <div class="navbar" onclick="if(isSidebarOpen && event.target.closest('#sidebar') === null) { toggleMenu(); }">
+        <div class="flex items-center">
+            <div class="menu-icon cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition" onclick="toggleMenu()">
+                <i class="fas fa-bars text-xl"></i>
+            </div>
+            <h1 class="text-xl md:text-2xl font-semibold ml-4">Gestión Académica</h1>
+        </div>
+        <div class="profile"><i class="fas fa-user-circle text-3xl hover:text-gray-300 cursor-pointer"></i></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div>
+            <ul>
+                <li><a href="{{ url_for('gestion_horarios_base') }}" class="active"><i class="fas fa-calendar-alt w-6"></i> Horarios y Grupos</a></li>
+                <li><a href="{{ url_for('gestion_cursos') }}"><i class="fas fa-layer-group w-6"></i> Gestión de Cursos</a></li>
+                <li><a href="{{ url_for('gestion_personal') }}"><i class="fas fa-users w-6"></i> Personal</a></li>
+                <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-user-graduate w-6"></i> Alumnos</a></li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-gray-700">
+            <ul><li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></li></ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="page-content" id="page-content">
+        
+        <div class="bg-white rounded-t-xl shadow-sm flex border-b border-gray-200 mb-0">
+            <button onclick="switchTab('horarios')" id="btn-horarios" class="tab-btn active flex-1 md:flex-none text-center"><i class="fas fa-clock mr-2"></i> Horarios Base</button>
+            <button onclick="switchTab('grupos')" id="btn-grupos" class="tab-btn flex-1 md:flex-none text-center"><i class="fas fa-users-class mr-2"></i> Grupos y Salones</button>
+        </div>
+
+        <!-- VISTA 1: HORARIOS BASE -->
+        <div id="view-horarios" class="view-section active">
+            <div class="sedes-control mb-4 rounded-t-none" id="sedes-container">
+                <h3 class="text-lg font-semibold" style="margin: 0 15px 0 0; color: var(--primary-color);">Sedes:</h3>
+                <!-- Botones generados por JS -->
+                <button class="sede-btn add-sede-btn" onclick="addSede()"><i class="fas fa-plus"></i> Añadir Sede</button>
+            </div>
+            <div class="workspace active" id="workspace-container-horarios">
+                <!-- Panel Izquierdo: Crear Horario -->
+                <div class="assignment-panel">
+                    <h2 id="panel-title">Crear Franja Horaria</h2>
+                    <form id="assign-form" class="space-y-5" action="{{ url_for('guardar_horario_base') }}" method="POST">
+                        <input type="hidden" name="sede" id="sede_input_hidden">
+                        <div class="form-group"><label>Días:</label><div class="days-checkbox-group"><label><input type="checkbox" name="dias[]" value="1"> Lunes</label><label><input type="checkbox" name="dias[]" value="2"> Martes</label><label><input type="checkbox" name="dias[]" value="3"> Miércoles</label><label><input type="checkbox" name="dias[]" value="4"> Jueves</label><label><input type="checkbox" name="dias[]" value="5"> Viernes</label><label><input type="checkbox" name="dias[]" value="6"> Sábado</label></div></div>
+                        <div class="form-group"><label>Horario:</label><div class="time-input-group flex gap-4"><input type="time" name="hora_inicio" required value="09:00"><input type="time" name="hora_fin" required value="11:00"></div></div>
+                        <div class="form-actions"><button type="submit" class="btn-assign"><i class="fas fa-clock mr-2"></i> Registrar Horario</button></div>
+                    </form>
+                </div>
+                <!-- Panel Derecho: Tabla Visual -->
+                <div class="schedule-view">
+                    <div class="schedule-header"><h2 class="text-xl font-bold text-gray-800">Horarios en <span id="current-sede-name">...</span></h2></div>
+                    <div class="timetable overflow-x-auto" id="timetable"><p class="text-center text-gray-500 py-10">Cargando...</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 2: GESTIÓN DE GRUPOS -->
+        <div id="view-grupos" class="view-section">
+            <div class="workspace active" style="opacity: 1; transform: translateY(0);">
+                
+                <!-- Panel Izquierdo: Crear Grupo -->
+                <div class="assignment-panel">
+                    <h2 class="text-[#3D348B] border-b-2 border-gray-100 pb-2 mb-4 text-xl font-bold">Crear Nuevo Grupo</h2>
+                    <form id="grupo-form" class="space-y-4">
+                        <div class="form-group">
+                            <!-- CORREGIDO: Etiqueta limpia -->
+                            <label class="block text-sm font-bold text-gray-600 mb-1">Curso (Idioma y Nivel):</label>
+                            <select name="id_curso" class="w-full p-2 border border-gray-300 rounded" required>
+                                <option value="" disabled selected>-- Selecciona --</option>
+                                {% for curso in cursos %}
+                                    <!-- CORREGIDO: Solo muestra Idioma y Nivel -->
+                                    <option value="{{ curso.id_curso }}">
+                                        {{ curso.idioma }} - {{ curso.nivel }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Docente:</label><select name="id_profesor" class="w-full p-2 border border-gray-300 rounded" required><option value="" disabled selected>-- Selecciona --</option>{% for profe in profesores %}<option value="{{ profe.id_profesor }}">{{ profe.nombre_completo }}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Nombre Grupo:</label><input type="text" name="nombre_grupo" placeholder="Ej. ING-A1-2024" class="w-full p-2 border border-gray-300 rounded" required></div>
+                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Salón:</label><input type="text" name="salon" placeholder="Ej. B-101" class="w-full p-2 border border-gray-300 rounded" required></div>
+                        <div class="form-actions"><button type="submit" class="btn-assign bg-[#F7B801] hover:bg-[#F18701] text-[#333]"><i class="fas fa-plus-circle mr-2"></i> Crear Grupo</button></div>
+                    </form>
+                </div>
+
+                <!-- Panel Derecho: Lista de Grupos -->
+                <div class="schedule-view">
+                    <div class="schedule-header flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-xl font-bold text-[#3D348B]">Grupos Activos</h2>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">{{ grupos|length }} Grupos</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
+                        {% if grupos %}
+                            {% for g in grupos %}
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 relative group hover:shadow-md transition">
+                                <div class="absolute top-2 right-2 flex gap-2">
+                                    <!-- Botón Editar -->
+                                    <button onclick="openEditGrupo({{ g.id_grupo }})" class="text-gray-300 hover:text-[#3D348B] transition" title="Editar"><i class="fas fa-edit"></i></button>
+                                    <!-- Botón Eliminar -->
+                                    <button onclick="deleteGrupo({{ g.id_grupo }})" class="text-gray-300 hover:text-red-500 transition" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-[#7678ED] text-white text-xs font-bold px-2 py-1 rounded">{{ g.idioma }}</span>
+                                    <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">{{ g.nivel }}</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-[#3D348B] mb-1">{{ g.nombre_grupo }}</h3>
+                                <div class="text-sm text-gray-600">
+                                    <p class="truncate"><i class="fas fa-user-tie w-5 text-center"></i> {{ g.profesor }}</p>
+                                    <p><i class="fas fa-door-open w-5 text-center"></i> Salón: <strong>{{ g.numero_salon }}</strong></p>
+                                    <!-- Muestra el horario solo si el curso llegara a tenerlo, o vacío -->
+                                    {% if g.dias and g.dias != 'Sin Asignar' %}
+                                        <p class="text-xs text-gray-400 mt-2 pt-2 border-t"><i class="far fa-clock"></i> {{ g.dias }} | {{ g.hora }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-span-full text-center py-10 text-gray-400">No hay grupos registrados.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR GRUPO -->
+    <div id="edit-grupo-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2000] flex justify-center items-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-[#3D348B]">Editar Grupo</h2>
+                <button onclick="document.getElementById('edit-grupo-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-grupo-form" class="space-y-4">
+                <input type="hidden" id="edit-id-grupo" name="id_grupo">
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-gray-600 mb-1">Curso:</label>
+                    <select id="edit-id-curso" name="id_curso" class="w-full p-2 border rounded" required>
+                        {% for curso in cursos %}
+                            <!-- CORREGIDO: También en el modal de edición -->
+                            <option value="{{ curso.id_curso }}">{{ curso.idioma }} - {{ curso.nivel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-gray-600 mb-1">Docente:</label>
+                    <select id="edit-id-profesor" name="id_profesor" class="w-full p-2 border rounded" required>
+                        {% for profe in profesores %}
+                            <option value="{{ profe.id_profesor }}">{{ profe.nombre_completo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-gray-600 mb-1">Nombre Grupo:</label>
+                    <input type="text" id="edit-nombre-grupo" name="nombre_grupo" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-gray-600 mb-1">Salón:</label>
+                    <input type="text" id="edit-salon" name="salon" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-[#3D348B] text-white py-2 rounded font-bold">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR HORARIO -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2000] flex justify-center items-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-[#3D348B]">Editar Horario</h2>
+                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-id-horario">
+                <div class="form-group"><label>Sede:</label><select id="edit-sede" class="w-full p-2 border rounded"></select></div>
+                <div class="form-group"><label>Días:</label><div class="grid grid-cols-3 gap-2"><label><input type="checkbox" class="edit-day-cb" value="Lun"> Lun</label><label><input type="checkbox" class="edit-day-cb" value="Mar"> Mar</label><label><input type="checkbox" class="edit-day-cb" value="Mié"> Mié</label><label><input type="checkbox" class="edit-day-cb" value="Jue"> Jue</label><label><input type="checkbox" class="edit-day-cb" value="Vie"> Vie</label><label><input type="checkbox" class="edit-day-cb" value="Sáb"> Sáb</label></div></div>
+                <div class="form-group"><label>Horario:</label><div class="flex gap-2"><input type="time" id="edit-hora-inicio" class="w-full p-2 border rounded"><input type="time" id="edit-hora-fin" class="w-full p-2 border rounded"></div></div>
+                <div class="flex justify-between pt-4 border-t">
+                    <button type="button" onclick="deleteHorario()" class="text-red-600">Eliminar</button>
+                    <button type="submit" class="bg-[#3D348B] text-white px-4 py-2 rounded">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Mensajes -->
+    <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2100] flex justify-center items-center">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm text-center">
+            <h3 id="modal-title" class="text-lg font-bold mb-2"></h3><p id="modal-text"></p>
+            <button onclick="document.getElementById('message-modal').classList.add('hidden'); if(document.getElementById('modal-title').classList.contains('text-green-700')) location.reload();" class="bg-[#3D348B] text-white font-bold py-2 px-6 rounded-lg">Aceptar</button>
+        </div>
+    </div>
+
+<script>
+    // --- PESTAÑAS ---
+    function switchTab(tab) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${tab}`).classList.add('active');
+        document.getElementById(`btn-${tab}`).classList.add('active');
+    }
+
+    // --- UTILIDADES ---
+    function toggleMenu() {
+        document.getElementById('sidebar').classList.toggle('active');
+        if(window.innerWidth > 1000) document.getElementById('page-content').classList.toggle('shifted');
+    }
+    function showMessage(title, text, type='success') {
+        const modal = document.getElementById('message-modal');
+        const titleEl = document.getElementById('modal-title');
+        modal.classList.remove('hidden');
+        document.getElementById('modal-text').textContent = text;
+        titleEl.textContent = title;
+        titleEl.className = type === 'success' ? 'text-lg font-bold mb-2 text-green-700' : 'text-lg font-bold mb-2 text-[#F35B04]';
+    }
+
+    // --- LÓGICA HORARIOS ---
+    let sedes = JSON.parse('{{ sedes | tojson }}');
+    let HORARIOS_BASE = [];
+    let selectedSede = sedes.length > 0 ? sedes[0] : '';
+    const timeSlots = ['07:00','07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00']; 
+    const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    function renderSedes() {
+        const container = document.getElementById('sedes-container');
+        container.querySelectorAll('.sede-wrapper').forEach(e => e.remove());
+        const addButton = container.querySelector('.add-sede-btn');
+        sedes.forEach(sede => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'sede-wrapper';
+            const btn = document.createElement('button');
+            btn.className = `sede-btn ${sede === selectedSede ? 'active' : ''}`;
+            btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${sede}`;
+            btn.onclick = () => selectSede(sede);
+            wrapper.appendChild(btn);
+            container.insertBefore(wrapper, addButton);
+        });
+    }
+
+    function selectSede(sede) {
+        selectedSede = sede;
+        document.getElementById('panel-title').textContent = `Crear Franja en ${sede}`;
+        document.getElementById('current-sede-name').textContent = sede;
+        document.getElementById('sede_input_hidden').value = sede;
+        renderSedes();
+        populateTimetable();
+    }
+
+    function addSede() {
+        const name = prompt("Nombre de la nueva Sede:");
+        if(name && !sedes.includes(name)) { sedes.push(name); selectSede(name); }
+    }
+
+    function populateTimetable() {
+        const table = document.getElementById('timetable');
+        table.innerHTML = `<div class="time-header">Hora</div>` + dayNames.map(d => `<div class="day-header">${d}</div>`).join('');
+        timeSlots.forEach(time => {
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'time-slot bg-gray-50 font-bold flex items-center justify-center';
+            timeLabel.textContent = time;
+            table.appendChild(timeLabel);
+            for(let d=1; d<=6; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'time-slot relative';
+                const matches = HORARIOS_BASE.filter(h => h.sede === selectedSede && h.day === d && h.time === time);
+                matches.forEach(match => {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot-occupied cursor-pointer hover:scale-105 transition shadow-sm';
+                    slot.innerHTML = `<strong>${match.time} - ${match.end_time}</strong><small class="block text-gray-500 text-xs">ID: ${match.id}</small>`;
+                    slot.onclick = (e) => { e.stopPropagation(); openEditModal(match.id); };
+                    cell.appendChild(slot);
+                });
+                table.appendChild(cell);
+            }
+        });
+    }
+
+    async function openEditModal(id) {
+        try {
+            const res = await fetch(`/api/horario_detail/${id}`);
+            const data = await res.json();
+            if(data.status === 'error') { showMessage('Error', data.message, 'error'); return; }
+            document.getElementById('edit-id-horario').value = data.id_horario;
+            document.getElementById('edit-hora-inicio').value = data.hora_inicio;
+            document.getElementById('edit-hora-fin').value = data.hora_fin;
+            const sedeSelect = document.getElementById('edit-sede');
+            sedeSelect.innerHTML = '';
+            sedes.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s; opt.textContent = s;
+                if(s === data.sede) opt.selected = true;
+                sedeSelect.appendChild(opt);
+            });
+            document.querySelectorAll('.edit-day-cb').forEach(cb => cb.checked = data.dias.includes(cb.value));
+            document.getElementById('edit-modal').classList.remove('hidden');
+        } catch(e) { showMessage('Error', "Error al cargar datos.", 'error'); }
+    }
+
+    async function deleteHorario() {
+        const id = document.getElementById('edit-id-horario').value;
+        if(!confirm("¿Seguro?")) return;
+        try {
+            const res = await fetch(`/eliminar_horario_base/${id}`, { method: 'POST' });
+            if(res.ok) { document.getElementById('edit-modal').classList.add('hidden'); showMessage("Eliminado", "Horario eliminado.", "success"); }
+            else { const r = await res.json(); showMessage("Error", r.message, "error"); }
+        } catch (err) { showMessage("Error", "Error de conexión.", "error"); }
+    }
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-id-horario').value;
+        const sede = document.getElementById('edit-sede').value;
+        const inicio = document.getElementById('edit-hora-inicio').value;
+        const fin = document.getElementById('edit-hora-fin').value;
+        const dias = Array.from(document.querySelectorAll('.edit-day-cb:checked')).map(cb => cb.value);
+        if(dias.length === 0) { alert("Selecciona un día"); return; }
+        try {
+            const res = await fetch('/editar_horario_base', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id_horario: id, sede: sede, dias: dias, hora_inicio: inicio, hora_fin: fin }) });
+            if(res.ok) { document.getElementById('edit-modal').classList.add('hidden'); showMessage("¡Hecho!", "Horario actualizado.", "success"); }
+            else { const r = await res.json(); showMessage("Error", r.message, "error"); }
+        } catch (err) { showMessage("Error", "Error de conexión.", "error"); }
+    });
+
+    document.getElementById('assign-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        try {
+            const res = await fetch(e.target.action, { method: 'POST', body: formData });
+            if(res.ok) { e.target.reset(); showMessage("¡Creado!", "Horario registrado.", "success"); }
+            else { const r = await res.json(); showMessage("Error", r.message, "error"); }
+        } catch (err) { showMessage("Error", "Error de conexión.", "error"); }
+    });
+
+    // --- LÓGICA GRUPOS ---
+    async function openEditGrupo(id) {
+        try {
+            const res = await fetch(`/api/grupo_detail/${id}`);
+            const data = await res.json();
+            if(data.status === 'success') {
+                const g = data.grupo;
+                document.getElementById('edit-id-grupo').value = g.id_grupo;
+                document.getElementById('edit-id-curso').value = g.id_curso;
+                document.getElementById('edit-id-profesor').value = g.id_profesor;
+                document.getElementById('edit-nombre-grupo').value = g.grupo;
+                document.getElementById('edit-salon').value = g.numero_salon;
+                document.getElementById('edit-grupo-modal').classList.remove('hidden');
+            } else { showMessage('Error', data.message, 'error'); }
+        } catch(e) { showMessage('Error', 'No se pudieron cargar los datos.', 'error'); }
+    }
+
+    document.getElementById('edit-grupo-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        try {
+            const res = await fetch('/editar_grupo', { method: 'POST', body: formData });
+            const result = await res.json();
+            if(res.ok) { document.getElementById('edit-grupo-modal').classList.add('hidden'); showMessage('Éxito', result.message, 'success'); }
+            else showMessage('Error', result.message, 'error');
+        } catch(e) { showMessage('Error', 'Error de conexión', 'error'); }
+    });
+
+    document.getElementById('grupo-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        try {
+            const res = await fetch('/guardar_grupo', { method: 'POST', body: formData });
+            const result = await res.json();
+            if(res.ok) { this.reset(); showMessage('Éxito', result.message, 'success'); }
+            else showMessage('Error', result.message, 'error');
+        } catch(e) { showMessage('Error', 'Error de conexión', 'error'); }
+    });
+
+    async function deleteGrupo(id) {
+        if(!confirm('¿Eliminar grupo?')) return;
+        try {
+            const res = await fetch(`/eliminar_grupo/${id}`, { method: 'POST' });
+            const result = await res.json();
+            if(res.ok) showMessage('Eliminado', result.message, 'success');
+            else showMessage('Error', result.message, 'error');
+        } catch(e) { showMessage('Error', 'Error de conexión', 'error'); }
+    }
+
+    // --- CARGA INICIAL ---
+    window.onload = async function() {
+        try {
+            const res = await fetch('/api/horarios_base');
+            HORARIOS_BASE = await res.json();
+            const backendSedes = [...new Set(HORARIOS_BASE.map(h => h.sede))];
+            backendSedes.forEach(s => { if(!sedes.includes(s)) sedes.push(s); });
+            if(!selectedSede && sedes.length > 0) selectSede(sedes[0]);
+            else renderSedes();
+            populateTimetable();
+        } catch (e) { console.error(e); }
+    };
+</script>
+</body>
+</html>
