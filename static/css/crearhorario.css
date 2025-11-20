@@ -2,7 +2,7 @@
         body {
             margin: 0;
             font-family: 'Inter', sans-serif;
-            background-color: #7678ED; /* Color de fondo de la paleta */
+            background-color: #ffffff; 
             color: #333;
             display: flex;
             flex-direction: column;
@@ -121,7 +121,7 @@
 
         /* --- Sección de Control de Sedes --- */
         .sedes-control {
-            background: white;
+            background: #cdc7e0;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
