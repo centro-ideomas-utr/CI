@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, abort, redirect, url_for, Response, jsonify
+from flask import Flask, render_template, request, abort, redirect, url_for, Response, jsonify, session
 import yagmail
 import mysql.connector
 from pymongo import MongoClient
@@ -77,6 +77,10 @@ global_avisos = []
 # =================================================================
 # === CONFIGURACIONES Y FUNCIONES AUXILIARES ===
 # =================================================================
+
+FACTURAMA_USER = 'CentrodeIdiomasUTR'
+FACTURAMA_PASSWORD = 'Uli0514122324#'
+FACTURAMA_URL = 'https://dev.facturama.mx/Profile/TaxProfile'
 
 UTR_DATA = {
     "rfc": "UTR130212KB3",
@@ -489,7 +493,7 @@ def editar_personal(tipo, id):
     
     # Redireccionamos si el método no es POST (aunque la ruta solo acepta POST)
     if request.method != 'POST':
-        return redirect(url_for('maestroinfo', tipo=tipo, id=id))
+        return redirect(url_for('   ', tipo=tipo, id=id))
 
     try:
         if tipo not in ['maestro', 'staff']:
@@ -986,6 +990,10 @@ def guardar():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    # Si ya está logueado, lo redirigimos directamente sin pedir contraseña
+    if 'user_id' in session:
+        return redirigir_por_rol(session['rol'], session['user_id'])
+
     if request.method == "GET":
         return render_template("login.html")
 
@@ -994,54 +1002,77 @@ def login():
 
     conn = None
     cursor = None
-
+    
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # Tablas a consultar (prioridad: Staff > Maestro > Alumno)
-        user_types = [
-            ("staff", "id_staff", "contraseña", "staff"),
-            ("profesores", "id_profesor", "contraseña", "maestro"),
-            ("alumnos", "id_alumno", "contraseña", "alumno"), 
+        # Definimos la estrategia de búsqueda: Tabla, Columna ID, Columna Password, Rol
+        # El orden importa: Primero busca en Staff, luego Maestros, al final Alumnos
+        busqueda_usuarios = [
+            {"tabla": "staff",      "id_col": "id_staff",    "rol": "staff"},
+            {"tabla": "profesores", "id_col": "id_profesor", "rol": "maestro"},
+            {"tabla": "alumnos",    "id_col": "id_alumno",   "rol": "alumno"}
         ]
-        
-        usuario = None
-        for table, id_col, pass_col, tipo in user_types:
-            cursor.execute(f"""
-                SELECT {id_col} AS id, correo_electronico, {pass_col}, telefono, domicilio, '{tipo}' AS tipo
-                FROM {table} WHERE correo_electronico = %s
-            """, (correo,))
-            usuario = cursor.fetchone()
-            if usuario:
-                break
-        
-        if not usuario:
+
+        usuario_encontrado = None
+        datos_usuario = None
+
+        # Bucle para buscar en las 3 tablas
+        for tipo in busqueda_usuarios:
+            query = f"""
+                SELECT {tipo['id_col']} AS id, nombre, apellido_p, contraseña, '{tipo['rol']}' as rol_detectado
+                FROM {tipo['tabla']} 
+                WHERE correo_electronico = %s
+            """
+            cursor.execute(query, (correo,))
+            datos_usuario = cursor.fetchone()
+
+            if datos_usuario:
+                usuario_encontrado = tipo # Guardamos qué tipo de usuario es
+                break # ¡Encontramos el correo! Dejamos de buscar
+
+        # 1. Si no existe el correo en ninguna tabla
+        if not datos_usuario:
             return render_template("login.html", error="Usuario no encontrado.")
 
-        # Verificar contraseña (solo si hay hash almacenado)
-        stored_password = usuario.get('contraseña')
-        if stored_password and not check_password_hash(stored_password, contrasena):
-             return render_template("login.html", error="Contraseña incorrecta.")
+        # 2. Verificar Contraseña (HASH vs TEXTO)
+        password_hash = datos_usuario['contraseña']
         
-        # Redirigir según el tipo de usuario
-        if usuario["tipo"] == "maestro":
-            return redirect(url_for("portal_facturacion", id_profesor=usuario["id"]))
-        elif usuario["tipo"] == "alumno":
-            return redirect(url_for("cursos"))
-        elif usuario["tipo"] == "staff":
-            # Redirige a la gestión de personal/reinscripciones
-            return redirect(url_for("gestion_personal")) 
-
-        return render_template("login.html", error="Tipo de usuario no válido.")
+        # IMPORTANTE: check_password_hash compara la contraseña escrita con el hash de la DB
+        if password_hash and check_password_hash(password_hash, contrasena):
+            
+            # --- CREAR SESIÓN (Esto mantiene al usuario conectado) ---
+            session.clear() # Limpiar sesiones anteriores por seguridad
+            session['user_id'] = datos_usuario['id']
+            session['rol'] = datos_usuario['rol_detectado']
+            session['nombre'] = f"{datos_usuario['nombre']} {datos_usuario['apellido_p']}"
+            
+            print(f"✅ Login exitoso: {session['nombre']} ({session['rol']})")
+            
+            # Redirigir según quién sea
+            return redirigir_por_rol(session['rol'], session['user_id'])
+        else:
+            print(f"Contraseña incorrecta para {correo}")
+            return render_template("login.html", error="Contraseña incorrecta.")
 
     except Exception as e:
-        print("Error en login:", e)
+        print(f"Error en login: {e}")
         return render_template("login.html", error="Error interno del servidor.")
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
+
+# Función auxiliar para direccionar (puedes ajustar las rutas aquí)
+def redirigir_por_rol(rol, id_usuario):
+    if rol == 'staff':
+        return redirect(url_for('gestion_personal')) # O 'inicio_staff'
+    elif rol == 'maestro':
+        return redirect(url_for('portal_facturacion', id_profesor=id_usuario))
+    elif rol == 'alumno':
+        return redirect(url_for('tablero')) # O 'cursos'
+    else:
+        return redirect(url_for('inicio'))
 
 @app.route("/asistencias_estudiantes")
 def listas():

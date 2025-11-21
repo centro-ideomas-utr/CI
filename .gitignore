@@ -1,6 +1,4 @@
-# --- Entornos Virtuales y Dependencias ---
 venv/
 env/
 
-# --- Seguridad (MUY IMPORTANTE) ---
-.env           # Variables de entorno con contraseñas
+.env
