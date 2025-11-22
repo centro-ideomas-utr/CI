@@ -38,7 +38,6 @@ CREATE TABLE idioma (
 
 CREATE TABLE cursos (
     id_curso INT not null AUTO_INCREMENT PRIMARY KEY,
-    id_horario INT,
     id_idioma INT,
     nivel ENUM('I','II','III','IV','V','VI','VII','VIII','Conv'),
     club varchar(50)
@@ -49,7 +48,8 @@ CREATE TABLE grupos (
     numero_salon VARCHAR (100),
     grupo VARCHAR(100),
     id_profesor INT,
-    id_curso INT not null
+    id_curso INT not null,
+    id_horario INT
 );
 
 CREATE TABLE profesores (
@@ -84,7 +84,7 @@ CREATE TABLE staff (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-alter table cursos add constraint foreign key (id_horario) references horario (id_horario);
+alter table grupos add constraint foreign key (id_horario) references horario (id_horario);
 alter table cursos add constraint foreign key (id_idioma) references idioma (id_idioma);
 alter table alumnos add constraint foreign key (id_curso) references cursos (id_curso);
 alter table alumnos add constraint foreign key (id_grupo) references grupos (id_grupo);
