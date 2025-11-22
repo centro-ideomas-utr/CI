@@ -345,7 +345,7 @@
 
     // --- CARGA INICIAL ---
     let sedes=JSON.parse('{{ sedes | tojson }}'), HORARIOS_BASE=[], selectedSede=sedes.length>0?sedes[0]:'';
-    const dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb'], timeSlots=['07:00','07:30','08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+    const dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb'], timeSlots=['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
     function renderSedes(){ const c=document.getElementById('sedes-container'); c.querySelectorAll('.sede-wrapper').forEach(e=>e.remove()); sedes.forEach(s=>{ const w=document.createElement('div'); w.className='sede-wrapper'; const b=document.createElement('button'); b.className=`sede-btn ${s===selectedSede?'active':''}`; b.innerHTML=`<i class="fas fa-map-marker-alt"></i> ${s}`; b.onclick=()=>selectSede(s); w.appendChild(b); c.insertBefore(w,c.querySelector('.add-sede-btn')); }); }
     function selectSede(s){ selectedSede=s; document.getElementById('current-sede-name').textContent=s; document.getElementById('sede_input_hidden').value=s; renderSedes(); populateTimetable(); }
     function addSede(){ const n=prompt("Sede:"); if(n&&!sedes.includes(n)){sedes.push(n); selectSede(n);} }
