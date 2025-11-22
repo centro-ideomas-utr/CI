@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, abort, redirect, url_for, Response, jsonify, session
 import yagmail
 import mysql.connector
@@ -78,6 +77,10 @@ global_avisos = []
 # =================================================================
 # === CONFIGURACIONES Y FUNCIONES AUXILIARES ===
 # =================================================================
+
+FACTURAMA_USER = 'CentrodeIdiomasUTR'
+FACTURAMA_PASSWORD = 'Uli0514122324#'
+FACTURAMA_URL = 'https://dev.facturama.mx/Profile/TaxProfile'
 
 UTR_DATA = {
     "rfc": "UTR130212KB3",

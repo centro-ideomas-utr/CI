@@ -1,14 +1,18 @@
 <!DOCTYPE html>
-< lang="es">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla de Reinscripciones</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla de Reinscripciones</title>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
 </head>
 <body>
+    <!-- NAVBAR -->
     <div class="navbar">
         <div class="menu-icon" id="menu-icon">
             <span></span>
@@ -19,6 +23,7 @@
         <div class="profile"></div>
     </div>
 
+    <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
         <ul>
             <li><a href="{{ url_for('grupos') }}"><i class="fas fa-bell"></i><span>Grupos</span></a></li>
@@ -30,230 +35,163 @@
         </ul>
     </nav>
 
-<main class="page-content"> 
-    <div class="buttons-container">
-                <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}" class="btn blue">REINSCRIPCIÓN ADULTOS REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}" class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS DESCUENTO') }}" class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTO DESCUENTO') }}" class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</a>
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES REGULAR') }}" class="btn green">REINSCRIPCIÓN MENORES REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES REGULAR') }}" class="btn purple">INSCRIPCIÓN MENORES REGULAR</a>
-        <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES DESCUENTO') }}" class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</a>
-        <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}" class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</a>
-    </div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="page-content"> 
+        <!-- Filtros de Botones -->
+        <div class="buttons-container">
+            <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}" class="btn blue">REINSCRIPCIÓN ADULTOS REGULAR</a>
+            <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}" class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</a>
+            <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS DESCUENTO') }}" class="btn red">REINSCRIPCIÓN-ADULTOS CON DESCUENTO</a>
+            <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTO DESCUENTO') }}" class="btn pink">INSCRIPCIÓN ADULTOS DESCUENTO</a>
+            <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES REGULAR') }}" class="btn green">REINSCRIPCIÓN MENORES REGULAR</a>
+            <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES REGULAR') }}" class="btn purple">INSCRIPCIÓN MENORES REGULAR</a>
+            <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN MENORES DESCUENTO') }}" class="btn yellow">REINSCRIPCIÓN MENORES DESCUENTO</a>
+            <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}" class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</a>
+        </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Correo Electrónico</th>
-                    <th>Edad</th>
-                    <th>Datos Faltantes</th>                     
-                    <th>Expediente</th>
-                    <th>Tipo de Inscripión</th>
-                    <th>Horario Inicial</th>
-                    <th>Nivel Actual</th>
-                    <th>Grupo Actual</th>
-                    <th>Maestro Actual</th>
-                    <th>ASIGNAR NIVEL</th>
-                    <th>ASIGNAR GRUPO</th>
-                    <th>GUARDAR</th>
-                    <th>Enviar Cobro</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for alumno in alumnos %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td><span class="lila">{{ alumno.matricula }}</span></td>
-                    <td>{{ alumno.nombre }}</td>
-                    <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
-                    <td>{{ alumno.correo_electronico }}</td>
-                    <td><span class="blue">{{ alumno.edad }}</span></td>
+        <!-- Tabla de Alumnos -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Matrícula</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Correo Electrónico</th>
+                        <th>Edad</th>
+                        <!-- Eliminada columna Datos Faltantes -->
+                        <th>Expediente (Mongo)</th>
+                        <th>Tipo de Inscripión</th>
+                        <th>Horario Inicial</th>
+                        <th>Nivel Actual</th>
+                        <th>Grupo Actual</th>
+                        <th>Maestro Actual</th>
+                        <th>ASIGNAR NIVEL</th>
+                        <th>ASIGNAR GRUPO</th>
+                        <th>GUARDAR</th>
+                        <th>Enviar Cobro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alumno in alumnos %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><span class="lila">{{ alumno.matricula }}</span></td>
+                        <td>{{ alumno.nombre }}</td>
+                        <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
+                        <td>{{ alumno.correo_electronico }}</td>
+                        <td><span class="blue">{{ alumno.edad }}</span></td>
 
-                    {% set docs = alumno.documentos_urls %} 
-                    {% set missing_data = [] %}
-                    
-                    {% if not alumno.correo_electronico %}
-                        {% set missing_data = missing_data + ['Correo'] %}
-                    {% endif %}
-                    
-                    {% set required_docs = {
-                        'comprobante_pago': 'Pago',
-                        'identificacion': 'ID'
-                    } %} 
-                    
-                    {% for doc_key, display_name in required_docs.items() %}
-                        {% if not docs[doc_key] %}
-                            {% set missing_data = missing_data + [display_name] %}
-                        {% endif %}
+                        <!-- Definimos docs aquí para usarlo en la columna de Expediente -->
+                        {% set docs = alumno.documentos_urls %} 
+                                          
+                        <!-- Botones de Expediente (Links a Mongo) -->
+                        <td>
+                            {% if docs.comprobante_pago %}
+                                <a href="{{ docs.comprobante_pago }}" target="_blank" class="btn-expediente" title="Ver Comprobante de Pago"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button></a>
+                            {% endif %}
+                            {% if docs.identificacion %}
+                                <a href="{{ docs.identificacion }}" target="_blank" class="btn-expediente" title="Ver Identificación Oficial"><button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button></a>
+                            {% endif %}
+                            {% if docs.acta_nacimiento %} 
+                                <a href="{{ docs.acta_nacimiento }}" target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento"><button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button></a>
+                            {% endif %}
+                            {% if docs.formato_descuento %} 
+                                <a href="{{ docs.formato_descuento }}" target="_blank" class="btn-expediente" title="Ver Formato de Descuento"><button class="btn-expediente-small"><i class="fas fa-percent"></i> Desc.</button></a>
+                            {% endif %}
+                            {% if docs.documentos_comprobatorios %} 
+                                <a href="{{ docs.documentos_comprobatorios }}" target="_blank" class="btn-expediente" title="Ver Documentos Comprobatorios Adicionales"><button class="btn-expediente-small"><i class="fas fa-file-pdf"></i> Comp.</button></a>
+                            {% endif %}
+                            
+                            {% set documentos_presentes_todos = docs.comprobante_pago or docs.identificacion or docs.acta_nacimiento or docs.formato_descuento or docs.documentos_comprobatorios %}
+                            {% if not documentos_presentes_todos %}<span class="lightred">N/A</span>{% endif %}
+                        </td>
+
+                        <!-- Etiqueta Tipo Inscripción -->
+                        <td>
+                            {% set tipo_inscripcion_clase = "" %}
+                            {% if alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS REGULARES' %}{% set tipo_inscripcion_clase = "btn-blue-text" %}
+                            {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTOS REGULAR' %}{% set tipo_inscripcion_clase = "btn-orange-text" %}
+                            {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-red-text" %}
+                            {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTO DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-pink-text" %}
+                            {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-green-text" %}
+                            {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-purple-text" %}
+                            {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-yellow-text" %}
+                            {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-magenta-text" %}{% endif %}
+                            <span class="{{ tipo_inscripcion_clase }}">{{ alumno.tipo_inscripcion }}</span>
+                        </td>
+
+                        <td>{{ alumno.horario or '---' }}</td>
+                        <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td>
+                        <td>{{ alumno.nombre_grupo or 'N/A' }}</td>
+                        <td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
+
+                        <!-- Selectors de Asignación -->
+                        <td>
+                            <select class="form-control select-curso" data-alumno-id="{{ alumno.id_alumno }}">
+                                <option value="">-- Seleccionar Nivel --</option>
+                                {% for curso in cursos %}
+                                    <option value="{{ curso.id_curso }}" {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>
+                                        {{ curso.nombre_completo }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        
+                        <td>
+                            <select class="form-control select-grupo" data-alumno-id="{{ alumno.id_alumno }}">
+                                <option value="">-- Seleccionar Grupo --</option>
+                                {% for grupo in grupos %}
+                                    <option value="{{ grupo.id_grupo }}" {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>
+                                        {{ grupo.grupo }} (Prof: {{ grupo.nombre_profesor }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+
+                        <!-- Botón Guardar -->
+                        <td>
+                            <button class="btn green btn-guardar-asignacion" 
+                                    data-id="{{ alumno.id_alumno }}" 
+                                    style="padding: 6px 10px;">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </td>
+                        
+                        <!-- Botón Cobrar -->
+                        <td>
+                             <button class="btn magenta btn-cobrar" 
+                                    data-id="{{ alumno.id_alumno }}" 
+                                    data-nombre="{{ alumno.nombre }} {{ alumno.apellido_p }}" 
+                                    data-email="{{ alumno.correo_electronico }}" 
+                                    style="padding: 6px 10px;">
+                                <i class="fas fa-envelope-open-text"></i> Cobrar
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="16" style="text-align:center;"><i class="fas fa-exclamation-triangle"></i> No hay alumnos registrados para este tipo de inscripción.</td></tr>
                     {% endfor %}
-
-                    <td>
-                        {% if missing_data %}
-                            <span class="lightred" title="Datos/Documentos Requeridos Faltantes">
-                                <i class="fas fa-exclamation-circle"></i> {{ missing_data|join(', ') }}
-                            </span>
-                        {% else %}
-                            <span class="green"><i class="fas fa-check-circle"></i> Completo</span>
-                        {% endif %}
-                    </td>
-                                        
-                    <td>
-                                                {% set docs = alumno.documentos_urls %} 
-                        {% if docs.comprobante_pago %}
-                            <a href="{{ docs.comprobante_pago }}" target="_blank" class="btn-expediente" title="Ver Comprobante de Pago"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button></a>
-                        {% endif %}
-                        {% if docs.identificacion %}
-                            <a href="{{ docs.identificacion }}" target="_blank" class="btn-expediente" title="Ver Identificación Oficial"><button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button></a>
-                        {% endif %}
-                        {% if docs.acta_nacimiento %} 
-                            <a href="{{ docs.acta_nacimiento }}" target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento"><button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button></a>
-                        {% endif %}
-                        {% if docs.formato_descuento %} 
-                            <a href="{{ docs.formato_descuento }}" target="_blank" class="btn-expediente" title="Ver Formato de Descuento"><button class="btn-expediente-small"><i class="fas fa-percent"></i> Desc.</button></a>
-                        {% endif %}
-                        {% if docs.documentos_comprobatorios %} 
-                            <a href="{{ docs.documentos_comprobatorios }}" target="_blank" class="btn-expediente" title="Ver Documentos Comprobatorios Adicionales"><button class="btn-expediente-small"><i class="fas fa-file-pdf"></i> Comp.</button></a>
-                        {% endif %}
-                        {% set documentos_presentes_todos = docs.comprobante_pago or docs.identificacion or docs.acta_nacimiento or docs.formato_descuento or docs.documentos_comprobatorios %}
-                        {% if not documentos_presentes_todos %}<span class="lightred">N/A</span>{% endif %}
-                    </td>
-
-                    <td>
-                        {% set tipo_inscripcion_clase = "" %}
-                        {% if alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS REGULARES' %}{% set tipo_inscripcion_clase = "btn-blue-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTOS REGULAR' %}{% set tipo_inscripcion_clase = "btn-orange-text" %}
-                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN ADULTOS DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-red-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN ADULTO DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-pink-text" %}
-                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-green-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES REGULAR' %}{% set tipo_inscripcion_clase = "btn-purple-text" %}
-                        {% elif alumno.tipo_inscripcion == 'REINSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-yellow-text" %}
-                        {% elif alumno.tipo_inscripcion == 'INSCRIPCIÓN MENORES DESCUENTO' %}{% set tipo_inscripcion_clase = "btn-magenta-text" %}{% endif %}
-                        <span class="{{ tipo_inscripcion_clase }}">{{ alumno.tipo_inscripcion }}</span>
-                    </td>
-
-                    <td>{{ alumno.horario or '---' }}</td>
-                    <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td>
-                    <td>{{ alumno.nombre_grupo or 'N/A' }}</td>
-                    <td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
-
-                    <td>
-                        <select class="form-control select-curso" data-alumno-id="{{ alumno.id_alumno }}">
-                            <option value="">-- Seleccionar Nivel --</option>
-                            {% for curso in cursos %}
-                                <option value="{{ curso.id_curso }}" {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>
-                                    {{ curso.nombre_completo }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </td>
-                    
-                    <td>
-                        <select class="form-control select-grupo" data-alumno-id="{{ alumno.id_alumno }}">
-                            <option value="">-- Seleccionar Grupo --</option>
-                            {% for grupo in grupos %}
-                                <option value="{{ grupo.id_grupo }}" {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>
-                                    {{ grupo.grupo }} (Prof: {{ grupo.nombre_profesor }})
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </td>
-
-                    <td>
-                        <button class="btn green btn-guardar-asignacion" 
-                                data-id="{{ alumno.id_alumno }}" 
-                                style="padding: 6px 10px;">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </td>
-                    
-                    <td>
-                                                <button class="btn magenta btn-cobrar" 
-                                data-id="{{ alumno.id_alumno }}" 
-                                data-nombre="{{ alumno.nombre }} {{ alumno.apellido_p }}" 
-                                data-email="{{ alumno.correo_electronico }}" 
-                                style="padding: 6px 10px;">
-                            <i class="fas fa-envelope-open-text"></i> Cobrar
-                        </button>
-                    </td>
-
-                </tr>
-                {% else %}
-                <tr><td colspan="17" style="text-align:center;"><i class="fas fa-exclamation-triangle"></i> No hay alumnos registrados para este tipo de inscripción.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</main>
+                </tbody>
+            </table>
+        </div>
+    </main>
     
-       <footer class="main-footer">
-    <div class="footer-content">
-      <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
-      <div class="social-login-icons">
-        <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer">
-          <div class="socialcontainer">
-            <div class="icon social-icon-2-2">
-              <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
-              </svg>
+    <!-- FOOTER -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
+            <div class="social-login-icons">
+                <!-- Iconos Sociales (simplificados para legibilidad) -->
+                <a href="https://www.instagram.com/cdi_utr" target="_blank"><i class="fab fa-instagram social-icon"></i></a>
+                <a href="https://www.facebook.com" target="_blank"><i class="fab fa-facebook social-icon"></i></a>
+                <a href="https://www.tiktok.com" target="_blank"><i class="fab fa-tiktok social-icon"></i></a>
+                <a href="https://whatsapp.com" target="_blank"><i class="fab fa-whatsapp social-icon"></i></a>
             </div>
-            <div class="social-icon-2">
-              <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
-              </svg>
-            </div>
-          </div>
-        </a>
-        <a href="https://www.facebook.com/share/1Cf7KRJFKm/" target="_blank" rel="noopener noreferrer">
-          <div class="socialcontainer">
-            <div class="icon social-icon-3-3">
-              <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
-              </svg>
-            </div>
-            <div class="social-icon-3">
-              <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
-                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
-              </svg>
-            </div>
-          </div>
-        </a>
-        <a href="https://www.tiktok.com/@centrodeidiomasutr?_t=ZS-8zg1HTdLcZM&_r=1" target="_blank" rel="noopener noreferrer">
-            <div class="socialcontainer">
-              <div class="icon social-icon-5-5">
-                 <svg viewBox="0 0 448 512" fill="white" height="1.4em">
-                    <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
-                </svg>
-              </div>
-              <div class="social-icon-5">
-                 <svg viewBox="0 0 448 512" fill="white" height="1.4em">
-                    <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
-                </svg>
-              </div>
-            </div>
-        </a>
-        <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer">
-            <div class="socialcontainer">
-              <div class="icon social-icon-6-6">
-                <svg fill="white" viewBox="0 0 16 16" height="1.4em">
-                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
-                </svg>
-              </div>
-              <div class="social-icon-6">
-                <svg fill="white" viewBox="0 0 16 16" height="1.4em">
-                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
-                </svg>
-              </div>
-            </div>
-        </a>
-      </div>
-    </div>
-  </footer>
+        </div>
+    </footer>
     
     <!-- MODAL DE COBRO (VENTANA EMERGENTE) -->
     <div id="cobroModal" class="modal">
@@ -263,111 +201,112 @@
             <p><strong>Alumno:</strong> <span id="modalAlumnoNombre"></span></p>
             <p><strong>Email:</strong> <span id="modalAlumnoEmail"></span></p>
 
-            <div class="descuento-options">
-                <h3>Descuentos Disponibles ($1,870.00 MXN base)</h3>
-                                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.00" data-nombre="REGULAR" checked>
-                    REGULAR (Sin descuento)
-                </label>
-                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.10" data-nombre="FAM 10%">
-                    FAM 10%
-                </label>
-                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.10" data-nombre="IDIOMAS 10%">
-                    IDIOMAS 10%
-                </label>
-                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.20" data-nombre="20% (EGRESADOS, ACTIVOS, FAM)">
-                    20% (EGRESADOS, ACTIVOS, FAM)
-                </label>
-                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.50" data-nombre="50% AUTORI">
-                    50% AUTORI
-                </label>
-                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.15" data-nombre="FAM 15%">
-                    FAM 15%
-                </label>
-                <label class="descuento-radio">
-                    <input type="radio" name="descuento_aplicado" value="0.00" data-nombre="CONV">
-                    CONV (Sin descuento)
-                </label>
-            </div>
-            
-                        <div class="cobro-summary">
-                Costo Base: <span class="original">$1,870.00</span>
-                Total a Cobrar: <span class="final" id="totalACobrar">$1,870.00</span>
-            </div>
+            <div class="descuento-options">
+                <h3>Descuentos Disponibles ($1,870.00 MXN base)</h3>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.00" data-nombre="REGULAR" checked>
+                    REGULAR (Sin descuento)
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.10" data-nombre="FAM 10%">
+                    FAM 10%
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.10" data-nombre="IDIOMAS 10%">
+                    IDIOMAS 10%
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.20" data-nombre="20% (EGRESADOS, ACTIVOS, FAM)">
+                    20% (EGRESADOS, ACTIVOS, FAM)
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.50" data-nombre="50% AUTORI">
+                    50% AUTORI
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.15" data-nombre="FAM 15%">
+                    FAM 15%
+                </label>
+                <label class="descuento-radio">
+                    <input type="radio" name="descuento_aplicado" value="0.00" data-nombre="CONV">
+                    CONV (Sin descuento)
+                </label>
+            </div>
+            
+            <div class="cobro-summary">
+                Costo Base: <span class="original">$1,870.00</span>
+                Total a Cobrar: <span class="final" id="totalACobrar">$1,870.00</span>
+            </div>
 
-            <div id="cobroMessage" class="message info hidden"></div>
+            <div id="cobroMessage" class="message info hidden"></div>
 
-            <div class="modal-actions">
-                <button id="btnEnviarCobro" class="btn green" style="padding: 10px 20px;">
-                    <i class="fas fa-paper-plane"></i> Enviar Cobro y Contraseña
-                </button>
-            </div>
-        </div>
-    </div>
+            <div class="modal-actions">
+                <button id="btnEnviarCobro" class="btn green" style="padding: 10px 20px;">
+                    <i class="fas fa-paper-plane"></i> Enviar Cobro y Contraseña
+                </button>
+            </div>
+        </div>
+    </div>
 
-        <div id="notificationModal" class="modal">
-        <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <span class="close-btn" data-modal-target="notificationModal">&times;</span>
-            <div id="notificationContent">
-                            </div>
-            <button class="btn blue mt-4" onclick="document.getElementById('notificationModal').style.display='none'">Aceptar</button>
-        </div>
-    </div>
-    
-    <script>
-    const COSTO_BASE = 1870.00; // $1870.00 MXN
+    <!-- MODAL DE NOTIFICACIÓN -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <span class="close-btn" data-modal-target="notificationModal">&times;</span>
+            <div id="notificationContent">
+                <!-- Contenido Dinámico -->
+            </div>
+            <button class="btn blue mt-4" onclick="document.getElementById('notificationModal').style.display='none'">Aceptar</button>
+        </div>
+    </div>
+    
+    <!-- SCRIPTS -->
+    <script>
+    const COSTO_BASE = 1870.00; // $1870.00 MXN
 
-    // Variables globales para el modal de cobro
-    let currentAlumnoId = null;
-    let currentAlumnoEmail = null;
+    // Variables globales para el modal de cobro
+    let currentAlumnoId = null;
+    let currentAlumnoEmail = null;
 
-    // Función para mostrar el modal de notificación (Reemplaza alert/confirm)
-    function showNotification(type, message, reload = false) {
-        const modal = document.getElementById('notificationModal');
-        const content = document.getElementById('notificationContent');
-        
-        let icon = '';
-        let colorClass = '';
+    // Función para mostrar el modal de notificación (Reemplaza alert/confirm)
+    function showNotification(type, message, reload = false) {
+        const modal = document.getElementById('notificationModal');
+        const content = document.getElementById('notificationContent');
+        
+        let icon = '';
+        let colorClass = '';
 
-        if (type === 'success') {
-            icon = '<i class="fas fa-check-circle fa-2x mb-2 text-green-600"></i>';
-            colorClass = 'message success';
-        } else if (type === 'error') {
-            icon = '<i class="fas fa-times-circle fa-2x mb-2 text-red-600"></i>';
-            colorClass = 'message error';
-        } else {
-            icon = '<i class="fas fa-info-circle fa-2x mb-2 text-blue-600"></i>';
-            colorClass = 'message info';
-        }
+        if (type === 'success') {
+            icon = '<i class="fas fa-check-circle fa-2x mb-2 text-green-600" style="color: green;"></i>';
+            colorClass = 'message success';
+        } else if (type === 'error') {
+            icon = '<i class="fas fa-times-circle fa-2x mb-2 text-red-600" style="color: red;"></i>';
+            colorClass = 'message error';
+        } else {
+            icon = '<i class="fas fa-info-circle fa-2x mb-2 text-blue-600" style="color: blue;"></i>';
+            colorClass = 'message info';
+        }
 
-        content.innerHTML = `
-            ${icon}
-            <div class="${colorClass}" style="margin-top: 10px; border: none;">${message}</div>
-        `;
+        content.innerHTML = `
+            ${icon}
+            <div class="${colorClass}" style="margin-top: 10px; border: none;">${message}</div>
+        `;
 
-        const acceptButton = modal.querySelector('.btn.blue');
-        acceptButton.onclick = function() {
-            modal.style.display = 'none';
-            if (reload) {
-                window.location.reload();
-            }
-        };
+        const acceptButton = modal.querySelector('.btn.blue');
+        acceptButton.onclick = function() {
+            modal.style.display = 'none';
+            if (reload) {
+                window.location.reload();
+            }
+        };
 
-        modal.style.display = 'block';
-    }
+        modal.style.display = 'block';
+    }
 
-
-    // Función para calcular el total a cobrar (Toma el descuento máximo del radio button)
-    function calcularTotal() {
-        const radioSelected = document.querySelector('#cobroModal input[name="descuento_aplicado"]:checked');
+    // Función para calcular el total a cobrar
+    function calcularTotal() {
+        const radioSelected = document.querySelector('#cobroModal input[name="descuento_aplicado"]:checked');
         
         if (!radioSelected) {
-            // Debería ser imposible si 'REGULAR' está checked por defecto
             return {
                 total_a_cobrar: COSTO_BASE,
                 descuentos_aplicados: 'N/A',
@@ -375,142 +314,31 @@
             };
         }
 
-        const nombreDescuento = radioSelected.getAttribute('data-nombre');
-        const maxDescuentoPorcentaje = parseFloat(radioSelected.value);
-        
-        // Calculamos el costo final y lo redondeamos
-        const total = COSTO_BASE * (1.0 - maxDescuentoPorcentaje);
-        const totalRedondeado = Math.round(total * 100) / 100;
-        
-        // Formatear para visualización
-        const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-        
-        document.getElementById('totalACobrar').textContent = formatter.format(totalRedondeado);
-        
-        // Retornamos el total y los detalles para enviarlos al servidor
-        return {
-            total_a_cobrar: totalRedondeado,
-            descuentos_aplicados: nombreDescuento,
-            porcentaje_aplicado: maxDescuentoPorcentaje * 100
-        };
-    }
+        const nombreDescuento = radioSelected.getAttribute('data-nombre');
+        const maxDescuentoPorcentaje = parseFloat(radioSelected.value);
+        
+        const total = COSTO_BASE * (1.0 - maxDescuentoPorcentaje);
+        const totalRedondeado = Math.round(total * 100) / 100;
+        
+        const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+        document.getElementById('totalACobrar').textContent = formatter.format(totalRedondeado);
+        
+        return {
+            total_a_cobrar: totalRedondeado,
+            descuentos_aplicados: nombreDescuento,
+            porcentaje_aplicado: maxDescuentoPorcentaje * 100
+        };
+    }
 
-    // Lógica principal de la página
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- Setup de Modales y Eventos de Cierre ---
-        const cobroModal = document.getElementById('cobroModal');
-        const notificationModal = document.getElementById('notificationModal');
-        
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.onclick = function() {
-                const targetId = this.getAttribute('data-modal-target');
-                if (targetId) {
-                    document.getElementById(targetId).style.display = 'none';
-                }
-            }
-        });
-
-        window.onclick = function(event) {
-            if (event.target == cobroModal) { cobroModal.style.display = 'none'; }
-            if (event.target == notificationModal) { notificationModal.style.display = 'none'; }
-        }
-
-        // --- Manejo de Radio Buttons de Descuento (Ajustado) ---
-        document.querySelectorAll('#cobroModal input[name="descuento_aplicado"]').forEach(radio => {
-            radio.addEventListener('change', calcularTotal);
-        });
-
-        // --- Botón Cobrar (Abre Modal) ---
-        document.querySelectorAll('.btn-cobrar').forEach(button => {
-            button.addEventListener('click', function() {
-                // 1. Obtener datos del alumno
-                currentAlumnoId = this.getAttribute('data-id');
-                currentAlumnoEmail = this.getAttribute('data-email');
-                const nombre = this.getAttribute('data-nombre');
-
-                // 2. Limpiar/Resetear el modal
-                document.getElementById('modalAlumnoNombre').textContent = nombre;
-                document.getElementById('modalAlumnoEmail').textContent = currentAlumnoEmail;
-                document.getElementById('cobroMessage').classList.add('hidden');
-                document.getElementById('btnEnviarCobro').disabled = false;
-                
-                // Marcar "REGULAR" por defecto
-                const regularRadio = document.querySelector('input[data-nombre="REGULAR"]');
-                if(regularRadio) regularRadio.checked = true;
-
-                calcularTotal();
-                cobroModal.style.display = 'block';
-            });
-        });
-
-        // --- Botón ENVIAR COBRO (Lógica AJAX) ---
-        document.getElementById('btnEnviarCobro').addEventListener('click', function() {
-            const cobroDetails = calcularTotal();
-            const originalButtonText = this.innerHTML;
-
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            
-            fetch("{{ url_for('enviar_cobro_factura') }}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_alumno: currentAlumnoId,
-                    total_a_cobrar: cobroDetails.total_a_cobrar,
-                    descuentos_aplicados: cobroDetails.descuentos_aplicados,
-                    porcentaje_aplicado: cobroDetails.porcentaje_aplicado
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                cobroModal.style.display = 'none';
-                if (data.status === 'success') {
-                    showNotification('success', data.message, true); // Recargar al guardar con éxito
-                } else {
-                    showNotification('error', data.message);
-                }
-            })
-            .catch(error => {
-                cobroModal.style.display = 'none';
-                console.error('Error:', error);
-                showNotification('error', 'Ocurrió un error de conexión con el servidor al enviar el cobro.');
-            })
-            .finally(() => {
-                this.disabled = false;
-                this.innerHTML = originalButtonText;
-            });
-        });
-
-
-        // --- Botón de Guardar Asignación (Modificado para usar Modal) ---
-        document.querySelectorAll('.btn-guardar-asignacion').forEach(button => {
-            button.addEventListener('click', function() {
-                const id_alumno = this.getAttribute('data-id');
-                const row = this.closest('tr');
-                const cursoSelect = row.querySelector('.select-curso');
-                const grupoSelect = row.querySelector('.select-grupo');
-                
-                const id_curso = cursoSelect.value;
-                const id_grupo = grupoSelect.value;
-                const originalText = this.innerHTML;
-
-                if (!id_curso || !id_grupo) {
-                    showNotification('error', 'Por favor, selecciona tanto el Nivel (Curso) como el Grupo antes de guardar.');
-                    return;
-                }
-
-                this.disabled = true;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-
-    // Lógica principal de la página
+    // Lógica principal del DOM
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Setup de Modales y Eventos de Cierre ---
+        
+        // --- Setup de Modales (Close Buttons) ---
         const cobroModal = document.getElementById('cobroModal');
         const notificationModal = document.getElementById('notificationModal');
         
         document.querySelectorAll('.close-btn').forEach(btn => {
             btn.onclick = function() {
-                // Usa el atributo data-modal-target para saber qué modal cerrar
                 const targetId = this.getAttribute('data-modal-target');
                 if (targetId) {
                     document.getElementById(targetId).style.display = 'none';
@@ -523,38 +351,33 @@
             if (event.target == notificationModal) { notificationModal.style.display = 'none'; }
         }
 
-        // --- Manejo de Checkboxes de Descuento ---
-        document.querySelectorAll('#cobroModal input[name="descuento"]').forEach(checkbox => {
-            checkbox.addEventListener('change', calcularTotal);
+        // --- Listeners de Radio Buttons (Cálculo en tiempo real) ---
+        document.querySelectorAll('#cobroModal input[name="descuento_aplicado"]').forEach(radio => {
+            radio.addEventListener('change', calcularTotal);
         });
 
-        // --- Botón Cobrar (Abre Modal) ---
+        // --- Botón "Cobrar" (Abrir Modal) ---
         document.querySelectorAll('.btn-cobrar').forEach(button => {
             button.addEventListener('click', function() {
-                // 1. Obtener datos del alumno
                 currentAlumnoId = this.getAttribute('data-id');
                 currentAlumnoEmail = this.getAttribute('data-email');
                 const nombre = this.getAttribute('data-nombre');
 
-                // 2. Limpiar/Resetear el modal
                 document.getElementById('modalAlumnoNombre').textContent = nombre;
                 document.getElementById('modalAlumnoEmail').textContent = currentAlumnoEmail;
                 document.getElementById('cobroMessage').classList.add('hidden');
                 document.getElementById('btnEnviarCobro').disabled = false;
                 
-                // Desmarcar todos los checkboxes al abrir
-                document.querySelectorAll('#cobroModal input[name="descuento"]').forEach(cb => cb.checked = false);
-                
-                // Marcar "REGULAR" si no hay descuentos por defecto
-                const regularCheckbox = document.querySelector('input[data-nombre="REGULAR"]');
-                if(regularCheckbox) regularCheckbox.checked = true;
+                // Resetear a Regular
+                const regularRadio = document.querySelector('input[data-nombre="REGULAR"]');
+                if(regularRadio) regularRadio.checked = true;
 
-                calcularTotal(); // Inicializa el cálculo en $1,870.00
+                calcularTotal();
                 cobroModal.style.display = 'block';
             });
         });
 
-        // --- Botón ENVIAR COBRO (Lógica AJAX) ---
+        // --- Botón "Enviar Cobro" (AJAX) ---
         document.getElementById('btnEnviarCobro').addEventListener('click', function() {
             const cobroDetails = calcularTotal();
             const originalButtonText = this.innerHTML;
@@ -576,7 +399,7 @@
             .then(data => {
                 cobroModal.style.display = 'none';
                 if (data.status === 'success') {
-                    showNotification('success', data.message, true); // Recargar al guardar con éxito
+                    showNotification('success', data.message, true);
                 } else {
                     showNotification('error', data.message);
                 }
@@ -584,7 +407,7 @@
             .catch(error => {
                 cobroModal.style.display = 'none';
                 console.error('Error:', error);
-                showNotification('error', 'Ocurrió un error de conexión con el servidor al enviar el cobro.');
+                showNotification('error', 'Ocurrió un error de conexión.');
             })
             .finally(() => {
                 this.disabled = false;
@@ -592,12 +415,10 @@
             });
         });
 
-
-        // --- Botón de Guardar Asignación (Modificado para usar Modal) ---
+        // --- Botón "Guardar Asignación" (AJAX) ---
         document.querySelectorAll('.btn-guardar-asignacion').forEach(button => {
             button.addEventListener('click', function() {
                 const id_alumno = this.getAttribute('data-id');
-                // Uso de querySelector en el contexto correcto
                 const row = this.closest('tr');
                 const cursoSelect = row.querySelector('.select-curso');
                 const grupoSelect = row.querySelector('.select-grupo');
@@ -622,14 +443,14 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        showNotification('success', data.message, true); // Recargar al guardar con éxito
+                        showNotification('success', data.message, true);
                     } else {
                         showNotification('error', 'Error al guardar: ' + (data.message || 'Error desconocido.'));
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showNotification('error', 'Ocurrió un error de conexión con el servidor.');
+                    showNotification('error', 'Ocurrió un error de conexión.');
                 })
                 .finally(() => {
                     this.disabled = false;
@@ -637,8 +458,10 @@
                 });
             });
         });
-    });
+
+    }); // Fin DOMContentLoaded
     </script>
+    
     <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 </body>
 </html>

@@ -297,3 +297,14 @@ CREATE TABLE inscripciones_idioma (
 alter table inscripciones_idioma add constraint foreign key (id_alumno) references alumnos (id_alumno);
 alter table inscripciones_idioma add constraint foreign key (id_idioma) references idioma (id_idioma);
 alter table inscripciones_idioma add constraint foreign key (id_horario) references horario (id_horario);
+
+create table utr_data(
+    id_utr_data int not null auto_increment primary key,
+    rfc varchar(14),
+    razon_social varchar(50),
+    cp int,
+    regimen_fiscal varchar(255),
+    uso_cfdi varchar(255),
+    metodo_pago varchar(255),
+    forma_pago varchar(255)
+);
