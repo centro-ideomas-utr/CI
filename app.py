@@ -1048,7 +1048,7 @@ def login():
             session['rol'] = datos_usuario['rol_detectado']
             session['nombre'] = f"{datos_usuario['nombre']} {datos_usuario['apellido_p']}"
             
-            print(f"✅ Login exitoso: {session['nombre']} ({session['rol']})")
+            print(f" Login exitoso: {session['nombre']} ({session['rol']})")
             
             # Redirigir según quién sea
             return redirigir_por_rol(session['rol'], session['user_id'])
@@ -1078,8 +1078,50 @@ def redirigir_por_rol(rol, id_usuario):
 def listas():
     return render_template("asistenciasestudiantes.html")
 
-@app.route("/avisos") #maetsro
-def avisos():
+
+@app.route('/publicar_aviso', methods=['POST'])
+def publicar_aviso():
+    # Verificar login y rol
+    if 'user_id' not in session or session.get('rol') != 'maestro':
+        return redirect(url_for('login'))
+
+    conn = None
+    try:
+        # 1. Recibir datos del formulario HTML
+        mensaje = request.form['mensaje']       # El textarea
+        fecha = request.form['fecha_evento']    # El input type="date"
+        id_grupo = request.form['id_grupo']     # El nuevo select
+        id_profesor = session['user_id']
+
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 2. Insertar en la Base de Datos MySQL
+        query = """
+            INSERT INTO avisos (descripcion, fecha_calendario, id_profesor, id_grupo)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (mensaje, fecha, id_profesor, id_grupo))
+        conn.commit()
+
+        # (Opcional) Log en Mongo
+        logs_col.insert_one({
+            "tipo_entidad": "aviso",
+            "accion": "nuevo_aviso",
+            "detalle": f"Aviso publicado para grupo ID {id_grupo}",
+            "usuario": f"profesor_{id_profesor}",
+            "fecha": datetime.utcnow()
+        })
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al publicar aviso: {e}")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return redirect(url_for('avisos'))
 
     avisos_ordenados = sorted(global_avisos, key=lambda x: x['id'], reverse=True)
     return render_template("avisos.html", avisos_publicados=avisos_ordenados)
@@ -1114,36 +1156,6 @@ def tablero():
         calendar_events=calendar_events
     )
 
-@app.route('/publicar_aviso', methods=['POST']) #maestros
-def publicar_aviso():
-    # Nota: Esta función usa una lista global simple. Se recomienda usar la tabla `avisos` de MySQL.
-    if request.method == 'POST':
-        mensaje_recibido = request.form['mensaje']
-        fecha_iso_cal = request.form['fecha_evento']
-        now = datetime.now()
-        fecha_display = now.strftime("%d/%m/%Y a las %H:%M") 
-
-        # 4. Crear un ID único (simple)
-        aviso_id = len(global_avisos) + 1
-        
-        # 5. Crear el diccionario del aviso (con ambos formatos)
-        nuevo_aviso = {
-            "id": aviso_id,
-            
-            # Campos para la lista de avisos
-            "fecha": fecha_display,
-            "mensaje": mensaje_recibido,
-            
-            # --- CAMPOS PARA FULLCALENDAR ---
-            "title": mensaje_recibido, # El 'título' del evento es el mensaje
-            "start": fecha_iso_cal      # La 'fecha' del evento es hoy
-        }
-        
-        # 6. Guardar el aviso en nuestra "base de datos"
-        global_avisos.append(nuevo_aviso)
-        
-        # 7. Redirigir al usuario DE VUELTA a la página de avisos
-        return redirect(request.referrer or url_for('avisos'))
 
 @app.route("/evidencias") #maetsro
 def evidencias():
