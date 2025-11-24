@@ -1173,135 +1173,137 @@ def clasesprofe():
     return render_template("clasesprofe.html")
 
 # --- RUTA PRINCIPAL DE ASISTENCIA (MODIFICADA) ---
-@app.route('/asistencia')
-def asistencia():
-    if 'user_id' not in session:
-        return redirect(url_for('index'))
+@app.route("/gestion_asistencia/<int:id_grupo>")
+def gestion_asistencia(id_grupo):
+    conn = None
+    try:
+        # Simulamos que el profesor está logueado (en tu código real esto viene del login)
+        # session['id_profesor'] = 1 
         
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    
-    # Obtener grupos asignados al profesor logueado
-    query_grupos = """
-        SELECT g.id_grupo, g.grupo, g.numero_salon, c.nivel
-        FROM grupos g
-        JOIN cursos c ON g.id_curso = c.id_curso
-        WHERE g.id_profesor = %s
-    """
-    cursor.execute(query_grupos, (session['user_id'],))
-    grupos = cursor.fetchall()
-    
-    conn.close()
-    return render_template('lista.html', grupos=grupos) # Tu HTML se debe llamar lista.html
-
-@app.route('/api/alumnos/<int:id_grupo>')
-def get_alumnos(id_grupo):
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    
-    # 1. Obtener alumnos del grupo
-    query = """
-        SELECT id_alumno, matricula, nombre, apellido_p, apellido_m 
-        FROM alumnos WHERE id_grupo = %s
-    """
-    cursor.execute(query, (id_grupo,))
-    alumnos = cursor.fetchall()
-    
-    # 2. Obtener faltas totales de la tabla 'asistencias' (MySQL)
-    # Contamos cuantas veces asistencia = 0 (Falso/Falta)
-    query_faltas = """
-        SELECT id_alumno, COUNT(*) as total_faltas 
-        FROM asistencias 
-        WHERE id_grupo = %s AND asistencia = 0 
-        GROUP BY id_alumno
-    """
-    cursor.execute(query_faltas, (id_grupo,))
-    faltas_dict = {row['id_alumno']: row['total_faltas'] for row in cursor.fetchall()}
-    
-    # 3. Consultar si ya se tomó asistencia HOY para marcar los checkbox
-    hoy = datetime.now().strftime('%Y-%m-%d')
-    query_hoy = """
-        SELECT id_alumno, asistencia FROM asistencias 
-        WHERE id_grupo = %s AND DATE(fecha_registro) = %s
-    """
-    cursor.execute(query_hoy, (id_grupo, hoy))
-    asistencia_hoy = {row['id_alumno']: row['asistencia'] for row in cursor.fetchall()}
-
-    # Combinar datos
-    lista_final = []
-    for al in alumnos:
-        lista_final.append({
-            'id': al['id_alumno'],
-            'matricula': al['matricula'],
-            'nombre_completo': f"{al['nombre']} {al['apellido_p']} {al['apellido_m']}",
-            'faltas': faltas_dict.get(al['id_alumno'], 0),
-            'asistencia_hoy': asistencia_hoy.get(al['id_alumno'], None) # 1=Presente, 0=Falta, None=No tomada
-        })
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
         
-    conn.close()
-    return jsonify(lista_final)
+        # 1. Obtener datos del Grupo y Profesor
+        cursor.execute("""
+            SELECT g.grupo, g.numero_salon, p.nombre as profe_nombre, g.id_profesor
+            FROM grupos g
+            JOIN profesores p ON g.id_profesor = p.id_profesor
+            WHERE g.id_grupo = %s
+        """, (id_grupo,))
+        info_grupo = cursor.fetchone()
 
-@app.route('/api/guardar_asistencia', methods=['POST'])
-def guardar_asistencia():
-    data = request.json
-    id_alumno = data['id_alumno']
-    id_grupo = data['id_grupo']
-    presente = 1 if data['asistencia'] else 0
-    id_profesor = session.get('user_id', 1) # Default 1 si no hay login
-    
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
-    
-    # Lógica: Borramos asistencia previa de HOY y ponemos la nueva (Upsert simple)
-    hoy = datetime.now().strftime('%Y-%m-%d')
-    
-    # Borrar registro de hoy si existe
-    query_del = "DELETE FROM asistencias WHERE id_alumno=%s AND id_grupo=%s AND DATE(fecha_registro)=%s"
-    cursor.execute(query_del, (id_alumno, id_grupo, hoy))
-    
-    # Insertar nuevo
-    query_ins = "INSERT INTO asistencias (asistencia, id_grupo, id_alumno, id_profesor) VALUES (%s, %s, %s, %s)"
-    cursor.execute(query_ins, (presente, id_grupo, id_alumno, id_profesor))
-    
-    conn.commit()
-    conn.close()
-    return jsonify({'status': 'ok'})
+        if not info_grupo:
+            return "Grupo no encontrado", 404
 
-# --- RUTAS DE COMENTARIOS (Híbrido MySQL + Mongo) ---
+        # 2. Obtener alumnos inscritos en ese grupo con nombre completo
+        # Nota: Asumo que la relación es directa en 'alumnos' por tu campo id_grupo
+        cursor.execute("""
+            SELECT id_alumno, matricula, 
+                   CONCAT(nombre, ' ', apellido_p, ' ', IFNULL(apellido_m, '')) as nombre_completo 
+            FROM alumnos 
+            WHERE id_grupo = %s 
+            ORDER BY apellido_p ASC
+        """, (id_grupo,))
+        alumnos = cursor.fetchall()
+        
+        return render_template("listas.html", 
+                             alumnos=alumnos, 
+                             grupo=info_grupo, 
+                             id_grupo=id_grupo)
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        return f"Error de conexión: {e}", 500
+    finally:
+        if conn and conn.is_connected(): conn.close()
 
-@app.route('/api/comentarios', methods=['GET', 'POST'])
-def comentarios():
-    if request.method == 'GET':
-        id_alumno = int(request.args.get('id_alumno'))
+# --- API: GUARDAR ASISTENCIA (Adaptado a tu Schema) ---
+@app.route("/api/guardar_asistencia", methods=["POST"])
+def api_guardar_asistencia():
+    conn = None
+    try:
+        data = request.get_json()
         
-        # Recuperamos historial desde Mongo (es más rápido para logs de texto)
-        historial = list(comentarios_col.find({'id_alumno': id_alumno}, {'_id': 0}).sort('fecha', -1))
-        return jsonify(historial)
+        # Datos recibidos del JS
+        id_alumno = data.get('id_alumno')
+        id_grupo = data.get('id_grupo')
+        fecha_clase = data.get('fecha') # YYYY-MM-DD
+        asistio = data.get('asistio')   # true/false
         
-    if request.method == 'POST':
-        data = request.json
-        id_alumno = int(data['id_alumno'])
-        descripcion = data['descripcion']
-        profesor_nombre = session.get('nombre', 'Profesor')
-        
-        # 1. Guardar en MySQL (tabla oficial)
+        # Valor para tu columna enum/boolean. Tu tabla dice BOOLEAN (0 o 1)
+        valor_asistencia = 1 if asistio else 0
+
+        # Necesitamos el id_profesor. Lo ideal es sacarlo de la sesión o del grupo.
+        # Aquí lo consultamos rápido basándonos en el grupo para cumplir la FK.
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO comentarios (descripcion, id_alumno, id_profesor) VALUES (%s, %s, %s)", 
-                       (descripcion, id_alumno, session.get('user_id', 1)))
-        conn.commit()
-        conn.close()
         
-        # 2. Guardar en Mongo (historial visual con más detalles)
-        comentarios_col.insert_one({
-            'id_alumno': id_alumno,
-            'comentario': descripcion,
-            'profesor': profesor_nombre,
-            'fecha': datetime.now().strftime('%Y-%m-%d %H:%M')
-        })
-        
-        return jsonify({'status': 'ok'})
+        # Obtener ID profesor dueño del grupo
+        cursor.execute("SELECT id_profesor FROM grupos WHERE id_grupo = %s", (id_grupo,))
+        res_profe = cursor.fetchone()
+        if not res_profe: return jsonify({"error": "Grupo sin profesor"}), 400
+        id_profesor = res_profe[0]
 
+        # INSERT / UPDATE Query usando tus campos
+        sql = """
+            INSERT INTO asistencias (asistencia, id_grupo, id_alumno, id_profesor, fecha_clase) 
+            VALUES (%s, %s, %s, %s, %s) 
+            ON DUPLICATE KEY UPDATE asistencia = %s
+        """
+        # Valores: (asistencia, grupo, alumno, profe, fecha) + (asistencia_update)
+        cursor.execute(sql, (valor_asistencia, id_grupo, id_alumno, id_profesor, fecha_clase, valor_asistencia))
+        conn.commit()
+        
+        return jsonify({"status": "success"})
+        
+    except Exception as e:
+        print(f"Error SQL: {e}")
+        return jsonify({"status": "error", "mensaje": str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+# --- API: OBTENER HISTORIAL (Adaptado a tu Schema) ---
+@app.route("/api/obtener_asistencias", methods=["POST"])
+def api_obtener_asistencias():
+    conn = None
+    try:
+        data = request.get_json()
+        fechas = data.get('fechas') # Lista de fechas ['2023-11-20', '2023-11-21']
+        id_grupo = data.get('id_grupo') # Necesitamos filtrar por grupo también
+        
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # Crear placeholders para la lista de fechas
+        format_strings = ','.join(['%s'] * len(fechas))
+        
+        query = f"""
+            SELECT id_alumno, fecha_clase, asistencia 
+            FROM asistencias 
+            WHERE id_grupo = %s AND fecha_clase IN ({format_strings})
+        """
+        
+        # Tupla de parámetros: (id_grupo, fecha1, fecha2, ...)
+        params = [id_grupo] + fechas
+        
+        cursor.execute(query, params)
+        resultados = cursor.fetchall()
+        
+        # Formatear fecha para JSON
+        for row in resultados:
+            row['fecha_clase'] = str(row['fecha_clase']) # Convertir date a string
+            
+        return jsonify(resultados)
+        
+    except Exception as e:
+        print(e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+
+    
 @app.route("/maestroinfo/<string:tipo>/<int:id>")
 def maestroinfo(tipo, id):
     """
