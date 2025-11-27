@@ -3,182 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla Tabla - Asistencia</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <title>Lista de Asistencia</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/listas.css') }}">
+    <style>
+        /* --- UTILIDADES --- */
+        .hidden-col { display: none !important; }
 
-<style> 
-    /* --- ESTILOS GENERALES Y LAYOUT --- */
-    body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: #f4f6f8;
-        color: #333;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-    }
+        /* --- CHECKBOX PERSONALIZADO --- */
+        .attendance-check {
+            -webkit-appearance: none; appearance: none;
+            width: 24px; height: 24px;
+            border: 2px solid #d1d5db; border-radius: 6px;
+            cursor: pointer; position: relative;
+            transition: all 0.2s ease; vertical-align: middle;
+            background-color: white;
+        }
+        .attendance-check:hover { border-color: #566a93; background-color: #f8fafc; }
+        .attendance-check:checked {
+            background-color: #2ecc71; border-color: #2ecc71;
+            transform: scale(1.05);
+        }
+        .attendance-check:checked::after {
+            content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            color: white; font-size: 14px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
 
-    /* Navbar */
-    .navbar {
-        background-color: #566a93;
-        color: white;
-        padding: 15px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        position: sticky;
-        top: 0;
-        z-index: 1001;
-    }
+        /* --- BOTÓN COMENTARIOS --- */
+        .btn-obs-pretty {
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            background-color: #e0f2fe; color: #0284c7;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-obs-pretty:hover { background-color: #0284c7; color: white; transform: translateY(-2px); }
 
-    .menu-icon { cursor: pointer; z-index: 1002; }
-    .menu-icon span { display: block; width: 25px; height: 3px; background-color: white; margin: 5px 0; transition: 0.4s; }
-    .navbar h1 { font-size: 1.5em; margin: 0; }
-    .profile { width: 40px; height: 40px; background-color: #f4f6f8; border-radius: 50%; }
-
-    /* Sidebar */
-    .sidebar {
-        height: 100%; width: 230px; position: fixed; z-index: 1000; top: 0; left: -230px;
-        background-color: #48597a; transition: 0.3s; padding-top: 80px;
-        display: flex; flex-direction: column; justify-content: space-between;
-    }
-    .sidebar.active { left: 0; }
-    .sidebar ul { list-style-type: none; padding: 0; margin: 0; }
-    .sidebar ul li a { padding: 15px 20px; text-decoration: none; font-size: 18px; color: #f4f6f8; display: block; transition: 0.2s; }
-    .sidebar ul li a:hover { background-color: #566a93; }
-    .sidebar ul li a i { width: 30px; text-align: center; margin-right: 10px; }
-    .logout-btn { background-color: #e74c3c; font-weight: bold; }
-    .logout-btn:hover { background-color: #c0392b !important; }
-
-    /* Contenido Principal */
-    .page-content { flex: 1; display: flex; flex-direction: column; transition: margin-left 0.3s; padding: 0; }
-
-    /* --- NUEVOS ESTILOS: NAVEGACIÓN DE FECHAS --- */
-    .date-navigation {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #ffffff;
-        padding: 15px 20px;
-        margin: 20px 20px 0 20px; /* Margen superior y lateral */
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        border-left: 5px solid #566a93;
-    }
-
-    .current-date-display {
-        font-size: 1.1em;
-        font-weight: 700;
-        color: #566a93;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        text-align: center;
-    }
-
-    .nav-btn {
-        background-color: #fff;
-        color: #566a93;
-        border: 1px solid #566a93;
-        padding: 8px 15px;
-        border-radius: 50px;
-        cursor: pointer;
-        font-weight: 600;
-        display: flex; align-items: center; gap: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .nav-btn:hover { background-color: #566a93; color: white; }
-
-    /* --- ESTILOS DE TABLA Y RESALTADO --- */
-    .table-container { padding: 20px; overflow-x: auto; flex: 1; }
-    
-    table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; }
-    thead { background-color: #9c94b8; color: white; }
-    th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; white-space: nowrap; }
-    tbody tr:hover { background-color: #f1f1f1; }
-
-    /* Estilos Específicos para HOY */
-    .th-today {
-        background-color: #566a93 !important; /* Azul más fuerte */
-        color: #fff !important;
-        border-bottom: 3px solid #ffeb3b !important; /* Línea amarilla abajo */
-    }
-    
-    .td-today {
-        background-color: #eef2f7 !important; /* Columna azul muy clarito */
-        border-left: 1px solid #dde1e6;
-        border-right: 1px solid #dde1e6;
-    }
-
-    .badge-hoy {
-        background-color: #ffeb3b;
-        color: #333;
-        font-size: 0.65em;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 800;
-        margin-left: 5px;
-        vertical-align: middle;
-        display: inline-block;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    /* Fecha pequeña debajo del día */
-    .date-subtext {
-        display: block;
-        font-size: 0.75em;
-        font-weight: normal;
-        opacity: 0.9;
-        margin-top: 3px;
-    }
-
-    /* Botones de acción */
-    .buttons { display: flex; justify-content: center; gap: 20px; padding: 20px; }
-    .btn { border: none; color: white; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; background-color: #566a93; }
-    .btn:hover { background-color: #48597a; }
-
-    /* Modal, Footer y otros (Simplificados para no repetir mucho código CSS original) */
-    .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); padding-top: 50px; }
-    .modal-content { background-color: #ffffff; margin: 5% auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 10px; }
-    .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-    
-    .main-footer { background-color: #566a93; color: white; padding: 20px 0; text-align: center; margin-top: auto; }
-    .footer-content { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-    .social-login-icons { display: flex; gap: 10px; }
-    
-    /* Media Print */
-    @media print {
-        body * { visibility: hidden; }
-        .table-container, .table-container * { visibility: visible; }
-        .table-container { position: absolute; left: 0; top: 0; width: 100%; }
-        .date-navigation, .navbar, .buttons, .sidebar, .main-footer { display: none !important; }
-    }
-</style>
+        /* --- HISTORIAL COMENTARIOS --- */
+        .obs-item {
+            background: #ffffff; border: 1px solid #f3f4f6; padding: 15px;
+            margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #566a93;
+            position: relative; transition: transform 0.2s;
+        }
+        .obs-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #9ca3af; margin-bottom: 8px; font-weight: 700; }
+        .obs-text { font-size: 0.95rem; color: #4b5563; line-height: 1.5; white-space: pre-wrap; }
+        .obs-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
+        .obs-btn { cursor: pointer; font-size: 0.9rem; color: #d1d5db; background: none; border: none; transition: 0.2s; }
+        .obs-btn:hover { color: #566a93; }
+        .obs-btn.delete:hover { color: #ef4444; }
+        .editing-mode { border-color: #F7B801 !important; background-color: #fffdf5 !important; }
+    </style>
 </head>
 <body>
 
 <div class="navbar">
-    <div class="menu-icon" id="menu-icon">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-    <h1>Lista de Asistencia</h1>
-    <div class="profile"></div>
+    <div class="menu-icon" id="menu-icon"><span></span><span></span><span></span></div>
+    <h1>{{ grupo.grupo }} - {{ grupo.idioma }} ({{ grupo.nivel }})</h1>
+    <div class="profile"><i class="fas fa-user-circle" style="font-size: 30px; color: white;"></i></div>
 </div>
 
 <nav class="sidebar" id="sidebar">
     <ul>
+        <li><a href="{{ url_for('grupos') }}"><i class="fas fa-arrow-left"></i><span>Volver a Grupos</span></a></li>
         <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
         <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciones</span></a></li>
         <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
         <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-home"></i><span>Home</span></a></li>
-        <li><a href="{{ url_for('asistencia') }}"><i class="fas fa-list-ul"></i><span>Lista</span></a></li>
-        <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
         <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
@@ -186,217 +78,315 @@
 <div class="page-content">
 
     <div class="date-navigation">
-        <button class="nav-btn" id="prev-week-btn">
-            <i class="fas fa-chevron-left"></i> Semana Ant.
-        </button>
-        
+        <button class="nav-btn" id="prev-week-btn"><i class="fas fa-chevron-left"></i> Semana Ant.</button>
         <div class="current-date-display">
             <i class="far fa-calendar-alt" style="margin-right:8px;"></i>
             <span id="date-range-label">Cargando...</span>
         </div>
-
-        <button class="nav-btn" id="next-week-btn">
-            Semana Sig. <i class="fas fa-chevron-right"></i>
-        </button>
+        <button class="nav-btn" id="next-week-btn">Semana Sig. <i class="fas fa-chevron-right"></i></button>
     </div>
+
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>No.</th>
+                    <th style="width: 50px;">No.</th>
                     <th>Matrícula</th>
                     <th>Nombre</th>
-                    <th>Observaciones</th> 
-                    <th id="th-clase1">Clase 1</th>
-                    <th id="th-clase2">Clase 2</th>
-                    <th id="th-clase3">Clase 3</th>
-                    <th id="th-clase4">Clase 4</th>
-                    <th>FALTAS</th>
+                    <th style="text-align:center; width: 60px;">Obs.</th> 
+                    
+                    <th id="th-clase0" class="col-day-0 text-center">Lunes</th>
+                    <th id="th-clase1" class="col-day-1 text-center">Martes</th>
+                    <th id="th-clase2" class="col-day-2 text-center">Miércoles</th>
+                    <th id="th-clase3" class="col-day-3 text-center">Jueves</th>
+                    <th id="th-clase4" class="col-day-4 text-center">Viernes</th>
+                    <th id="th-clase5" class="col-day-5 text-center">Sábado</th>
+                    <th style="text-align:center; color: #e74c3c;">FALTAS</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>UT00152</td>
-                    <td>Juan Pérez</td>
-                    <td style="text-align:center;"><button class="btn-obs ver-obs">Ver</button></td>
-                    <td><input type="checkbox"></td>
-                    <td><input type="checkbox"></td>
-                    <td><input type="checkbox"></td>
-                    <td><input type="checkbox"></td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>UT00153</td>
-                    <td>María López</td>
-                    <td style="text-align:center;"><button class="btn-obs anadir-obs">Añadir</button></td>
-                    <td><input type="checkbox"></td>
-                    <td><input type="checkbox"></td>
-                    <td><input type="checkbox"></td>
-                    <td><input type="checkbox"></td>
-                    <td>0</td>
-                </tr>
+                {% if alumnos %}
+                    {% for alumno in alumnos %}
+                    <tr data-id-alumno="{{ alumno.id_alumno }}">
+                        <td>{{ loop.index }}</td>
+                        <td style="font-family: monospace; font-weight: bold; color: #566a93;">{{ alumno.matricula }}</td>
+                        <td style="font-weight: 600; color: #374151;">{{ alumno.nombre_completo }}</td>
+                        
+                        <td style="text-align:center;">
+                            <div style="display: flex; justify-content: center;">
+                                <button class="btn-obs-pretty" onclick="openObservation({{ alumno.id_alumno }}, '{{ alumno.nombre_completo }}')" title="Ver Observaciones">
+                                    <i class="far fa-comment-dots"></i>
+                                </button>
+                            </div>
+                        </td>
+                        
+                        <td class="text-center col-day-0"><input type="checkbox" class="attendance-check" data-day="0"></td>
+                        <td class="text-center col-day-1"><input type="checkbox" class="attendance-check" data-day="1"></td>
+                        <td class="text-center col-day-2"><input type="checkbox" class="attendance-check" data-day="2"></td>
+                        <td class="text-center col-day-3"><input type="checkbox" class="attendance-check" data-day="3"></td>
+                        <td class="text-center col-day-4"><input type="checkbox" class="attendance-check" data-day="4"></td>
+                        <td class="text-center col-day-5"><input type="checkbox" class="attendance-check" data-day="5"></td>
+                        
+                        <td style="text-align: center; font-weight: bold; color: #bdc3c7; font-size: 1.1em;">0</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="11" style="text-align:center; padding: 40px; color: #9ca3af; font-style: italic;">No hay alumnos inscritos en este grupo.</td></tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
 
     <div class="buttons">
-        <button class="btn" id="print-btn">Imprimir Lista</button>
+        <button class="btn" id="print-btn"><i class="fas fa-print"></i> Imprimir Lista</button>
     </div>
     
     <div id="observation-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h2 id="modal-title">Observaciones</h2>
-            <div id="observation-history" class="history-section">
-                <h3 class="section-title">Historial</h3>
-                <div id="history-list"><p class="no-data-msg">Sin datos...</p></div>
+            <h2 id="modal-title" style="color: #3D348B;">Observaciones</h2>
+            <p id="modal-alumno-name" style="color: #6b7280; font-weight: 600; margin-bottom: 20px; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px;"></p>
+            
+            <div id="history-section" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
+                <div id="history-list"><p style="color: #999; text-align: center;">Cargando...</p></div>
             </div>
-            <div class="add-section">
-                <h3 class="section-title">Añadir</h3>
-                <textarea id="new-observation-text" rows="3" style="width:100%"></textarea>
-                <button id="save-observation-btn" class="btn btn-save" style="margin-top:10px;">Guardar</button>
+
+            <div class="add-section" style="border-top: 1px solid #f3f4f6; pt-4;">
+                <h4 id="form-title" style="margin: 0 0 8px 0; font-size: 0.85em; color: #555; text-transform: uppercase;">Nueva Observación:</h4>
+                <textarea id="new-observation-text" rows="3" placeholder="Escribe aquí..." style="width:100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px;"></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="cancel-edit-btn" class="btn" style="background-color: #9ca3af; display: none;">Cancelar</button>
+                    <button id="save-observation-btn" class="btn" style="flex: 1; background-color: #3D348B;">Guardar Observación</button>
+                </div>
             </div>
         </div>
     </div>
-
 </div>
 
-<footer class="main-footer">
-    <div class="footer-content">
-      <p>Contacto: centrodeidiomas@utr.edu.mx</p>
-      </div>
-</footer>
+<footer class="main-footer"><div class="footer-content"><p>Centro de Idiomas UTR</p></div></footer>
 
 <script>
+// VARIABLES GLOBALES
+const ID_GRUPO = {{ id_grupo }}; 
+const DIAS_CLASE_STR = "{{ grupo.dias }}"; 
+const CURRENT_USER_ID = {{ session.get('user_id', 0) }}; 
+
+let currentDate = new Date(); 
+let currentWeekDates = []; 
+let currentStudentId = null; 
+let editingCommentId = null; 
+
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- LÓGICA DE FECHAS Y ASISTENCIA ---
-    let currentDate = new Date(); 
-
-    // Función: Obtener el lunes de la semana actual
-    function getMonday(d) {
-        d = new Date(d);
-        var day = d.getDay(),
-            diff = d.getDate() - day + (day == 0 ? -6 : 1); // Ajuste para que Lunes sea el día 1
-        return new Date(d.setDate(diff));
+    // 1. CONFIGURAR DÍAS VISIBLES
+    const dayMap = { 'Lun': 0, 'Mar': 1, 'Mié': 2, 'Jue': 3, 'Vie': 4, 'Sáb': 5 };
+    let activeDayIndexes = [0,1,2,3,4];
+    if(DIAS_CLASE_STR && DIAS_CLASE_STR.trim() !== "") {
+        activeDayIndexes = DIAS_CLASE_STR.split(',').map(d => dayMap[d.trim()]).filter(d => d !== undefined);
     }
 
-    const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+    // 2. FECHAS Y TABLA
+    function getMonday(d) { var day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1); return new Date(d.setDate(diff)); }
 
-    // Función Principal: Actualizar encabezados y resaltar "HOY"
     function updateTableDates(referenceDate) {
         const monday = getMonday(referenceDate);
-        
-        // Obtenemos la fecha REAL de hoy (sistema) sin horas para comparar
-        const todayReal = new Date();
-        todayReal.setHours(0,0,0,0);
+        const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        currentWeekDates = []; 
+        const saturday = new Date(monday); saturday.setDate(monday.getDate() + 5); 
+        document.getElementById('date-range-label').innerText = `SEMANA: ${monday.toLocaleDateString('es-ES', {day:'numeric', month:'short'})} - ${saturday.toLocaleDateString('es-ES', {day:'numeric', month:'short'})}`.toUpperCase();
+        const todayReal = new Date(); todayReal.setHours(0,0,0,0);
 
-        // 1. Actualizar etiqueta de rango (Semana)
-        const friday = new Date(monday);
-        friday.setDate(monday.getDate() + 4); 
-        const options = { day: 'numeric', month: 'short' };
-        // Formato: 20 nov - 24 nov
-        const textRange = `${monday.toLocaleDateString('es-ES', options)} - ${friday.toLocaleDateString('es-ES', options)}`;
-        document.getElementById('date-range-label').innerText = `SEMANA: ${textRange.toUpperCase()}`;
+        for(let i=0; i<=5; i++){
+            let colDate = new Date(monday); colDate.setDate(monday.getDate() + i);
+            let yyyy = colDate.getFullYear(), mm = String(colDate.getMonth()+1).padStart(2,'0'), dd = String(colDate.getDate()).padStart(2,'0');
+            if(i<6) currentWeekDates.push(`${yyyy}-${mm}-${dd}`);
 
-        // 2. IDs de las columnas en HTML
-        const thIds = ['th-clase1', 'th-clase2', 'th-clase3', 'th-clase4'];
-        
-        // Referencia a las filas para pintar columnas completas
-        const tableRows = document.querySelectorAll('tbody tr');
+            const th = document.getElementById(`th-clase${i}`);
+            const cells = document.querySelectorAll(`.col-day-${i}`);
 
-        thIds.forEach((id, i) => {
-            const thElement = document.getElementById(id);
-            if (!thElement) return;
-
-            // Calcular fecha de la columna
-            let columnDate = new Date(monday);
-            columnDate.setDate(monday.getDate() + i);
-            
-            let dayName = daysOfWeek[i];
-            let dateStr = columnDate.toLocaleDateString('es-ES', {day: '2-digit', month: '2-digit'}); // Ej: 21/11
-
-            // Comparar si es HOY
-            let compareDate = new Date(columnDate);
-            compareDate.setHours(0,0,0,0);
-            
-            let isToday = compareDate.getTime() === todayReal.getTime();
-
-            // Renderizar encabezado
-            if (isToday) {
-                thElement.innerHTML = `${dayName} <span class="date-subtext">${dateStr}</span> <span class="badge-hoy">HOY</span>`;
-                thElement.classList.add('th-today');
+            if (activeDayIndexes.includes(i)) {
+                if(th) th.classList.remove('hidden-col');
+                cells.forEach(c => c.classList.remove('hidden-col'));
+                let isToday = colDate.getTime() === todayReal.getTime();
+                if(isToday) {
+                    th.innerHTML = `${daysOfWeek[i]} <span class="date-subtext">${colDate.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})}</span> <span class="badge-hoy">HOY</span>`;
+                    th.classList.add('th-today');
+                } else {
+                    th.innerHTML = `${daysOfWeek[i]} <span class="date-subtext">${colDate.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})}</span>`;
+                    th.classList.remove('th-today');
+                }
             } else {
-                thElement.innerHTML = `${dayName} <span class="date-subtext">${dateStr}</span>`;
-                thElement.classList.remove('th-today');
+                if(th) th.classList.add('hidden-col');
+                cells.forEach(c => c.classList.add('hidden-col'));
             }
+        }
+        cargarAsistencias();
+    }
 
-            // Pintar la columna (celdas verticales)
-            // Índice de columna: No(0) + Matrícula(1) + Nombre(2) + Obs(3) = 4 columnas antes.
-            // Clase 1 es índice 4.
-            let cellIndex = i + 4; 
+    // --- FUNCIÓN PARA CALCULAR FALTAS ---
+    function actualizarContadorFaltas(row) {
+        let faltas = 0;
+        const checkboxes = row.querySelectorAll('.attendance-check');
+        
+        // Fecha de hoy YYYY-MM-DD
+        const hoy = new Date();
+        const hoyStr = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
 
-            tableRows.forEach(row => {
-                if(row.cells.length > cellIndex) { // Validación simple
-                    const cell = row.cells[cellIndex];
-                    if(isToday) {
-                        cell.classList.add('td-today');
-                    } else {
-                        cell.classList.remove('td-today');
+        checkboxes.forEach(cb => {
+            const dayIndex = cb.getAttribute('data-day');
+            const fechaColumna = currentWeekDates[dayIndex];
+            const parentTd = cb.closest('td');
+
+            // Contar falta si:
+            // 1. Es día de clase (visible).
+            // 2. La fecha es HOY o ANTERIOR (no futuro).
+            // 3. NO está marcado.
+            if (!parentTd.classList.contains('hidden-col') && fechaColumna <= hoyStr && !cb.checked) {
+                faltas++;
+            }
+        });
+
+        const celdaFaltas = row.querySelector('td:last-child');
+        celdaFaltas.innerText = faltas;
+        
+        if(faltas > 0) celdaFaltas.style.color = "#e74c3c"; // Rojo
+        else celdaFaltas.style.color = "#bdc3c7"; // Gris
+    }
+
+    // 3. CARGAR ASISTENCIAS
+    async function cargarAsistencias() {
+        document.querySelectorAll('.attendance-check').forEach(cb => cb.checked = false);
+        try {
+            const res = await fetch('/api/obtener_asistencias', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ fechas: currentWeekDates, id_grupo: ID_GRUPO })
+            });
+            const data = await res.json();
+            
+            data.forEach(r => {
+                const row = document.querySelector(`tr[data-id-alumno="${r.id_alumno}"]`);
+                if(row) {
+                    const idx = currentWeekDates.indexOf(r.fecha_clase);
+                    if(idx !== -1) {
+                        const cb = row.querySelector(`.attendance-check[data-day="${idx}"]`);
+                        if(cb) cb.checked = (r.asistencia === 1);
                     }
                 }
             });
-        });
+
+            // Calcular faltas después de cargar los datos
+            document.querySelectorAll('tbody tr').forEach(row => actualizarContadorFaltas(row));
+
+        } catch(e) { console.error(e); }
     }
 
-    // Inicializar al cargar
-    updateTableDates(currentDate);
+    // 4. GUARDAR ASISTENCIA
+    async function guardarAsistencia(checkbox) {
+        const row = checkbox.closest('tr');
+        const fecha = currentWeekDates[checkbox.getAttribute('data-day')];
+        
+        // Actualizar visualmente inmediato
+        actualizarContadorFaltas(row);
 
-    // Eventos de botones Anterior / Siguiente
-    document.getElementById('prev-week-btn').addEventListener('click', function() {
-        currentDate.setDate(currentDate.getDate() - 7);
-        updateTableDates(currentDate);
-    });
-
-    document.getElementById('next-week-btn').addEventListener('click', function() {
-        currentDate.setDate(currentDate.getDate() + 7);
-        updateTableDates(currentDate);
-    });
-
-    // --- LÓGICA DE INTERFAZ (Sidebar, Modal, etc.) ---
-    
-    // Toggle Sidebar
-    const menuIcon = document.getElementById('menu-icon');
-    const sidebar = document.getElementById('sidebar');
-    menuIcon.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-    });
-
-    // Cerrar sidebar al hacer click fuera
-    document.addEventListener('click', function(event) {
-        if (!sidebar.contains(event.target) && !menuIcon.contains(event.target) && sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
+        try {
+            const res = await fetch('/api/guardar_asistencia', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id_alumno: row.getAttribute('data-id-alumno'), id_grupo: ID_GRUPO, fecha: fecha, asistio: checkbox.checked })
+            });
+            const d = await res.json();
+            if(d.status !== 'success') {
+                alert("Error al guardar.");
+                checkbox.checked = !checkbox.checked; 
+                actualizarContadorFaltas(row); // Revertir
+            }
+        } catch(e) { 
+            alert("Error conexión"); 
+            checkbox.checked = !checkbox.checked; 
+            actualizarContadorFaltas(row); // Revertir
         }
+    }
+
+    document.querySelector('tbody').addEventListener('change', (e) => {
+        if(e.target.classList.contains('attendance-check')) guardarAsistencia(e.target);
     });
 
-    // Modal de Observaciones (Lógica básica de abrir/cerrar)
+    // 5. COMENTARIOS
     const modal = document.getElementById('observation-modal');
-    const closeBtn = document.querySelector('.close-btn');
-    
-    // Delegación de eventos para botones dinámicos
-    document.querySelector('table').addEventListener('click', function(e) {
-        if(e.target.classList.contains('btn-obs')) {
-            modal.style.display = 'block';
-        }
-    });
+    const historyList = document.getElementById('history-list');
+    const newObsText = document.getElementById('new-observation-text');
+    const saveObsBtn = document.getElementById('save-observation-btn');
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    const formTitle = document.getElementById('form-title');
 
-    closeBtn.onclick = function() { modal.style.display = 'none'; }
-    window.onclick = function(event) { if (event.target == modal) { modal.style.display = 'none'; } }
+    function resetCommentForm() {
+        editingCommentId = null; newObsText.value = ""; saveObsBtn.innerText = "Guardar Observación";
+        formTitle.innerText = "Nueva Observación:"; cancelEditBtn.style.display = "none";
+        newObsText.classList.remove('editing-mode');
+    }
 
-    // Imprimir
+    window.openObservation = function(idAlumno, nombre) {
+        currentStudentId = idAlumno;
+        document.getElementById('modal-alumno-name').innerText = nombre;
+        resetCommentForm();
+        modal.style.display = 'block';
+        cargarComentarios(idAlumno);
+    };
+
+    async function cargarComentarios(id) {
+        historyList.innerHTML = '<p style="text-align:center; color:#666;">Cargando...</p>';
+        try {
+            const res = await fetch(`/api/obtener_comentarios/${id}`);
+            const data = await res.json();
+            if(data.status === 'success' && data.comentarios.length > 0) {
+                historyList.innerHTML = '';
+                data.comentarios.forEach(c => {
+                    const div = document.createElement('div'); div.className = 'obs-item';
+                    const isOwner = (c.id_profesor === CURRENT_USER_ID);
+                    let btns = isOwner ? `<div class="obs-actions"><button class="obs-btn" onclick='iniciarEdicion(${JSON.stringify(c)})'><i class="fas fa-pen"></i></button><button class="obs-btn delete" onclick="eliminarComentario(${c.id_comentario})"><i class="fas fa-trash"></i></button></div>` : '';
+                    div.innerHTML = `${btns}<div class="obs-meta"><span>${c.profesor||'Instructor'}</span><span>${c.fecha}</span></div><div class="obs-text">${c.descripcion}</div>`;
+                    historyList.appendChild(div);
+                });
+            } else { historyList.innerHTML = '<p style="text-align:center; color:#999;">Sin observaciones.</p>'; }
+        } catch(e) { historyList.innerHTML = '<p style="color:red;">Error.</p>'; }
+    }
+
+    window.iniciarEdicion = function(c) {
+        editingCommentId = c.id_comentario; newObsText.value = c.descripcion; newObsText.focus();
+        newObsText.classList.add('editing-mode'); saveObsBtn.innerText = "Actualizar";
+        formTitle.innerText = "Editando:"; cancelEditBtn.style.display = "block";
+    };
+    cancelEditBtn.onclick = resetCommentForm;
+
+    saveObsBtn.onclick = async function() {
+        const txt = newObsText.value.trim(); if(!txt) return alert("Escribe algo.");
+        saveObsBtn.disabled = true;
+        const pl = { id_alumno: currentStudentId, descripcion: txt };
+        if(editingCommentId) pl.id_comentario = editingCommentId;
+        try {
+            const res = await fetch('/api/guardar_comentario', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(pl) });
+            if((await res.json()).status === 'success') { resetCommentForm(); cargarComentarios(currentStudentId); } 
+            else alert("Error al guardar");
+        } catch(e) { alert("Error conexión"); } finally { saveObsBtn.disabled = false; }
+    };
+
+    window.eliminarComentario = async function(id) {
+        if(!confirm("¿Borrar?")) return;
+        try {
+            const res = await fetch('/api/eliminar_comentario', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id_comentario: id }) });
+            if((await res.json()).status === 'success') cargarComentarios(currentStudentId); else alert("Error al borrar");
+        } catch(e) { alert("Error conexión"); }
+    };
+
+    // UI GENERAL
+    document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
+    window.onclick = (e) => { if(e.target == modal) modal.style.display = 'none'; };
+    document.getElementById('prev-week-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 7); updateTableDates(currentDate); });
+    document.getElementById('next-week-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 7); updateTableDates(currentDate); });
     document.getElementById('print-btn').addEventListener('click', () => window.print());
+    const menuIcon = document.getElementById('menu-icon'); const sidebar = document.getElementById('sidebar');
+    menuIcon.addEventListener('click', () => sidebar.classList.toggle('active'));
+    
+    updateTableDates(currentDate);
 });
 </script>
 

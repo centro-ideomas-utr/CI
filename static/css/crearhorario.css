@@ -2,7 +2,6 @@
 body { margin: 0; font-family: 'Inter', sans-serif; background-color: #f4f6f8; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
 main { flex: 1; padding: 20px; transition: margin-left 0.3s; }
 :root {
-    /* Paleta de colores extraída de tu CSS base */
     --primary-color: #566a93;       /* Azul grisáceo Navbar */
     --sidebar-bg: #48597a;          /* Azul oscuro Sidebar */
     --bg-color: #f4f6f8;            /* Gris claro fondo */

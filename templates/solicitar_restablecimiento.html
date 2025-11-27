@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reutilizamos estilos, añadimos específicos para mensajes */
+        .message-box { padding: 15px; border-radius: 5px; margin-bottom: 20px; color: white; }
+        .success { background-color: #27ae60; }
+        .error { background-color: #c0392b; }
+        .back-link { margin-top: 20px; display: block; color: white; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body class="your_css_selector_here">
+    <main class="contenedor">
+        <div class="contenido">
+            <h1>Recuperar Cuenta</h1>
+            <p style="color: #eee; margin-bottom: 20px;">Ingresa tu correo institucional y te enviaremos un enlace.</p>
+
+            {% if message %}
+                <div class="message-box success">{{ message }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="message-box error">{{ error }}</div>
+            {% endif %}
+
+            <form class="formulario-login" action="{{ url_for('solicitar_restablecimiento') }}" method="POST">
+                <div class="campo">
+                    <input class="registro_field" type="email" name="correo_electronico" placeholder="Correo Electrónico" required>
+                </div>
+                <div class="campo-boton">
+                    <input type="submit" value="Enviar Enlace" class="boton boton--primario">
+                </div>
+            </form>
+
+            <a href="{{ url_for('login') }}" class="back-link">← Volver al Login</a>
+        </div>
+    </main>
+</body>
+</html>

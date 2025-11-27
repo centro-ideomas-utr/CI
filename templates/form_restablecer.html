@@ -4,29 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cambiar Contraseña</title>
-    <meta name="description" content="Formulario para establecer una nueva contraseña.">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
-    
     <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
-
     <style>
-        /* Estilo simple para el mensaje de error */
         .error-message, .success-message {
-            background-color: #e74c3c;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-weight: 500;
+            background-color: #e74c3c; color: white; padding: 10px;
+            border-radius: 5px; margin-bottom: 20px; font-weight: 500;
         }
-        .success-message {
-            background-color: #2ecc71;
-        }
+        .success-message { background-color: #2ecc71; }
     </style>
 </head>
 <body class="your_css_selector_here"> 
@@ -40,9 +27,7 @@
 
             <p style="color: white; margin-bottom: 2rem;">El token es válido. Ingresa tu nueva contraseña segura.</p>
 
-            <!-- El action apunta a la misma ruta de Flask, pero ahora con método POST -->
             <form class="formulario-login" action="{{ url_for('restablecer_contrasena', token=token) }}" method="POST">
-
                 <div class="campo nueva_contrasena">
                     <input class="registro_field" type="password" id="nueva_contrasena" name="nueva_contrasena" placeholder="Nueva Contraseña (mín. 8 caracteres)" required minlength="8">
                 </div>
@@ -55,20 +40,15 @@
                     <input type="submit" value="Cambiar Contraseña" class="boton boton--primario">
                 </div>
             </form>
-            
         </div>
     </main>
 
     <script>
-        // Lógica simple de JS para verificar que las contraseñas coincidan antes del envío
         document.querySelector('.formulario-login').addEventListener('submit', function(e) {
             const nueva = document.getElementById('nueva_contrasena').value;
             const confirmar = document.getElementById('confirmar_contrasena').value;
-            const errorDisplay = document.querySelector('.contenido');
-
             if (nueva !== confirmar) {
                 e.preventDefault();
-                // Usamos una alerta temporal para notificar al usuario (sustituir por un div en producción)
                 alert("Las contraseñas no coinciden.");
             }
         });

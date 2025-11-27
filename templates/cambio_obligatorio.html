@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguridad de la Cuenta</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    <style>
+        .alert-security {
+            background-color: #f39c12; /* Naranja de advertencia */
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body class="your_css_selector_here"> 
+    <main class="contenedor">
+        <div class="contenido">
+            <h1>Configurar Cuenta</h1>
+            
+            <div class="alert-security">
+                <strong>Acción Requerida:</strong><br>
+                Por motivos de seguridad, detectamos que es tu primer inicio de sesión o que tu contraseña es temporal. Debes crear una contraseña personal para continuar.
+            </div>
+
+            {% if error %}
+            <div style="background-color: #e74c3c; color: white; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form class="formulario-login" action="{{ url_for('cambiar_contrasena_inicial') }}" method="POST">
+                <div class="campo">
+                    <input class="registro_field" type="password" id="nueva_contrasena" name="nueva_contrasena" placeholder="Nueva Contraseña Personal" required minlength="8">
+                </div>
+                
+                <div class="campo">
+                    <input class="registro_field" type="password" id="confirmar_contrasena" name="confirmar_contrasena" placeholder="Confirmar Nueva Contraseña" required minlength="8">
+                </div>
+
+                <div class="campo-boton">
+                    <input type="submit" value="Guardar y Continuar" class="boton boton--primario">
+                </div>
+            </form>
+            
+            <div style="margin-top: 20px;">
+                <a href="{{ url_for('logout') }}" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Cancelar y Cerrar Sesión</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.querySelector('.formulario-login').addEventListener('submit', function(e) {
+            const nueva = document.getElementById('nueva_contrasena').value;
+            const confirmar = document.getElementById('confirmar_contrasena').value;
+            if (nueva !== confirmar) {
+                e.preventDefault();
+                alert("Las contraseñas no coinciden.");
+            }
+        });
+    </script>
+</body>
+</html>
