@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle de Calificaciones</title>
+  <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+  <!-- Reutilizamos el CSS base de calificaciones -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/calf.css') }}">
+  <style>
+    /* Estilos específicos para esta vista de detalle */
+    .table-container {
+        overflow-x: auto; /* Scroll horizontal si hay muchas columnas (ej. Niños) */
+        width: 90%;
+        margin: 0 auto 50px auto;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-radius: 12px;
+        background: white;
+    }
+    
+    table {
+        width: 100%;
+        margin: 0; /* Quitamos margen del CSS base porque está en el container */
+        box-shadow: none; /* Quitamos sombra duplicada */
+        border-radius: 0;
+    }
+
+    /* Botón de regreso */
+    .back-container {
+        width: 90%;
+        max-width: 1200px;
+        margin: 20px auto 0;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        color: #566a93;
+        font-weight: 600;
+        font-size: 1.1em;
+        transition: 0.3s;
+        padding: 8px 15px;
+        border-radius: 5px;
+        background-color: #eef1f6;
+    }
+
+    .back-btn:hover { 
+        background-color: #dce2eb;
+        transform: translateX(-5px);
+    }
+
+    .comentario-row td {
+        background-color: #f8f9fa;
+        color: #555;
+        border-bottom: 2px solid #e9ecef;
+        padding: 15px 25px;
+        font-size: 0.95em;
+        text-align: left;
+    }
+    
+    .nota-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 15px;
+        background-color: #f0f2f5;
+        font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span>Centro de Idiomas</span>
+    <nav class="nav-derecha">
+      <a href="{{ url_for('calificaciones') }}">
+        <svg width="150px" height="50px" viewBox="0 0 150 50" class="border">
+          <polyline points="149,1 149,49 1,49 1,1 149,1" class="bg-line" />
+          <polyline points="149,1 149,49 1,49 1,1 149,1" class="hl-line" />
+        </svg>
+        <span>Volver</span>
+      </a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Título con información del curso -->
+    <h2>{{ curso.idioma }} - {{ curso.nivel }} ({{ curso.grupo }})</h2>
+    
+    <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width: 100px;">Parcial</th>
+              <!-- Generamos las columnas dinámicamente (Pronunciación, Gramática, etc.) -->
+              {% for header in headers %}
+                <th style="text-align: center;">{{ header }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% if calificaciones %}
+                {% for calif in calificaciones %}
+                <tr>
+                  <td style="font-weight:bold; color: #566a93; border-right: 1px solid #eee;">
+                    Parcial {{ calif.numero }}
+                  </td>
+                  
+                  {% for valor in calif.valores %}
+                    <td style="text-align: center;">
+                        {% if valor %}
+                            <span class="nota-badge">{{ valor }}</span>
+                        {% else %}
+                            <span style="color: #ccc;">-</span>
+                        {% endif %}
+                    </td>
+                  {% endfor %}
+                </tr>
+                
+                <!-- Fila especial para comentarios del profesor -->
+                {% if calif.comentario %}
+                <tr class="comentario-row">
+                    <td colspan="{{ headers|length + 1 }}">
+                        <strong style="color: #566a93;">📝 Comentarios del profesor:</strong> 
+                        <span style="margin-left: 5px;">{{ calif.comentario }}</span>
+                    </td>
+                </tr>
+                {% endif %}
+                
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="{{ headers|length + 1 }}" style="text-align:center; padding: 40px; color: #7f8c8d;">
+                        <div style="font-size: 1.1em; margin-bottom: 5px;">Aún no hay calificaciones registradas.</div>
+                        <small>Las notas de tus parciales aparecerán aquí cuando tu profesor las capture.</small>
+                    </td>
+                </tr>
+            {% endif %}
+          </tbody>
+        </table>
+    </div>
+  </main>
+
+  <footer class="main-footer">
+    <div class="footer-content">
+      <p>Sistema de Calificaciones UTR - Centro de Idiomas</p>
+    </div>
+  </footer>
+</body>
+</html>

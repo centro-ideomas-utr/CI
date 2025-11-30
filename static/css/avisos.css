@@ -1,378 +1,415 @@
 /* --- Estilos Generales --- */
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f4f6f8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7fa; /* Fondo gris azulado suave */
     color: #333;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
-/* --- Barra de Navegación Superior --- */
+/* --- Navbar Superior (Azul Sólido) --- */
 .navbar {
-    background-color: #566a93;
+    background-color: #566a93; /* Azul Institucional */
     color: white;
-    padding: 15px 20px;
+    padding: 10px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
     z-index: 1001;
 }
 
+/* --- MENÚ HAMBURGUESA (CORREGIDO) --- */
 .menu-icon {
     cursor: pointer;
-    z-index: 1002;
+    display: flex;
+    flex-direction: column; /* IMPORTANTE: Apila las líneas verticalmente */
+    justify-content: center;
+    gap: 5px; /* Espacio entre líneas */
+    width: 35px;
+    height: 35px;
+    z-index: 1005; /* Z-index alto para asegurar clic */
+    padding: 5px;
 }
 
 .menu-icon span {
     display: block;
-    width: 25px;
+    width: 100%;
     height: 3px;
     background-color: white;
-    margin: 5px 0;
-    transition: 0.4s;
+    border-radius: 3px;
+    transition: all 0.3s ease;
 }
 
+/* Efecto activo en el icono (Opcional) */
+.menu-icon.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+.menu-icon.active span:nth-child(2) { opacity: 0; }
+.menu-icon.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+
+
 .navbar h1 {
-    font-size: 1.5em;
+    font-size: 1.4rem;
     margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .profile {
-    width: 40px;
-    height: 40px;
-    background-color: #f4f6f8;
+    width: 35px;
+    height: 35px;
+    background-color: white;
     border-radius: 50%;
-}
-/* --- Menú Lateral (Sidebar) --- */
-.sidebar ul li a i {
-width: 30px; 
-text-align: center;
-margin-right: 10px;
-} 
-/* CAMBIO: Ajustado a 230px para coincidir con tu JS */
-.sidebar {
-    height: 100%;
-    width: 230px;
-    position: fixed;
-    z-index: 1000;
-    top: 0;
-    left: -230px; /* Oculto por defecto */
-    background-color: #48597a;
-    overflow-x: hidden;
-    transition: 0.3s;
-    padding-top: 80px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
+    color: #566a93;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* --- Sidebar (Menú Lateral) --- */
+.sidebar {
+    position: fixed;
+    left: -250px; /* Oculto por defecto */
+    top: 60px; /* Debajo del navbar */
+    width: 250px;
+    height: calc(100% - 60px);
+    background-color: white;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    transition: left 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
 }
 
 .sidebar.active {
-    left: 0;
+    left: 0; /* Se muestra al activar */
 }
 
 .sidebar ul {
-    list-style-type: none;
+    list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.sidebar ul li a {
+.sidebar li a {
+    display: flex;
+    align-items: center;
     padding: 15px 20px;
     text-decoration: none;
-    font-size: 18px;
-    color: #f4f6f8;
-    display: block;
-    transition: 0.2s;
+    color: #444;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+    font-weight: 500;
 }
 
-.sidebar ul li a:hover {
-    background-color: #566a93;
+.sidebar li a:hover, .sidebar li a.active {
+    background-color: #f0f4f8;
+    color: #566a93;
+    border-left: 4px solid #566a93;
+}
+
+.sidebar i {
+    width: 25px;
+    text-align: center;
+    margin-right: 10px;
+    color: #566a93;
 }
 
 .logout-btn {
-    background-color: #e74c3c;
-    color: white;
-    text-align: center;
-    font-weight: bold;
+    color: #e74c3c !important;
+}
+.logout-btn i {
+    color: #e74c3c !important;
 }
 
-.logout-btn:hover {
-    background-color: #c0392b !important;
-}
-
-/* --- Contenedor Principal (Wrapper) --- */
+/* --- Layout Principal --- */
 .page-content {
     flex: 1;
+    padding: 30px;
     display: flex;
-    flex-direction: column;
-    transition: margin-left 0.3s;
+    justify-content: center;
+    transition: margin-left 0.3s; 
 }
 
-
-/* --- Contenido Principal --- */
 .main-content {
-    padding: 30px 20px;
-    /* MODIFICADO: Aumentamos el ancho máximo para que quepan las columnas */
-    max-width: 1400px; 
-    margin: 0 auto;
     width: 100%;
-    box-sizing: border-box;
-    /* Añadido para que el contenido principal crezca */
-    flex: 1;
+    max-width: 1300px;
 }
 
-.section {
-    margin-bottom: 30px;
+.avisos-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr; /* Izquierda un poco más estrecha */
+    gap: 30px;
+    align-items: start;
 }
 
+/* --- Títulos de Sección --- */
 .section-title {
-    font-size: 1.2em;
+    font-size: 1.1rem;
     color: #7f8c8d;
     margin-bottom: 15px;
+    font-weight: 700;
     padding-bottom: 5px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+/* --- Tarjetas de Avisos (Lista) --- */
+.avisos-list-container {
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 .card {
     background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: 15px 20px;
     margin-bottom: 15px;
-    border-left: 5px solid #566a93;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 5px solid #566a93; /* Borde azul izquierdo */
+    transition: transform 0.2s;
+    position: relative;
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.card-title {
-    margin: 0 0 10px 0;
-    font-size: 1.3em;
-    color: #333;
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
 }
+
+.card-date i { color: #f39c12; margin-right: 5px; }
+.card-dest { font-weight: bold; color: #566a93; }
 
 .card-content {
-    margin: 0 0 15px 0;
-    color: #555;
-    line-height: 1.6;
-}
-
-.card-date {
-    font-size: 0.8em;
-    color: #999;
-    text-align: right;
-    display: block;
-}
-
-/* --- Contenedor de Botones --- */
-.buttons-container {
-    text-align: center;
-    padding: 20px;
-}
-
-.btn {
-    border: none;
-    color: white;
-    padding: 12px 30px;
-    font-size: 1em;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #7f8c8d;
-    transition: background-color 0.3s ease;
-}
-
-.btn:hover {
-    background-color: #6c7a7b;
-}
-.avisos-layout {
-    display: flex;
-    flex-wrap: wrap; /* Para que en móviles se ponga una columna debajo de la otra */
-    gap: 30px; /* Espacio entre la columna izquierda y derecha */
-}
-
-.columna-avisos {
-    flex: 2; /* La columna de avisos ocupa 2 partes */
-    min-width: 350px; /* Ancho mínimo antes de que se rompa el layout */
-    display: flex;
-    flex-direction: column; /* Para que las secciones de avisos y formulario se apilen verticalmente */
-}
-
-.columna-calendario {
-    flex: 3; /* La columna del calendario ocupa 3 partes (es más ancha) */
-    min-width: 400px; /* Ancho mínimo */
-}
-
-/* --- FOOTER --- */
-.main-footer {
-background-color: #566a93;
-color: white;
-padding: 20px 0;
-text-align: center;
-/* margin-top: auto; */ /* Comentado, .page-content se encarga */
-}
-
-.footer-content {
-display: flex;
-justify-content: center;
-align-items: center;
-flex-wrap: wrap;
-gap: 20px;
-}
-
-.footer-content p {
-margin: 0;
-font-size: 0.9em;
-}
-
-/* --- Social Icons --- */
-.social-login-icons {
-display: flex;
-align-items: center;
-gap: 10px;
--webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
-}
-.social-login-icons svg {
-width: 30px;
-}
-.social-login-icons a {
-    text-decoration: none;
-}
-
-.social-icon-2,
-.social-icon-2-2,
-.social-icon-3,
-.social-icon-3-3,
-.social-icon-5,
-.social-icon-5-5,
-.social-icon-6,
-.social-icon-6-6 {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50px;
     margin: 0;
+    color: #444;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
 }
 
-.icon svg {
-    fill: #111;
+.empty-card {
+    border-left-color: #ccc;
+    text-align: center;
+    font-style: italic;
+    color: #999;
+    padding: 30px;
 }
 
-.socialcontainer {
-    height: 40px;
+/* Botones de Acción en Tarjeta */
+.card-actions {
+    margin-top: 10px;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #f9f9f9;
+    padding-top: 8px;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 5px;
+    transition: transform 0.2s;
+}
+.btn-icon:hover { transform: scale(1.2); }
+.btn-edit { color: #f39c12; }
+.btn-delete { color: #e74c3c; }
+
+/* --- Formulario de Nuevo Aviso --- */
+.form-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    padding: 0;
+    border-left: 5px solid #2ecc71; /* Borde verde izquierdo */
     overflow: hidden;
 }
 
-.social-icon-2 svg,
-.social-icon-3 svg,
-.social-icon-5 svg,
-.social-icon-6 svg {
-    opacity: 0;
-    transition-duration: 0.5s;
-    transition-delay: 0.2s;
-}
-.social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-    transition-duration: 0.4s;
-    background-color: rgba(0, 0, 0, 0);
-}
-.socialcontainer:hover .social-icon-2,
-.socialcontainer:hover .social-icon-3,
-.socialcontainer:hover .social-icon-5,
-.socialcontainer:hover .social-icon-6 {
-    transform: translateY(-40px);
-}
-.socialcontainer:hover svg {
-    opacity: 1;
-}
-.social-icon-2 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: linear-gradient(
-        72.44deg,
-        #ff7a00 11.92%,
-        #ff0169 51.56%,
-        #d300c5 85.69%
-    );
-}
-.social-icon-3 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: #316ff6;
-}
-    .social-icon-5 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: #000000;
-}
-    .social-icon-6 {
-    transition-duration: 0.4s;
-    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-    background: #25D366;
+.card-title {
+    margin: 0;
+    padding: 15px 20px;
+    background-color: white;
+    color: #333;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
 }
 
-/* --- NUEVOS ESTILOS AÑADIDOS --- */
+form { padding: 20px; }
 
-/* Estilos para el formulario de nuevo aviso */
-.form-card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    padding: 20px;
-    border-left: 5px solid #2ecc71; /* Verde para "nuevo" */
-}
-.form-card textarea {
+textarea {
     width: 100%;
-    min-height: 80px;
+    min-height: 100px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 4px;
     padding: 10px;
     font-family: inherit;
-    font-size: 1em;
-    box-sizing: border-box; /* Para que el padding no afecte el ancho */
+    font-size: 0.95rem;
+    box-sizing: border-box;
     margin-bottom: 15px;
     resize: vertical;
+    outline: none;
 }
-.form-card .btn-publicar {
-    border: none;
+textarea:focus { border-color: #2ecc71; }
+
+label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.input-fecha, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    background-color: white;
+}
+
+.btn-publicar {
+    width: 100%;
+    background-color: #2ecc71;
     color: white;
-    padding: 12px 30px;
-    font-size: 1em;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
     font-weight: bold;
-    border-radius: 8px;
+    font-size: 1rem;
     cursor: pointer;
-    background-color: #27ae60; /* Verde */
-    transition: background-color 0.3s ease;
-    width: 100%;
+    transition: background 0.3s;
+    margin-top: 10px;
 }
-.form-card .btn-publicar:hover {
-    background-color: #219d55;
+.btn-publicar:hover {
+    background-color: #27ae60;
 }
-.form-card .input-fecha {
+
+/* --- Calendario --- */
+.calendar-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+#calendar {
+    max-width: 100%;
+    font-size: 0.9rem;
+}
+
+/* --- Ventana Modal (Editar) --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
     width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s;
+}
+
+.modal-content h3 {
+    margin: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    color: #566a93;
+    font-size: 1.2rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #aaa;
+    line-height: 1;
+}
+.close-modal:hover { color: #333; }
+
+.modal-textarea {
+    width: 100%;
+    height: 100px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
+    margin-bottom: 15px;
     font-family: inherit;
-    font-size: 1em;
-    box-sizing: border-box; /* Importante para que el padding no afecte el ancho */
-    margin-top: 10px;
-    margin-bottom: 20px; /* Espacio antes del botón de publicar */
+    box-sizing: border-box;
+    resize: vertical;
 }
 
-/* Estilos para el calendario en esta página */
-#calendar {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Footer --- */
+.main-footer {
+    background-color: #566a93;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+}
+
+.footer-content p { margin: 0; font-size: 0.9rem; }
+.social-login-icons { margin-top: 10px; display: flex; justify-content: center; gap: 15px; }
+
+/* Social Icons */
+.socialcontainer { width: 40px; height: 40px; overflow: hidden; cursor: pointer; border-radius: 50%; }
+.social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.social-icon-2, .social-icon-3, .social-icon-5, .social-icon-6 { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+.socialcontainer:hover .social-icon-2, .socialcontainer:hover .social-icon-3, .socialcontainer:hover .social-icon-5, .socialcontainer:hover .social-icon-6 { transform: translateY(-40px); opacity: 1; }
+
+/* Gradientes Sociales */
+.social-icon-2 { background: linear-gradient(72.44deg, #ff7a00 11.92%, #ff0169 51.56%, #d300c5 85.69%); }
+.social-icon-3 { background: #316ff6; }
+.social-icon-5 { background: #000000; }
+.social-icon-6 { background: #25D366; }
+
+.icon svg { fill: white; width: 20px; }
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .avisos-layout {
+        grid-template-columns: 1fr; /* Una columna en móviles/tablets */
+    }
+    .columna-avisos { order: 2; }
+    .columna-calendario { order: 1; }
 }

@@ -271,6 +271,7 @@ create table avisos(
     fecha_calendario DATE,
     id_profesor int,
     id_staff int,
+    id_grupo INT,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

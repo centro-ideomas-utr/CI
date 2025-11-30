@@ -14,10 +14,9 @@ import secrets
 import string
 import decimal
 import threading
-from io import BytesIO 
+from io import BytesIO
 from gridfs import GridFS
 import locale
-from io import BytesIO 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
@@ -964,70 +963,265 @@ def historial():
 
 @app.route("/asistencias_estudiantes")
 def listas():
-    return render_template("asistenciasestudiantes.html")
-
-@app.route("/avisos")
-def avisos():
-    #avisos_publicados = cargar_avisos_desde_db()
+    # 1. Seguridad: Verificar que sea alumno
+    if session.get('rol') != 'alumno':
+        return redirect(url_for('login'))
     
-    # Para FullCalendar: solo eventos con fecha
-    calendar_events = [
-        {
-            #'title': a['title'],
-            #'start': a['start'],
-            'backgroundColor': '#566a93',
-            'borderColor': '#566a93',
-            'display': 'dot'
-        }
-        #for a in avisos_publicados if a['start']
-    ]
-
-    return render_template(
-        "avisos.html",  # tu archivo HTML que ya tienes
-        #avisos_publicados=avisos_publicados,
-        calendar_events=calendar_events
-    )
-
-
-# ========================================
-# RUTA: PUBLICAR NUEVO AVISO (SIN LOGIN OBLIGATORIO)
-# ========================================
-@app.route('/aviso', methods=['POST'])
-def aviso():
+    user_id = session.get('user_id')
     conn = None
+    resumen_asistencias = []
+
     try:
-        mensaje = request.form.get('mensaje', '').strip()
-        fecha_evento = request.form.get('fecha_evento')
-        id_grupo = request.form.get('id_grupo', 1)
-
-        if not mensaje:
-            return "El mensaje es obligatorio", 400
-
-        id_profesor = session.get('user_id') or 1
-
         conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         query = """
-            INSERT INTO avisos (descripcion, fecha_calendario, id_profesor, id_grupo)
-            VALUES (%s, %s, %s, %s)
+            SELECT 
+                i.nombre AS idioma,
+                c.nivel,
+                (SELECT COUNT(*) 
+                 FROM asistencias a 
+                 WHERE a.id_alumno = ii.id_alumno 
+                   AND a.id_grupo = ii.id_grupo 
+                   AND a.asistencia = 0) AS total_faltas
+            FROM inscripciones_idioma ii
+            JOIN grupos g ON ii.id_grupo = g.id_grupo
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            WHERE ii.id_alumno = %s AND ii.estado = 'Activo'
         """
-        cursor.execute(query, (mensaje, fecha_evento or None, id_profesor, id_grupo))
-        conn.commit()
-
-        return redirect(url_for('avisos'))
+        cursor.execute(query, (user_id,))
+        resumen_asistencias = cursor.fetchall()
 
     except Exception as e:
-        if conn:
-            conn.rollback()
-        print("Error al publicar aviso:", e)
-        return "Error al guardar el aviso", 500
-
+        print(f"Error cargando asistencias: {e}")
     finally:
         if conn and conn.is_connected():
-            if 'cursor' in locals():
-                cursor.close()
+            cursor.close()
             conn.close()
+
+    return render_template("asistenciasestudiantes.html", datos=resumen_asistencias)
+
+def enviar_notificacion_async(destinatarios, asunto, mensaje_aviso, autor):
+    """Envía correos en segundo plano para no bloquear la interfaz."""
+    try:
+        # Reconexión temporal a Yagmail si es necesario o uso de la instancia global
+        local_yag = yag if yag else None
+        
+        if local_yag and destinatarios:
+            html_content = f"""
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                    <h2 style="color: #566a93;">Nuevo Aviso Publicado</h2>
+                    <p>Hola,</p>
+                    <p>Se ha publicado un nuevo aviso en el tablero del Centro de Idiomas.</p>
+                    <hr>
+                    <p><strong>Publicado por:</strong> {autor}</p>
+                    <p><strong>Mensaje:</strong></p>
+                    <blockquote style="background: #f9f9f9; padding: 15px; border-left: 4px solid #566a93;">
+                        {mensaje_aviso}
+                    </blockquote>
+                    <hr>
+                    <p style="font-size: 0.9em; color: #777;">
+                        Para ver más detalles, ingresa a tu <a href="http://localhost:5000/login">portal de alumno</a>.
+                    </p>
+                </div>
+            """
+            # Enviamos con copia oculta (bcc) para proteger la privacidad de los correos
+            local_yag.send(bcc=destinatarios, subject=asunto, contents=[html_content])
+            print(f"Correos de notificación enviados a {len(destinatarios)} destinatarios.")
+    except Exception as e:
+        print(f"Error enviando correos de notificación: {e}")
+
+@app.route("/avisos", methods=['GET', 'POST'])
+def avisos():
+    if 'user_id' not in session or session.get('rol') not in ['maestro', 'staff']:
+        return redirect(url_for('login'))
+    
+    rol = session.get('rol')
+    user_id = session.get('user_id')
+    user_name = session.get('nombre', 'Usuario')
+    
+    conn = None
+    grupos = []
+    avisos_publicados = []
+    calendar_events = []
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # ---------------------------------------------------------
+        # A) PROCESAR NUEVO AVISO (POST)
+        # ---------------------------------------------------------
+        if request.method == 'POST':
+            mensaje = request.form.get('mensaje')
+            fecha = request.form.get('fecha_evento')
+            id_grupo = request.form.get('id_grupo') # Solo para maestros
+
+            if mensaje and fecha:
+                destinatarios = []
+                autor_aviso = ""
+                asunto_correo = "Nuevo Aviso - Centro de Idiomas UTR"
+
+                if rol == 'maestro' and id_grupo:
+                    # 1. Guardar Aviso
+                    query = "INSERT INTO avisos (descripcion, fecha_calendario, id_profesor, id_grupo) VALUES (%s, %s, %s, %s)"
+                    cursor.execute(query, (mensaje, fecha, user_id, id_grupo))
+                    conn.commit()
+                    
+                    # 2. Obtener correos de los alumnos de ese grupo
+                    cursor.execute("""
+                        SELECT a.correo_electronico 
+                        FROM alumnos a
+                        JOIN inscripciones_idioma ii ON a.id_alumno = ii.id_alumno
+                        WHERE ii.id_grupo = %s AND ii.estado = 'Activo'
+                    """, (id_grupo,))
+                    rows = cursor.fetchall()
+                    destinatarios = [r['correo_electronico'] for r in rows]
+                    autor_aviso = f"Prof. {user_name}"
+
+                elif rol == 'staff':
+                    # 1. Guardar Aviso General
+                    query = "INSERT INTO avisos (descripcion, fecha_calendario, id_staff) VALUES (%s, %s, %s)"
+                    cursor.execute(query, (mensaje, fecha, user_id))
+                    conn.commit()
+                    
+                    # 2. Obtener correos de TODOS los alumnos activos
+                    # (Cuidado: si son miles, esto podría necesitar optimización por lotes)
+                    cursor.execute("""
+                        SELECT DISTINCT a.correo_electronico 
+                        FROM alumnos a
+                        JOIN inscripciones_idioma ii ON a.id_alumno = ii.id_alumno
+                        WHERE ii.estado = 'Activo'
+                    """)
+                    rows = cursor.fetchall()
+                    destinatarios = [r['correo_electronico'] for r in rows]
+                    autor_aviso = "Administración Centro de Idiomas"
+
+                # 3. Lanzar hilo para enviar correos (si hay destinatarios y yagmail configurado)
+                if destinatarios and yag:
+                    thread = threading.Thread(
+                        target=enviar_notificacion_async,
+                        args=(destinatarios, asunto_correo, mensaje, autor_aviso)
+                    )
+                    thread.start()
+                
+                return redirect(url_for('avisos'))
+
+        # ---------------------------------------------------------
+        # B) CARGAR DATOS (GET) - (Igual que antes)
+        # ---------------------------------------------------------
+        if rol == 'maestro':
+            cursor.execute("SELECT id_grupo, grupo, numero_salon FROM grupos WHERE id_profesor = %s", (user_id,))
+            grupos = cursor.fetchall()
+
+            query_avisos = """
+                SELECT a.id_aviso, a.descripcion as mensaje, a.fecha_calendario as fecha, 
+                       g.grupo as destino, g.id_grupo
+                FROM avisos a
+                LEFT JOIN grupos g ON a.id_grupo = g.id_grupo
+                WHERE a.id_profesor = %s
+                ORDER BY a.fecha_calendario DESC
+            """
+            cursor.execute(query_avisos, (user_id,))
+        else: 
+            query_avisos = """
+                SELECT id_aviso, descripcion as mensaje, fecha_calendario as fecha, 'General' as destino
+                FROM avisos 
+                WHERE id_staff IS NOT NULL
+                ORDER BY fecha_calendario DESC
+            """
+            cursor.execute(query_avisos)
+
+        resultados = cursor.fetchall()
+
+        for row in resultados:
+            fecha_iso = ""
+            fecha_fmt = ""
+            if row['fecha']:
+                fecha_iso = row['fecha'].isoformat()
+                fecha_fmt = row['fecha'].strftime("%Y-%m-%d")
+                
+                calendar_events.append({
+                    "title": f"Para {row['destino']}: {row['mensaje']}",
+                    "start": fecha_iso,
+                    "backgroundColor": "#566a93",
+                    "borderColor": "#566a93",
+                    "textColor": "#ffffff"
+                })
+
+            avisos_publicados.append({
+                "id": row['id_aviso'],
+                "mensaje": row['mensaje'],
+                "fecha": fecha_fmt,
+                "fecha_display": row['fecha'].strftime("%d/%m/%Y") if row['fecha'] else "Sin fecha",
+                "destino": row.get('destino', 'General'),
+                "id_grupo": row.get('id_grupo')
+            })
+
+    except Exception as e:
+        print(f"Error en avisos: {e}")
+    finally:
+        if conn: conn.close()
+
+    return render_template("avisos.html", 
+                           grupos=grupos, 
+                           avisos_publicados=avisos_publicados, 
+                           calendar_events=calendar_events)
+
+@app.route("/eliminar_aviso/<int:id_aviso>", methods=['POST'])
+def eliminar_aviso(id_aviso):
+    if 'user_id' not in session: return jsonify({'status': 'error'}), 403
+    
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        # Borramos solo si pertenece al usuario (seguridad básica por ID en WHERE)
+        if session['rol'] == 'maestro':
+            cursor.execute("DELETE FROM avisos WHERE id_aviso = %s AND id_profesor = %s", (id_aviso, session['user_id']))
+        elif session['rol'] == 'staff':
+            cursor.execute("DELETE FROM avisos WHERE id_aviso = %s", (id_aviso,)) # Staff puede borrar avisos generales
+            
+        conn.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+    finally:
+        if conn: conn.close()
+
+@app.route("/editar_aviso", methods=['POST'])
+def editar_aviso():
+    if 'user_id' not in session: return redirect(url_for('login'))
+    
+    id_aviso = request.form.get('edit_id')
+    mensaje = request.form.get('edit_mensaje')
+    fecha = request.form.get('edit_fecha')
+    id_grupo = request.form.get('edit_grupo') # Opcional si es maestro
+    
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        if session['rol'] == 'maestro':
+            cursor.execute("""
+                UPDATE avisos SET descripcion=%s, fecha_calendario=%s, id_grupo=%s 
+                WHERE id_aviso=%s AND id_profesor=%s
+            """, (mensaje, fecha, id_grupo, id_aviso, session['user_id']))
+        elif session['rol'] == 'staff':
+            cursor.execute("""
+                UPDATE avisos SET descripcion=%s, fecha_calendario=%s 
+                WHERE id_aviso=%s
+            """, (mensaje, fecha, id_aviso))
+            
+        conn.commit()
+    except Exception as e:
+        print(f"Error editar aviso: {e}")
+    finally:
+        if conn: conn.close()
+        
+    return redirect(url_for('avisos'))
 
 @app.route("/calificacion")
 def calificacion():
@@ -1232,21 +1426,426 @@ def api_guardar_calificaciones():
     finally:
         if conn: conn.close()
 
-@app.route("/calificaciones") #alumno
+@app.route("/calificaciones")
 def calificaciones():
-    return render_template("calificacionesestudiantes.html")
+    # Seguridad: Solo alumnos
+    if session.get('rol') != 'alumno':
+        return redirect(url_for('login'))
+        
+    user_id = session.get('user_id')
+    conn = None
+    mis_clases = []
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # CAMBIO CLAVE: Agregamos 'ii.id_grupo' al SELECT
+        # Esto es necesario para crear el enlace al detalle
+        query = """
+            SELECT 
+                ii.id_grupo, 
+                i.nombre AS idioma,
+                c.nivel,
+                ii.calificacion_final
+            FROM inscripciones_idioma ii
+            JOIN grupos g ON ii.id_grupo = g.id_grupo
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            WHERE ii.id_alumno = %s AND ii.estado = 'Activo'
+        """
+        cursor.execute(query, (user_id,))
+        mis_clases = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error cargando calificaciones: {e}")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template("calificacionesestudiantes.html", clases=mis_clases)
+
+
+# =================================================================
+# 2. RUTA DETALLE (Agregar esta función nueva al final)
+# =================================================================
+@app.route("/ver_detalle_curso/<int:id_grupo>")
+def ver_detalle_curso(id_grupo):
+    # Seguridad: Solo alumnos
+    if session.get('rol') != 'alumno':
+        return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    conn = None
+    detalle_calif = []
+    info_curso = {}
+    columnas_a_mostrar = [] 
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # A) Obtener información del grupo
+        cursor.execute("""
+            SELECT g.grupo, i.nombre as idioma, c.nivel 
+            FROM grupos g
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            WHERE g.id_grupo = %s
+        """, (id_grupo,))
+        info_curso = cursor.fetchone()
+
+        if not info_curso:
+            return "Curso no encontrado", 404
+
+        # B) Lógica inteligente para elegir tabla (Adultos / Niños / LSM)
+        tabla = "calificaciones_adult"
+        # Configuración por defecto (Adultos)
+        mapa_columnas = {
+            "pronunciation": "Pronunciación", "fluency": "Fluidez", 
+            "grammar_vocabulary": "Gramática y Vocabulario", "performance_skill": "Habilidades",
+            "comprenhension": "Comprensión", "main_ideas": "Ideas Principales",
+            "grammar_word_choice": "Elección de Palabras", "punctuation_capitalization": "Puntuación"
+        }
+
+        # Detectar si es Niños o LSM
+        if 'Niños' in info_curso['grupo']:
+            tabla = "calificaciones_ninos"
+            mapa_columnas = {
+                "pronunciacion": "Pronunciación", "fluidez": "Fluidez",
+                "gramatica_vocabulario": "Gramática", "habilidades_pronunciacion": "Hab. Pronunciación",
+                "comprension": "Comprensión", "contenido": "Contenido",
+                "organizacion": "Organización", "lenguaje": "Lenguaje",
+                "gramatica": "Gramática", "ortografia": "Ortografía"
+            }
+        elif 'LSM' in info_curso['idioma']:
+            tabla = "calificaciones_lsm"
+            mapa_columnas = {
+                "expresiones_faciales": "Expr. Faciales", "movimientos_corporales": "Mov. Corporales",
+                "movimiento_manos": "Manos", "identifica_ideograma": "Ideogramas",
+                "uos_mano_dominante": "Mano Dominante", "realiza_dactilogía": "Dactilología",
+                "transmite_mensaje": "Mensaje", "detalles_coordinada": "Coordinación",
+                "orden_secuencial": "Orden Sec.", "percibir_detalles": "Detalles",
+                "comprende_mensaje": "Comprensión", "recuerda_senas": "Memoria"
+            }
+
+        columnas_a_mostrar = list(mapa_columnas.values())
+        columnas_sql = ", ".join(mapa_columnas.keys())
+
+        # C) Consultar las calificaciones
+        query = f"""
+            SELECT parcial, comentario, {columnas_sql}
+            FROM {tabla}
+            WHERE id_grupo = %s AND id_alumno = %s
+            ORDER BY parcial ASC
+        """
+        cursor.execute(query, (id_grupo, user_id))
+        filas = cursor.fetchall()
+
+        # D) Formatear datos
+        for fila in filas:
+            datos_parcial = {
+                "numero": fila['parcial'],
+                "comentario": fila['comentario'],
+                "valores": [fila[col] for col in mapa_columnas.keys()]
+            }
+            detalle_calif.append(datos_parcial)
+
+    except Exception as e:
+        print(f"Error detalle curso: {e}")
+        return f"Error: {e}", 500
+    finally:
+        if conn: conn.close()
+
+    return render_template("detalle_calificaciones.html", 
+                           curso=info_curso, 
+                           headers=columnas_a_mostrar, 
+                           calificaciones=detalle_calif)
 
 @app.route('/tablero')
 def tablero():
-    return render_template("tableroestudiantes.html")
+    # 1. Seguridad: Verificar que sea alumno
+    if session.get('rol') != 'alumno':
+        return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    conn = None
+    avisos_list = []
+    calendar_events = []
 
-@app.route("/evidencias") #maetsro
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 2. CONSULTA FILTRADA: 
+        # Trae avisos globales (hechos por Staff) Y avisos específicos de los grupos activos del alumno
+        query = """
+            SELECT 
+                a.descripcion, 
+                a.fecha_calendario,
+                CASE 
+                    WHEN a.id_staff IS NOT NULL THEN 'Administración'
+                    WHEN p.id_profesor IS NOT NULL THEN CONCAT('Prof. ', p.nombre, ' ', p.apellido_p)
+                    ELSE 'Aviso'
+                END as autor,
+                CASE 
+                    WHEN a.id_staff IS NOT NULL THEN '#e74c3c'  -- Rojo para Admin
+                    ELSE '#566a93'                              -- Azul institucional para Profesores
+                END as color
+            FROM avisos a
+            LEFT JOIN profesores p ON a.id_profesor = p.id_profesor
+            WHERE 
+                a.id_staff IS NOT NULL 
+                OR 
+                a.id_grupo IN (
+                    SELECT id_grupo FROM inscripciones_idioma 
+                    WHERE id_alumno = %s AND estado = 'Activo'
+                )
+            ORDER BY a.fecha_calendario DESC
+        """
+        cursor.execute(query, (user_id,))
+        resultados = cursor.fetchall()
+
+        # 3. Procesar datos para enviarlos al HTML y al JS
+        for row in resultados:
+            fecha_str = ""
+            if row['fecha_calendario']:
+                fecha_str = row['fecha_calendario'].strftime("%d/%m/%Y")
+                
+                # Datos para el Calendario (FullCalendar)
+                calendar_events.append({
+                    "title": f"{row['autor']}: {row['descripcion']}",
+                    "start": row['fecha_calendario'].isoformat(),
+                    "backgroundColor": row['color'],
+                    "borderColor": row['color'],
+                    "textColor": "#ffffff" # Texto blanco para contraste
+                })
+
+            # Datos para la Lista lateral
+            avisos_list.append({
+                "fecha": fecha_str if fecha_str else "Sin fecha",
+                "mensaje": row['descripcion'],
+                "autor": row['autor']
+            })
+
+    except Exception as e:
+        print(f"Error en tablero: {e}")
+        # En producción podrías redirigir a una página de error o mostrar mensaje flash
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template("tableroestudiantes.html", 
+                           avisos_publicados=avisos_list, 
+                           calendar_events=calendar_events)
+
+@app.route("/evidencias", methods=['GET', 'POST'])
 def evidencias():
-    return render_template("evidencias.html")
+    if session.get('rol') != 'maestro':
+        return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    conn = None
+    grupos = []
+    lista_evidencias = []
 
-@app.route("/clasesprofe") #porfe y se queda
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        if request.method == 'POST':
+            archivo = request.files.get('archivo')
+            id_grupo = request.form.get('id_grupo')
+
+            if archivo and id_grupo:
+                filename = secure_filename(archivo.filename)
+
+                file_stream = BytesIO(archivo.read())
+                
+                drive_link = subir_a_drive(file_stream, filename, archivo.content_type)
+
+                if drive_link:
+                    # 2. Guardar en MongoDB (Metadatos del archivo)
+                    evidencia_doc = {
+                        "tipo": "evidencia_profesor",
+                        "id_profesor": user_id,
+                        "id_grupo_mysql": int(id_grupo),
+                        "documentos": {
+                            "archivo_principal": drive_link,
+                            "nombre_original": filename
+                        },
+                        "metadata": {
+                            "fecha_subida": datetime.utcnow()
+                        }
+                    }
+                    mongo_result = expedientes_col.insert_one(evidencia_doc)
+                    mongo_id = str(mongo_result.inserted_id)
+
+                    # 3. Guardar referencia en MySQL (Relación SQL-NoSQL)
+                    query_insert = """
+                        INSERT INTO evidencias (id_grupo, id_profesor, id_evidencias_mongo)
+                        VALUES (%s, %s, %s)
+                    """
+                    cursor.execute(query_insert, (id_grupo, user_id, mongo_id))
+                    conn.commit()
+
+        cursor.execute("""
+            SELECT g.id_grupo, g.grupo, i.nombre as idioma, c.nivel
+            FROM grupos g
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            WHERE g.id_profesor = %s
+        """, (user_id,))
+        grupos = cursor.fetchall()
+
+        # 2. Obtener historial de evidencias ya subidas
+        cursor.execute("""
+            SELECT e.id_evidencias, e.fecha_registro, e.id_evidencias_mongo,
+                   g.grupo, i.nombre as idioma, c.nivel
+            FROM evidencias e
+            JOIN grupos g ON e.id_grupo = g.id_grupo
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            WHERE e.id_profesor = %s
+            ORDER BY e.fecha_registro DESC
+        """, (user_id,))
+        rows = cursor.fetchall()
+
+        for row in rows:
+            mongo_doc = expedientes_col.find_one({"_id": ObjectId(row['id_evidencias_mongo'])})
+            
+            nombre_archivo = "Documento"
+            link = "#"
+
+            if mongo_doc:
+                docs = mongo_doc.get('documentos', {})
+                nombre_archivo = docs.get('nombre_original', 'Archivo')
+                link = docs.get('archivo_principal', '#')
+
+            lista_evidencias.append({
+                "id": row['id_evidencias'],
+                "grupo": f"{row['idioma']} {row['nivel']} ({row['grupo']})",
+                "fecha": row['fecha_registro'].strftime("%d/%m/%Y"),
+                "archivo": nombre_archivo,
+                "url": link
+            })
+
+    except Exception as e:
+        print(f"Error en evidencias: {e}")
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template("evidencias.html", grupos=grupos, evidencias=lista_evidencias)
+
+@app.route("/eliminar_evidencia/<int:id_evidencia>", methods=['POST'])
+def eliminar_evidencia(id_evidencia):
+    if session.get('rol') != 'maestro':
+        return jsonify({'status': 'error', 'message': 'No autorizado'}), 403
+
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Obtener ID de Mongo antes de borrar la relación en SQL
+        cursor.execute("SELECT id_evidencias_mongo FROM evidencias WHERE id_evidencias = %s", (id_evidencia,))
+        row = cursor.fetchone()
+
+        if row:
+            mongo_id = row['id_evidencias_mongo']
+            
+            # 2. Borrar relación en MySQL
+            cursor.execute("DELETE FROM evidencias WHERE id_evidencias = %s", (id_evidencia,))
+            conn.commit()
+
+            # 3. Borrar metadatos en MongoDB
+            # Nota: El archivo en Drive seguirá existiendo a menos que implementes
+            # la lógica de borrado de Drive aquí también.
+            if mongo_id:
+                expedientes_col.delete_one({"_id": ObjectId(mongo_id)})
+
+        return jsonify({'status': 'success', 'message': 'Evidencia eliminada correctamente'})
+
+    except Exception as e:
+        print(f"Error al eliminar evidencia: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+@app.route("/editar_evidencia", methods=['POST'])
+def editar_evidencia():
+    if session.get('rol') != 'maestro':
+        return redirect(url_for('login'))
+
+    id_evidencia = request.form.get('id_evidencia_edit')
+    nuevo_grupo = request.form.get('id_grupo_edit')
+    
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Actualizamos la relación en MySQL
+        cursor.execute("UPDATE evidencias SET id_grupo = %s WHERE id_evidencias = %s", (nuevo_grupo, id_evidencia))
+        conn.commit()
+        
+    except Exception as e:
+        print(f"Error al editar evidencia: {e}")
+    finally:
+        if conn: conn.close()
+
+    return redirect(url_for('evidencias'))
+
+@app.route("/clasesprofe")
 def clasesprofe():
-    return render_template("clasesprofe.html")
+    # 1. Seguridad: Verificar que el rol sea 'maestro'
+    if session.get('rol') != 'maestro':
+        return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    conn = None
+    mis_grupos = []
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 2. Consulta: Obtener grupos del profesor + conteo de alumnos inscritos
+        query = """
+            SELECT 
+                g.id_grupo,
+                g.numero_salon as salon,
+                g.grupo as nombre_grupo,
+                i.nombre as idioma,
+                c.nivel,
+                h.dias,
+                h.hora,
+                (SELECT COUNT(*) FROM inscripciones_idioma ii 
+                 WHERE ii.id_grupo = g.id_grupo AND ii.estado = 'Activo') as total_alumnos
+            FROM grupos g
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            LEFT JOIN horario h ON g.id_horario = h.id_horario
+            WHERE g.id_profesor = %s
+            ORDER BY i.nombre, c.nivel
+        """
+        cursor.execute(query, (user_id,))
+        mis_grupos = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error cargando clases profe: {e}")
+        # En producción podrías manejar el error de otra forma
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    # Renderizar la plantilla con los datos obtenidos
+    return render_template("clasesprofe.html", grupos=mis_grupos)
 
 @app.route("/asistencia")
 def asistencia():
@@ -1539,9 +2138,113 @@ def maestroinfo(tipo, id):
 def nomina():
     return render_template("nomina.html")
 
-@app.route("/perfil") #actualizar password
+@app.route("/perfil")
 def perfil():
-    return render_template("Perfil.html")
+    # Seguridad: Solo alumnos pueden entrar aquí
+    if session.get('rol') != 'alumno':
+        return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    conn = None
+    alumno_data = {}
+    curso_info = "Sin curso activo"
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # A) Obtener datos personales del alumno
+        cursor.execute("""
+            SELECT matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono 
+            FROM alumnos WHERE id_alumno = %s
+        """, (user_id,))
+        alumno = cursor.fetchone()
+        
+        if alumno:
+            # Preparamos el diccionario que espera el HTML
+            alumno_data = {
+                "nombre_completo": f"{alumno['nombre']} {alumno['apellido_p']} {alumno['apellido_m']}",
+                "matricula": alumno['matricula'],
+                "correo": alumno['correo_electronico'],
+                "telefono": alumno['telefono']
+            }
+
+        # B) Obtener información del curso activo (Idioma, Nivel, Horario)
+        # Tomamos el primero activo si tuviera varios
+        query_curso = """
+            SELECT i.nombre as idioma, c.nivel, h.dias, h.hora
+            FROM inscripciones_idioma ii
+            JOIN grupos g ON ii.id_grupo = g.id_grupo
+            JOIN cursos c ON g.id_curso = c.id_curso
+            JOIN idioma i ON c.id_idioma = i.id_idioma
+            LEFT JOIN horario h ON g.id_horario = h.id_horario
+            WHERE ii.id_alumno = %s AND ii.estado = 'Activo'
+            LIMIT 1
+        """
+        cursor.execute(query_curso, (user_id,))
+        curso = cursor.fetchone()
+        
+        if curso:
+            # Formateamos el texto ej: "Inglés IV (Sábados 8:00 - 13:00)"
+            dias = curso['dias'] if curso['dias'] else "Días por definir"
+            hora = curso['hora'] if curso['hora'] else ""
+            curso_info = f"{curso['idioma']} {curso['nivel']} ({dias} {hora})"
+
+    except Exception as e:
+        print(f"Error en perfil: {e}")
+        alumno_data = {"nombre_completo": "Error al cargar", "matricula": "-", "correo": "-", "telefono": "-"}
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+    return render_template("Perfil.html", alumno=alumno_data, curso_actual=curso_info)
+
+@app.route("/actualizar_password", methods=["POST"])
+def actualizar_password():
+    if session.get('rol') != 'alumno':
+        return redirect(url_for('login'))
+
+    user_id = session.get('user_id')
+    current_pass = request.form.get('current_pass')
+    new_pass = request.form.get('new_pass')
+    confirm_pass = request.form.get('confirm_pass')
+
+    # Validaciones rápidas del lado del servidor
+    if new_pass != confirm_pass:
+        return "<script>alert('Las contraseñas no coinciden'); window.history.back();</script>"
+    
+    if len(new_pass) < 6:
+        return "<script>alert('La contraseña es muy corta (mínimo 6 caracteres)'); window.history.back();</script>"
+
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Verificar contraseña actual en la BD
+        cursor.execute("SELECT contraseña FROM alumnos WHERE id_alumno = %s", (user_id,))
+        user = cursor.fetchone()
+        
+        if not user or not check_password_hash(user['contraseña'], current_pass):
+             return "<script>alert('La contraseña actual es incorrecta'); window.history.back();</script>"
+             
+        # 2. Actualizar contraseña (Encriptada)
+        new_hash = generate_password_hash(new_pass)
+        cursor.execute("UPDATE alumnos SET contraseña = %s WHERE id_alumno = %s", (new_hash, user_id))
+        conn.commit()
+        
+        return "<script>alert('Contraseña actualizada correctamente'); window.location.href='/perfil';</script>"
+
+    except Exception as e:
+        print(f"Error cambio password: {e}")
+        return f"Error interno: {e}", 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+#Alumno
 
 @app.route("/gestion_cursos")
 def gestion_cursos():
@@ -1549,17 +2252,69 @@ def gestion_cursos():
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SHOW COLUMNS FROM cursos LIKE 'nivel'")
-        niveles = parse_enum(cursor.fetchone())
-        cursor.execute("SELECT id_idioma, nombre FROM idioma ORDER BY nombre")
-        idiomas = cursor.fetchall()
-        # Cursos (solo definición académica)
-        cursor.execute("SELECT c.id_curso, i.nombre AS idioma_nombre, c.nivel, c.club FROM cursos c JOIN idioma i ON c.id_idioma = i.id_idioma ORDER BY i.nombre, c.nivel")
-        cursos = cursor.fetchall()
-        return render_template("cursos.html", niveles=niveles, idiomas=idiomas, cursos=cursos)
-    except Exception as e: return f"Error: {e}", 500
-    finally: 
-        if conn: conn.close()
+
+        rol = session.get('rol')
+        user_id = session.get('user_id')
+        
+        # Título por defecto
+        titulo = "Nuestros Grupos Abiertos"
+
+        if rol == 'alumno' and user_id:
+            # --- ESCENARIO ALUMNO: Ver solo mis clases activas ---
+            titulo = "Mis Clases Actuales"
+            query = """
+                SELECT 
+                    g.id_grupo,
+                    g.grupo AS nombre_grupo,
+                    i.nombre AS idioma,
+                    c.nivel,
+                    COALESCE(CONCAT(p.nombre, ' ', p.apellido_p), 'Por asignar') AS profesor,
+                    COALESCE(h.dias, 'Por definir') AS dias,
+                    COALESCE(h.hora, 'Por definir') AS hora,
+                    h.sede
+                FROM inscripciones_idioma ii
+                JOIN grupos g ON ii.id_grupo = g.id_grupo
+                LEFT JOIN cursos c ON g.id_curso = c.id_curso
+                LEFT JOIN idioma i ON c.id_idioma = i.id_idioma
+                LEFT JOIN profesores p ON g.id_profesor = p.id_profesor
+                LEFT JOIN horario h ON g.id_horario = h.id_horario
+                WHERE ii.id_alumno = %s AND ii.estado = 'Activo'
+                ORDER BY i.nombre ASC
+            """
+            cursor.execute(query, (user_id,))
+            
+        else:
+            # --- ESCENARIO PÚBLICO/STAFF: Ver toda la oferta ---
+            query = """
+                SELECT 
+                    g.id_grupo,
+                    g.grupo AS nombre_grupo,
+                    i.nombre AS idioma,
+                    c.nivel,
+                    COALESCE(CONCAT(p.nombre, ' ', p.apellido_p), 'Por asignar') AS profesor,
+                    COALESCE(h.dias, 'Por definir') AS dias,
+                    COALESCE(h.hora, 'Por definir') AS hora,
+                    h.sede
+                FROM grupos g
+                LEFT JOIN cursos c ON g.id_curso = c.id_curso
+                LEFT JOIN idioma i ON c.id_idioma = i.id_idioma
+                LEFT JOIN profesores p ON g.id_profesor = p.id_profesor
+                LEFT JOIN horario h ON g.id_horario = h.id_horario
+                ORDER BY i.nombre ASC, c.nivel ASC
+            """
+            cursor.execute(query)
+
+        grupos_disponibles = cursor.fetchall()
+
+        return render_template("cursos.html", grupos=grupos_disponibles, titulo_pagina=titulo)
+
+    except Exception as e:
+        print(f"Error en cursos: {e}")
+        return f"Error al cargar cursos: {e}", 500
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 @app.route("/guardar_curso", methods=["POST"])
 def guardar_curso():
@@ -2280,7 +3035,7 @@ def enviar_cobro_factura():
 
 @app.route("/Cerrar")
 def cerrar():
-    return redirect(url_for('inicio')) 
+    return redirect(url_for('logout'))
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,4 +1,8 @@
-        document.getElementById('password-form').addEventListener('submit', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+    const passwordForm = document.getElementById('password-form');
+
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
             const newPass = document.getElementById('new_pass').value;
             const confirmPass = document.getElementById('confirm_pass').value;
 
@@ -7,3 +11,5 @@
                 alert('La nueva contraseña y la confirmación no coinciden. Por favor, inténtalo de nuevo.');
             }
         });
+    }
+});
