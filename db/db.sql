@@ -247,7 +247,8 @@ CREATE TABLE profesores_datos_fiscales (
     regimen_fiscal VARCHAR(100) NOT NULL, 
     metodo_pago VARCHAR(50), 
     uso_cfdi VARCHAR(50),     
-    cuenta_clabe VARCHAR(18)
+    cuenta_clabe VARCHAR(18),
+    codigo_postal varchar(10) DEFAULT NULL
 );
 
 alter table profesores_datos_fiscales add constraint foreign key (id_profesor) references profesores (id_profesor);

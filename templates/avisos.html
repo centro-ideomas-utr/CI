@@ -26,16 +26,17 @@
 <!-- SIDEBAR (MENÚ LATERAL) -->
 <nav class="sidebar" id="sidebar">
     <ul>
-        <li><a href="{{ url_for('avisos') }}" class="active"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
-        
-        <!-- Opciones exclusivas para Maestros -->
+            <li><a href="{{ url_for('gestion_personal') }}"><i class="fas fa-list-ul"></i><span>Personal</span></a></li>
+            <li><a href="{{ url_for('gestion_horarios_base') }}"><i class="fas fa-clock"></i><span>Grupos y Horarios</span></a></li>
+            <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-users"></i><span>Reinscripciones</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}" class="active"><i class="fas fa-folder-open"></i><span>Evidencias Globales</span></a></li>
         {% if session.rol == 'maestro' %}
             <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-home"></i><span>Mis Clases</span></a></li>
             <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
             <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
         {% endif %}
         
-        <li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        <li><a href="{{ url_for('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
 

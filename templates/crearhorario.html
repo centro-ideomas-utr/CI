@@ -44,9 +44,11 @@
     <div class="sidebar" id="sidebar">
         <div>
          <ul>
-            <li><a href="{{ url_for('historial') }}"><i class="fas fa-graduation-cap"></i><span>Historial</span></a></li>
-            <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-list-ul"></i><span>Reinscripciones</span></a></li>
-            <li><a href="{{ url_for('inicio') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('gestion_personal') }}"><i class="fas fa-list-ul"></i><span>Personal</span></a></li>
+            <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-users"></i><span>Reinscripciones</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}" class="active"><i class="fas fa-folder-open"></i><span>Evidencias Globales</span></a></li>
+            <li><a href="{{ url_for('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
         </div>
     </div>

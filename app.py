@@ -663,6 +663,7 @@ def guardar():
     conn = None
     cursor = None
     try:
+        # 1. Recolección de Datos del Formulario
         datos = {
             "correo": request.form["correo_electronico"],
             "nombre": request.form["nombre"],
@@ -675,6 +676,7 @@ def guardar():
             "tipo_inscripcion": request.form["tipo_inscripcion"],
         }
         
+        # 2. Validación de Inscripción (Idiomas y Horarios)
         idiomas_seleccionados = request.form.getlist('idiomas[]')
         horarios_seleccionados = request.form.getlist('horarios[]')
         inscripciones_validas = list(zip(idiomas_seleccionados, horarios_seleccionados))
@@ -683,7 +685,26 @@ def guardar():
         if not inscripciones_validas:
              return "<h1>Error: Debe seleccionar al menos un idioma y su horario correspondiente.</h1><a href='/registro'>Volver</a>", 400
 
-        # --- Lógica de Manejo de Archivos (GOOGLE DRIVE) ---
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # 3. GENERAR MATRÍCULA
+        cursor.execute("SELECT COALESCE(MAX(matricula),16446)+1 FROM alumnos")
+        matricula = cursor.fetchone()[0]
+
+        # ---------------------------------------------------------
+        # 4. CREAR CARPETA ESPECÍFICA EN DRIVE
+        # ---------------------------------------------------------
+        nombre_carpeta_alumno = f"{matricula} - {datos['nombre']} {datos['apellido_p']} {datos['apellido_m']}".strip()
+        id_carpeta_alumno = crear_carpeta_drive(nombre_carpeta_alumno)
+
+        if not id_carpeta_alumno:
+            print("Advertencia: No se pudo crear carpeta personal, los archivos irán a la raíz.")
+            id_carpeta_alumno = None 
+
+        # ---------------------------------------------------------
+        # 5. SUBIR ARCHIVOS A ESA CARPETA
+        # ---------------------------------------------------------
         file_fields = {
             "acta_n": "acta_nacimiento",
             "identificacion": "identificacion",
@@ -698,34 +719,29 @@ def guardar():
             if file and file.filename:
                 original_filename_secure = secure_filename(file.filename)
                 
-                # Leemos archivo y lo convertimos a Stream
                 file_content = file.read()
                 file_stream = BytesIO(file_content)
 
-                # SUBIR A DRIVE
-                drive_link = subir_a_drive(file_stream, original_filename_secure, file.content_type)
+                # Subimos indicando la carpeta del alumno
+                drive_link = subir_a_drive(file_stream, original_filename_secure, file.content_type, folder_id=id_carpeta_alumno)
                 
-                documentos_mongo[mongo_key] = drive_link # Guardamos URL
+                documentos_mongo[mongo_key] = drive_link 
             else:
                 documentos_mongo[mongo_key] = None
 
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT COALESCE(MAX(matricula),16446)+1 FROM alumnos")
-        matricula = cursor.fetchone()[0]
-
+        # 6. INSERTAR ALUMNO EN MYSQL (Aquí puede ocurrir el error de duplicado)
         cursor.execute("""
             INSERT INTO alumnos 
             (matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono,
              fecha_nacimiento, domicilio, genero, tipo_inscripcion)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (matricula, datos["nombre"], datos["apellido_p"], datos["apellido_m"], datos["correo"],
-            datos["telefono"], datos["fecha_nacimiento"], datos["domicilio"], datos["genero"],
-            datos["tipo_inscripcion"]))
+              datos["telefono"], datos["fecha_nacimiento"], datos["domicilio"], datos["genero"],
+              datos["tipo_inscripcion"]))
 
         id_alumno = cursor.lastrowid
         
+        # 7. INSERTAR INSCRIPCIONES
         inscripcion_query = """
             INSERT INTO inscripciones_idioma (id_alumno, id_idioma, id_horario)
             VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE id_alumno = id_alumno;
@@ -733,31 +749,55 @@ def guardar():
         for id_idioma, id_horario in inscripciones_validas:
             cursor.execute(inscripcion_query, (id_alumno, int(id_idioma), int(id_horario)))
 
-        # Guardar Expediente en MongoDB (URLS de Drive)
+        # 8. GUARDAR EXPEDIENTE EN MONGODB
         expediente_doc = {
             "tipo": "alumno",
             "id_relacional": id_alumno,
             "documentos": documentos_mongo, 
+            "drive_folder_id": id_carpeta_alumno, 
             "metadata": { "fecha_subida": datetime.utcnow(), "actualizado_por": "sistema_auto" }
         }
         mongo_id = expedientes_col.insert_one(expediente_doc).inserted_id
 
+        # 9. VINCULAR MYSQL CON MONGO
         cursor.execute("UPDATE alumnos SET id_expediente_mongo = %s WHERE id_alumno = %s", (str(mongo_id), id_alumno))
+        
         conn.commit()
 
+        # 10. GENERAR LOG
         logs_col.insert_one({
             "tipo_entidad": "alumno",
             "id_entidad": id_alumno,
             "accion": "registro",
-            "detalle": "Alumno registrado con Docs en Drive.",
+            "detalle": f"Alumno registrado. Carpeta Drive ID: {id_carpeta_alumno}",
             "fecha": datetime.utcnow()
         })
 
         return render_template("registro_exitoso.html", matricula=matricula)
 
+    # --- MANEJO DE ERRORES CORREGIDO ---
+    except mysql.connector.Error as err:
+        if conn and conn.is_connected(): conn.rollback()
+        
+        # Error 1062: Entrada duplicada (Correo ya existe)
+        if err.errno == 1062:
+            return """
+            <div style='text-align:center; padding:50px; font-family:sans-serif;'>
+                <h1 style='color:#e74c3c; font-size: 2.5em;'>¡Correo Duplicado!</h1>
+                <p style='font-size: 1.2em; color: #555;'>El correo electrónico <b>{}</b> ya está registrado en el sistema.</p>
+                <br>
+                <a href='/registro' style='padding:12px 24px; background:#566a93; color:white; text-decoration:none; border-radius:5px; font-size:1.1em;'>Volver al Registro</a>
+            </div>
+            """.format(datos['correo']), 409
+        
+        # Otros errores de SQL
+        print(f"Error SQL: {err}")
+        return f"<h1>Error de base de datos: {err}</h1><a href='/registro'>Volver</a>", 500
+
     except Exception as e:
         if conn and conn.is_connected(): conn.rollback() 
-        return f"<h1>Error en el registro: {e}</h1><a href='/registro'>Volver</a>", 500
+        print(f"Error general: {e}")
+        return f"<h1>Error en el sistema: {e}</h1><a href='/registro'>Volver</a>", 500
 
     finally:
         if cursor: cursor.close()
@@ -776,8 +816,6 @@ def redirigir_por_rol(rol, id_usuario):
         return redirect(url_for('clasesprofe'))
     
     elif rol == 'alumno':
-        # Solicitud: pantalla principal cursos.html
-        # Nota: La ruta que renderiza 'cursos.html' se llama 'gestion_cursos'
         return redirect(url_for('gestion_cursos'))
     
     else:
@@ -853,13 +891,12 @@ def cambiar_contrasena_inicial():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Si intenta entrar directo sin la bandera, lo mandamos a su inicio normal
     if not session.get('force_change'):
         return redirigir_por_rol(session.get('rol'), session.get('user_id'))
 
     rol = session.get('rol')
     user_id = session.get('user_id')
-    is_maestro = (rol == 'maestro') # Bandera para el HTML
+    is_maestro = (rol == 'maestro')
 
     # GET: Mostrar el formulario
     if request.method == 'GET':
@@ -941,18 +978,27 @@ def solicitar_restablecimiento():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         
-        # Buscar usuario en staff o profesores (Alumnos generalmente no cambian pass por correo en estos sistemas, pero puedes agregarlo)
         table_name = None
+        id_col = None
+
+        # 1. Buscar en Profesores
         cursor.execute("SELECT id_profesor FROM profesores WHERE correo_electronico = %s", (email,))
         if cursor.fetchone():
             table_name = "profesores"
+            print("Encontrado en Profesores") # Debug
         else:
+            # 2. Buscar en Staff
             cursor.execute("SELECT id_staff FROM staff WHERE correo_electronico = %s", (email,))
             if cursor.fetchone():
                 table_name = "staff"
-        
-        # Generamos el token siempre para no revelar si el correo existe o no (seguridad)
-        # Pero solo guardamos y enviamos si existe tabla.
+                print("Encontrado en Staff") # Debug
+            else:
+                # 3. NUEVO: Buscar en Alumnos
+                cursor.execute("SELECT id_alumno FROM alumnos WHERE correo_electronico = %s", (email,))
+                if cursor.fetchone():
+                    table_name = "alumnos"
+                    print("Encontrado en Alumnos") # Debug
+
         if table_name:
             reset_token = secrets.token_urlsafe(32)
             expiration = datetime.now() + timedelta(hours=1)
@@ -964,23 +1010,30 @@ def solicitar_restablecimiento():
             # Generar Link
             reset_url = url_for('restablecer_contrasena', token=reset_token, _external=True)
 
-            # Enviar Correo o Imprimir en Consola
+            # Intentar enviar correo
             if yag:
-                yag.send(to=email, subject="Restablecer Contraseña UTR", contents=f"Haz clic aquí: {reset_url}")
+                try:
+                    yag.send(to=email, subject="Restablecer Contraseña UTR", contents=f"Haz clic aquí para cambiar tu contraseña: {reset_url}")
+                    print(f"Correo enviado exitosamente a {email}")
+                except Exception as e_mail:
+                    print(f"Error al enviar correo con Yagmail: {e_mail}")
+                    print(f"LINK DE RECUPERACIÓN (FALLBACK): {reset_url}")
             else:
-                print(f"\n[DEBUG] MODO DESARROLLO - Link de recuperación para {email}:")
+                print(f"\n[DEBUG] Yagmail no configurado. Link para {email}:")
                 print(f"{reset_url}\n")
+        else:
+            print(f"El correo {email} no existe en ninguna tabla.")
         
+        # Siempre mostramos el mismo mensaje por seguridad
         return render_template('solicitar_restablecimiento.html', 
-                             message="Se ha enviado un enlace de recuperación.")
+                             message="Si el correo existe, se ha enviado un enlace de recuperación.")
         
     except Exception as e:
         print(f"Error reset: {e}")
-        return render_template('solicitar_restablecimiento.html', error="Error interno.")
+        return render_template('solicitar_restablecimiento.html', error="Error interno del servidor.")
     finally:
         if conn: conn.close()
 
-# PASO 2: Formulario de cambio (El que me mandaste)
 @app.route('/restablecer-contrasena/<token>', methods=['GET', 'POST'])
 def restablecer_contrasena(token):
     conn = None
@@ -988,29 +1041,37 @@ def restablecer_contrasena(token):
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
-        # Buscar quién tiene ese token válido
         user_data = None
         table_name = None
         id_column = None
 
-        # Check Profesores
+        # 1. Check Profesores
         cursor.execute("SELECT id_profesor AS id, token_expiration FROM profesores WHERE reset_token = %s", (token,))
         user_data = cursor.fetchone()
         if user_data:
             table_name = "profesores"; id_column = "id_profesor"
-        else:
-            # Check Staff
+        
+        # 2. Check Staff
+        if not user_data:
             cursor.execute("SELECT id_staff AS id, token_expiration FROM staff WHERE reset_token = %s", (token,))
             user_data = cursor.fetchone()
             if user_data:
                 table_name = "staff"; id_column = "id_staff"
 
-        # Validar expiración
+        # 3. Check Alumnos (NUEVO)
+        if not user_data:
+            cursor.execute("SELECT id_alumno AS id, token_expiration FROM alumnos WHERE reset_token = %s", (token,))
+            user_data = cursor.fetchone()
+            if user_data:
+                table_name = "alumnos"; id_column = "id_alumno"
+
+        # ... (El resto de la función sigue igual: validar expiración y update) ...
+        
         if not user_data or user_data['token_expiration'] < datetime.now():
-            return render_template('form_restablecer.html', error="El enlace es inválido o ha expirado.", token=token)
+             return render_template('form_restablecer.html', error="El enlace es inválido o ha expirado.", token=token)
 
         if request.method == 'GET':
-            return render_template('form_restablecer.html', token=token)
+             return render_template('form_restablecer.html', token=token)
 
         # PROCESAR CAMBIO
         nueva_pass = request.form.get('nueva_contrasena')
@@ -1031,10 +1092,6 @@ def restablecer_contrasena(token):
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
-@app.route("/historial")
-def historial():
-    return render_template("historial.html")
 
 @app.route("/asistencias_estudiantes")
 def listas():
@@ -1694,7 +1751,6 @@ def tablero():
 
     except Exception as e:
         print(f"Error en tablero: {e}")
-        # En producción podrías redirigir a una página de error o mostrar mensaje flash
     finally:
         if conn and conn.is_connected():
             cursor.close()
@@ -1706,7 +1762,9 @@ def tablero():
 
 @app.route("/evidencias", methods=['GET', 'POST'])
 def evidencias():
-    if session.get('rol') != 'maestro':
+    # 1. Seguridad: Permitir Maestros y Staff
+    rol = session.get('rol')
+    if rol not in ['maestro', 'staff']:
         return redirect(url_for('login'))
     
     user_id = session.get('user_id')
@@ -1718,19 +1776,23 @@ def evidencias():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        if request.method == 'POST':
+        # ---------------------------------------------------------
+        # A) PROCESAR SUBIDA (SOLO MAESTROS)
+        # ---------------------------------------------------------
+        # Por seguridad de datos, sugerimos que solo maestros suban evidencias,
+        # o el staff tendría que seleccionar a nombre de quién sube.
+        if request.method == 'POST' and rol == 'maestro':
             archivo = request.files.get('archivo')
             id_grupo = request.form.get('id_grupo')
 
             if archivo and id_grupo:
                 filename = secure_filename(archivo.filename)
-
                 file_stream = BytesIO(archivo.read())
                 
                 drive_link = subir_a_drive(file_stream, filename, archivo.content_type)
 
                 if drive_link:
-                    # 2. Guardar en MongoDB (Metadatos del archivo)
+                    # Guardar en Mongo
                     evidencia_doc = {
                         "tipo": "evidencia_profesor",
                         "id_profesor": user_id,
@@ -1739,41 +1801,71 @@ def evidencias():
                             "archivo_principal": drive_link,
                             "nombre_original": filename
                         },
-                        "metadata": {
-                            "fecha_subida": datetime.utcnow()
-                        }
+                        "metadata": { "fecha_subida": datetime.utcnow() }
                     }
                     mongo_result = expedientes_col.insert_one(evidencia_doc)
                     mongo_id = str(mongo_result.inserted_id)
 
-                    # 3. Guardar referencia en MySQL (Relación SQL-NoSQL)
-                    query_insert = """
-                        INSERT INTO evidencias (id_grupo, id_profesor, id_evidencias_mongo)
-                        VALUES (%s, %s, %s)
-                    """
+                    # Guardar en MySQL
+                    query_insert = "INSERT INTO evidencias (id_grupo, id_profesor, id_evidencias_mongo) VALUES (%s, %s, %s)"
                     cursor.execute(query_insert, (id_grupo, user_id, mongo_id))
                     conn.commit()
 
-        cursor.execute("""
-            SELECT g.id_grupo, g.grupo, i.nombre as idioma, c.nivel
-            FROM grupos g
-            JOIN cursos c ON g.id_curso = c.id_curso
-            JOIN idioma i ON c.id_idioma = i.id_idioma
-            WHERE g.id_profesor = %s
-        """, (user_id,))
+        # ---------------------------------------------------------
+        # B) CARGAR DATOS (DIFERENCIADO POR ROL)
+        # ---------------------------------------------------------
+        
+        # CONSULTA DE GRUPOS (Para el selector)
+        if rol == 'staff':
+            # Staff ve TODOS los grupos con nombre del profe
+            cursor.execute("""
+                SELECT g.id_grupo, g.grupo, i.nombre as idioma, c.nivel,
+                       CONCAT(p.nombre, ' ', p.apellido_p) as nombre_profe
+                FROM grupos g
+                JOIN cursos c ON g.id_curso = c.id_curso
+                JOIN idioma i ON c.id_idioma = i.id_idioma
+                JOIN profesores p ON g.id_profesor = p.id_profesor
+                ORDER BY p.apellido_p, i.nombre
+            """)
+        else:
+            # Maestro solo ve SUS grupos
+            cursor.execute("""
+                SELECT g.id_grupo, g.grupo, i.nombre as idioma, c.nivel
+                FROM grupos g
+                JOIN cursos c ON g.id_curso = c.id_curso
+                JOIN idioma i ON c.id_idioma = i.id_idioma
+                WHERE g.id_profesor = %s
+            """, (user_id,))
+            
         grupos = cursor.fetchall()
 
-        # 2. Obtener historial de evidencias ya subidas
-        cursor.execute("""
-            SELECT e.id_evidencias, e.fecha_registro, e.id_evidencias_mongo,
-                   g.grupo, i.nombre as idioma, c.nivel
-            FROM evidencias e
-            JOIN grupos g ON e.id_grupo = g.id_grupo
-            JOIN cursos c ON g.id_curso = c.id_curso
-            JOIN idioma i ON c.id_idioma = i.id_idioma
-            WHERE e.id_profesor = %s
-            ORDER BY e.fecha_registro DESC
-        """, (user_id,))
+        # CONSULTA DE EVIDENCIAS (Lista principal)
+        if rol == 'staff':
+            # Staff ve TODO + Nombre del Profesor
+            cursor.execute("""
+                SELECT e.id_evidencias, e.fecha_registro, e.id_evidencias_mongo,
+                       g.grupo, i.nombre as idioma, c.nivel,
+                       CONCAT(p.nombre, ' ', p.apellido_p) as nombre_profe
+                FROM evidencias e
+                JOIN grupos g ON e.id_grupo = g.id_grupo
+                JOIN cursos c ON g.id_curso = c.id_curso
+                JOIN idioma i ON c.id_idioma = i.id_idioma
+                JOIN profesores p ON e.id_profesor = p.id_profesor
+                ORDER BY e.fecha_registro DESC
+            """)
+        else:
+            # Maestro solo ve SU historial
+            cursor.execute("""
+                SELECT e.id_evidencias, e.fecha_registro, e.id_evidencias_mongo,
+                       g.grupo, i.nombre as idioma, c.nivel
+                FROM evidencias e
+                JOIN grupos g ON e.id_grupo = g.id_grupo
+                JOIN cursos c ON g.id_curso = c.id_curso
+                JOIN idioma i ON c.id_idioma = i.id_idioma
+                WHERE e.id_profesor = %s
+                ORDER BY e.fecha_registro DESC
+            """, (user_id,))
+            
         rows = cursor.fetchall()
 
         for row in rows:
@@ -1786,14 +1878,21 @@ def evidencias():
                 docs = mongo_doc.get('documentos', {})
                 nombre_archivo = docs.get('nombre_original', 'Archivo')
                 link = docs.get('archivo_principal', '#')
-
-            lista_evidencias.append({
+            
+            # Formateamos los datos para la vista
+            item = {
                 "id": row['id_evidencias'],
                 "grupo": f"{row['idioma']} {row['nivel']} ({row['grupo']})",
                 "fecha": row['fecha_registro'].strftime("%d/%m/%Y"),
                 "archivo": nombre_archivo,
                 "url": link
-            })
+            }
+            
+            # Si es staff, agregamos el nombre del profesor al objeto
+            if rol == 'staff':
+                item["profesor"] = row['nombre_profe']
+
+            lista_evidencias.append(item)
 
     except Exception as e:
         print(f"Error en evidencias: {e}")
@@ -3428,7 +3527,12 @@ def enviar_cobro_factura():
                 <p>Descuentos: {data.get('descuentos_aplicados')}</p>
                 <h2 style="color: #27ae60;">Total a Pagar: {data.get('total_a_cobrar')}</h2>
                 <hr>
-                <p>Realizar pago en caja o transferencia.</p>
+                <p>Realizar pago en caja o transferencia a la siguiente cuenta:</p>
+                <p>Santander</p>
+                <p>NOMBRE CLENTE: UNIVERSIDAD TECNOLOGICA EL RETOÑO</p>
+                <p>ALIAS: IP CENTRO DE IDIOMAS</p>
+                <p>NO. CUENTA: 18 00 01 78 73 2</p>
+                <p>CLABE: 0140 1018 0001 7873 25</p>
             </div>
         </body>
         </html>

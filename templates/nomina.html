@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/claseprofe.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/nomina.css') }}"> 
-
 </head>
 <body>
 
@@ -24,7 +23,7 @@
         <li><a href="{{ url_for('nomina') }}" class="active"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
         <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
         <li><a href="{{ url_for('perfil') }}"><i class="fas fa-user-cog"></i><span>Mi Perfil</span></a></li>
-        <li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        <li><a href="{{ url_for('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
 

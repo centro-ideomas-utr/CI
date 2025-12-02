@@ -12,12 +12,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-  
-  <!-- BARRA DE NAVEGACIÓN -->
   <header>
       <span>Centro de Idiomas</span>
       <nav class="nav-derecha">
-          <!-- Menú Dinámico por Rol -->
           {% if session.rol == 'alumno' %}
               <a href="{{ url_for('gestion_cursos') }}">Cursos</a>
               <a href="{{ url_for('calificaciones') }}">Calificaciones</a>
@@ -29,11 +26,8 @@
               <a href="{{ url_for('nomina') }}">Nómina</a>
               <a href="{{ url_for('avisos') }}">Avisos</a>
           {% endif %}
-          
-          <!-- Enlace Activo -->
           <a href="{{ url_for('perfil') }}" class="active">Perfil</a>
-          
-          <a href="{{ url_for('cerrar') }}" id="logout-btn">Cerrar</a>
+          <a href="{{ url_for('logout') }}" id="logout-btn">Cerrar</a>
       </nav>
   </header>
   

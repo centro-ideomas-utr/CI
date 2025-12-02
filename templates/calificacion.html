@@ -72,10 +72,12 @@
 <nav class="sidebar" id="sidebar">
     <ul>
         {% if session.rol == 'staff' %}
-            <!-- Menú Staff -->
             <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('gestion_personal') }}"><i class="fas fa-list-ul"></i><span>Personal</span></a></li>
+            <li><a href="{{ url_for('gestion_horarios_base') }}"><i class="fas fa-clock"></i><span>Grupos y Horarios</span></a></li>
+            <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-users"></i><span>Reinscripciones</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}" class="active"><i class="fas fa-folder-open"></i><span>Evidencias Globales</span></a></li>
         {% else %}
-            <!-- Menú Maestro -->
             <li><a href="{{ url_for('clasesprofe') }}" class="active"><i class="fas fa-chalkboard-teacher"></i><span>Mis Clases</span></a></li>
             <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
             <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
@@ -83,7 +85,7 @@
             <li><a href="{{ url_for('perfil') }}"><i class="fas fa-user-cog"></i><span>Mi Perfil</span></a></li>
         {% endif %}
         
-        <li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        <li><a href="{{ url_for('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
 

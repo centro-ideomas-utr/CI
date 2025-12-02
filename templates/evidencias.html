@@ -17,29 +17,37 @@
         <span></span>
     </div>
     <h1>Evidencias</h1>
-    <div class="profile">{{ session.get('nombre', 'P')[0] }}</div>
+    <div class="profile">{{ session.get('nombre', 'U')[0] }}</div>
 </div>
 
 <nav class="sidebar" id="sidebar">
     <ul>
-        <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
-        <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-home"></i><span>Home</span></a></li>
-        <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
-        <li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        {% if session.rol == 'staff' %}
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('gestion_personal') }}"><i class="fas fa-list-ul"></i><span>Personal</span></a></li>
+            <li><a href="{{ url_for('gestion_horarios_base') }}"><i class="fas fa-clock"></i><span>Grupos y Horarios</span></a></li>
+            <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-users"></i><span>Reinscripciones</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}" class="active"><i class="fas fa-folder-open"></i><span>Evidencias Globales</span></a></li>
+        {% elif session.rol == 'maestro' %}
+            <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-chalkboard-teacher"></i><span>Mis Clases</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}" class="active"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('perfil') }}"><i class="fas fa-user-cog"></i><span>Mi Perfil</span></a></li>
+        {% endif %}
+        <li><a href="{{ url_for('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
 
 <div class="page-content">
     
-    <!-- Formulario principal de subida -->
     <form id="upload-form" action="{{ url_for('evidencias') }}" method="POST" enctype="multipart/form-data">
         
-        <!-- SELECTOR DE GRUPO ANIMADO -->
         <div class="custom-select-wrapper">
             <input type="checkbox" id="options-checkbox-btn" />
             <div id="select-btn" class="fx fx-justify-between">
                 <div id="selected-value">
-                    <span id="text-display">Selecciona un grupo</span>
+                    <span id="text-display">Filtrar / Seleccionar Grupo</span>
                 </div>
                 <div id="chevrons">
                     <i class="fas fa-chevron-up"></i>
@@ -54,15 +62,18 @@
                     <input class="option-radio-btn bottom" type="radio" name="id_grupo" value="{{ g.id_grupo }}" 
                            onclick="updateSelect('{{ g.idioma }} {{ g.nivel }} - {{ g.grupo }}')"/>
                     <i class="fas fa-users"></i>
-                    <span class="option-label">{{ g.idioma }} {{ g.nivel }} - {{ g.grupo }}</span>
-                    <span class="option-value">{{ g.idioma }} {{ g.nivel }} - {{ g.grupo }}</span>
+                    <span class="option-label">
+                        {{ g.idioma }} {{ g.nivel }} - {{ g.grupo }}
+                        {% if session.rol == 'staff' %}
+                            <small style="color: #e67e22;">({{ g.nombre_profe }})</small>
+                        {% endif %}
+                    </span>
                 </div>
                 {% endfor %}
                 <div id="option-bg"></div>
             </div>
         </div>
 
-        <!-- LISTA DE EVIDENCIAS -->
         <div class="box">
             {% if evidencias %}
                 <ul class="evidencias-list">
@@ -70,44 +81,50 @@
                     <li id="evi-{{ evi.id }}">
                         <div class="file-info">
                             <span class="file-name"><i class="fas fa-file-pdf"></i> {{ evi.archivo }}</span>
+                            
+                            {% if session.rol == 'staff' %}
+                                <span class="file-group" style="color: #e67e22; font-weight: bold; font-size: 0.9em;">
+                                    <i class="fas fa-user-tie"></i> {{ evi.profesor }}
+                                </span>
+                            {% endif %}
+
                             <span class="file-group">{{ evi.grupo }}</span>
                             <span class="file-date">{{ evi.fecha }}</span>
                         </div>
                         <div class="actions">
-                            <!-- Ver -->
                             <a href="{{ evi.url }}" target="_blank" class="btn-action btn-view" title="Ver documento">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <!-- Editar (Abre Modal) -->
-                            <button type="button" class="btn-action btn-edit" title="Cambiar Grupo" 
-                                    onclick="openEditModal('{{ evi.id }}', '{{ evi.archivo }}')">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <!-- Borrar -->
-                            <button type="button" class="btn-action btn-delete" title="Eliminar Evidencia" 
-                                    onclick="deleteEvidencia('{{ evi.id }}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
+
+                            {% if session.rol == 'maestro' %}
+                                <button type="button" class="btn-action btn-edit" title="Cambiar Grupo" 
+                                        onclick="openEditModal('{{ evi.id }}', '{{ evi.archivo }}')">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button type="button" class="btn-action btn-delete" title="Eliminar Evidencia" 
+                                        onclick="deleteEvidencia('{{ evi.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            {% endif %}
                         </div>
                     </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <!-- Estado vacío -->
-                <button type="button" class="no-data">Sin evidencias</button>
+                <button type="button" class="no-data">Sin evidencias registradas</button>
             {% endif %}
         </div>
         
-        <!-- Botón Flotante para subir -->
-        <label for="file-upload" class="upload-btn">
-            <i class="fas fa-plus"></i>
-        </label>
-        <input id="file-upload" name="archivo" type="file" style="display: none;">
+        {% if session.rol == 'maestro' %}
+            <label for="file-upload" class="upload-btn" title="Subir nueva evidencia">
+                <i class="fas fa-plus"></i>
+            </label>
+            <input id="file-upload" name="archivo" type="file" style="display: none;">
+        {% endif %}
     
     </form>
 </div>
 
-<!-- MODAL PARA EDITAR -->
 <div id="edit-modal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeEditModal()">&times;</span>
@@ -132,16 +149,16 @@
     <footer class="main-footer">
         <div class="footer-content">
             <p>Contacto: centrodeidiomas@utr.edu.mx | Tel: 449 975 5783</p>
-            <div class="social-login-icons">
+             <div class="social-login-icons">
                 <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer"><div class="socialcontainer"><div class="icon social-icon-2-2"><svg fill="white" viewBox="0 0 448 512" height="1.2em"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/></svg></div><div class="social-icon-2"><svg fill="white" viewBox="0 0 448 512" height="1.2em"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/></svg></div></div></a>
                 <a href="https://www.facebook.com/share/1Cf7KRJFKm/" target="_blank" rel="noopener noreferrer"><div class="socialcontainer"><div class="icon social-icon-3-3"><svg viewBox="0 0 384 512" fill="white" height="1.3em"><path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"/></svg></div><div class="social-icon-3"><svg viewBox="0 0 384 512" fill="white" height="1.3em"><path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"/></svg></div></div></a>
                 <a href="https://www.tiktok.com/@centrodeidiomasutr?_t=ZS-8zg1HTdLcZM&_r=1" target="_blank" rel="noopener noreferrer">
                     <div class="socialcontainer">
                       <div class="icon social-icon-5-5">
-                         <svg viewBox="0 0 448 512" fill="white" height="1.4em"><path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/></svg>
+                          <svg viewBox="0 0 448 512" fill="white" height="1.4em"><path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/></svg>
                       </div>
                       <div class="social-icon-5">
-                         <svg viewBox="0 0 448 512" fill="white" height="1.4em"><path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/></svg>
+                          <svg viewBox="0 0 448 512" fill="white" height="1.4em"><path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/></svg>
                       </div>
                     </div>
                 </a>
@@ -171,12 +188,13 @@
 
     const fileInput = document.getElementById('file-upload');
     const form = document.getElementById('upload-form');
+    
     if(fileInput && form) {
         fileInput.addEventListener('change', function() {
             if (this.files.length > 0) {
                 const selectedGroup = document.querySelector('input[name="id_grupo"]:checked');
                 if (!selectedGroup) {
-                    alert("⚠️ Selecciona un grupo primero.");
+                    alert("Selecciona un grupo primero.");
                     this.value = ""; 
                 } else {
                     form.submit();
