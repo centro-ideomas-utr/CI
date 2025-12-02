@@ -1,190 +1,645 @@
-/* --- VARIABLES Y RESET BÁSICO --- */
-:root {
-    --primary-color: #3D348B; /* Azul Oscuro */
-    --accent-color: #7678ED;  /* Lavanda */
-    --action-yellow: #F7B801; /* Amarillo Acción */
-    --danger-red: #F35B04;    /* Rojo Peligro */
-    --text-color: #333;
-    --bg-light: #f4f6f9;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Inter', sans-serif;
-}
-
 /* --- Estilos Generales --- */
+body { margin: 0; font-family: 'Inter', sans-serif; background-color: #f4f6f8; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; padding: 20px; transition: margin-left 0.3s; }
+:root {
+    --primary-color: #566a93;       /* Azul grisáceo Navbar */
+    --sidebar-bg: #48597a;          /* Azul oscuro Sidebar */
+    --bg-color: #f4f6f8;            /* Gris claro fondo */
+    --text-color: #333;
+    --accent-purple: #3D348B;       /* Mantenido de tu HTML original */
+    --accent-light: #7678ED;
+    --white: #ffffff;
+    --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 6px 15px rgba(0,0,0,0.15);
+}
+
 body {
-    background-color: var(--bg-light);
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
     color: var(--text-color);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    transition: margin-left 0.3s;
+    overflow-x: hidden;
 }
 
-/* --- Navbar --- */
+/* --- Barra de Navegación Superior --- */
 .navbar {
-    background-color: var(--primary-color);
+    background-color: #566a93;
     color: white;
-    padding: 10px 20px;
+    padding: 15px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: fixed;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    z-index: 1001; /* Nivel 1 */
+    z-index: 1001;
 }
-.menu-icon { cursor: pointer; }
-.navbar h1 { font-size: 1.5em; margin: 0; }
-.profile { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
-/* --- Sidebar --- */
+.navbar h1 {
+    font-size: 1.6em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.menu-icon {
+    cursor: pointer;
+    z-index: 1002; /* Asegura que esté sobre el sidebar */
+}
+
+.menu-icon span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 5px 0;
+    transition: 0.4s;
+}
+
+.profile {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+/* --- Menú Lateral (Sidebar) --- */
+
 .sidebar {
-    height: 100%; width: 250px; position: fixed; 
-    z-index: 1000; /* Nivel 0 (debajo del navbar) */
-    top: 0; left: -250px;
-    background-color: var(--primary-color);
-    overflow-x: hidden; transition: 0.3s; padding-top: 80px;
-    display: flex; flex-direction: column; justify-content: space-between;
+    height: 100%;
+    width: 230px;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: -230px; /* Oculto por defecto */
+    background-color: #48597a;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 80px; /* Espacio para la navbar */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
-.sidebar.active { left: 0; }
-.sidebar ul { list-style-type: none; padding: 0; margin: 0; }
-.sidebar ul li a { padding: 15px 20px; text-decoration: none; font-size: 18px; color: white; display: block; transition: 0.2s; }
-.sidebar ul li a:hover { background-color: var(--accent-color); }
-.sidebar .active { background-color: var(--accent-color); font-weight: bold; }
 
-.logout-btn { 
-    background-color: var(--danger-red);
-    color: white; text-align: center; font-weight: bold; 
-    margin: 10px; border-radius: 8px;
+.sidebar.active {
+    left: 0; /* Mostrar sidebar */
 }
-.logout-btn:hover { background-color: #c0392b !important; }
 
-/* --- Contenedor Principal --- */
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li a {
+    padding: 15px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #f4f6f8;
+    display: flex; /* Para alinear icono y texto */
+    align-items: center;
+    transition: 0.2s;
+}
+
+.sidebar ul li a i {
+    width: 30px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+.sidebar ul li a:hover {
+    background-color: #566a93;
+}
+
+.logout-btn {
+    background-color: #e74c3c;
+    color: white !important; /* Forzar color */
+    text-align: center;
+    font-weight: bold;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b !important;
+}
+
+/* =========================================
+   4. CONTENIDO PRINCIPAL
+   ========================================= */
+   /* --- Estilos para el botón de eliminar Sede --- */
+.sede-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-right: 8px; /* Espacio entre botones */
+}
+
+.delete-sede-btn {
+    position: absolute;
+    top: -8px;
+    right: -5px;
+    background-color: #ef4444; /* Rojo Tailwind */
+    color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0; /* Oculto por defecto */
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.delete-sede-btn:hover {
+    background-color: #dc2626; /* Rojo más oscuro */
+    transform: scale(1.1);
+}
+
+/* Mostrar la X cuando el mouse está sobre la sede */
+.sede-wrapper:hover .delete-sede-btn {
+    opacity: 1;
+    transform: scale(1);
+}
 .page-content {
     flex: 1;
-    padding: 20px;
-    padding-top: 84px;
-    max-width: 1400px;
-    margin: 0 auto;
+    padding: 25px;
+    transition: margin-left 0.3s;
+    margin-left: 0;
     width: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    transition: margin-left 0.3s;
 }
-.page-content.shifted { margin-left: 250px; }
 
-/* --- Control de Sedes --- */
+/* Empuje del contenido en escritorio cuando el sidebar abre */
+@media (min-width: 1000px) {
+    .page-content.shifted {
+        margin-left: 230px;
+        width: calc(100% - 230px);
+    }
+}
+
+/* Títulos de sección */
+h2 {
+    color: var(--accent-purple);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+/* =========================================
+   5. PESTAÑAS Y VISTAS
+   ========================================= */
+/* Contenedor de pestañas */
+.bg-white.rounded-t-xl {
+    background-color: white;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+
+.tab-btn {
+    padding: 15px 25px;
+    font-weight: 600;
+    color: #666;
+    background: transparent;
+    border: none;
+    border-bottom: 4px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.tab-btn:hover {
+    background-color: #f9fafb;
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--accent-purple);
+    border-bottom-color: var(--accent-purple);
+    background-color: #f0f4ff;
+}
+
+.view-section {
+    display: none;
+    animation: fadeIn 0.4s ease-in-out;
+    width: 100%;
+}
+
+.view-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   6. ESTILOS DE SEDES (Botones superiores)
+   ========================================= */
 .sedes-control {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
-    border-left: 5px solid var(--primary-color);
+    padding: 15px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
 }
-.sede-btn {
-    background-color: var(--primary-color);
-    color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
-}
-.sede-btn:hover { background-color: #4c43a3; transform: translateY(-2px); }
-.sede-btn.active { background-color: var(--accent-color); border: 2px solid var(--primary-color); color: white; }
-.add-sede-btn { background-color: var(--action-yellow); color: var(--text-color); margin-left: auto; }
-.add-sede-btn:hover { background-color: #F18701; color: white; }
 
-/* --- Área de Trabajo --- */
+.sede-btn {
+    border: 1px solid #ddd;
+    background: white;
+    color: #555;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.sede-btn:hover {
+    background-color: #f1f1f1;
+    transform: translateY(-2px);
+}
+
+.sede-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 5px rgba(86, 106, 147, 0.4);
+}
+
+.add-sede-btn {
+    border-style: dashed;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* =========================================
+   7. GRID DEL ESPACIO DE TRABAJO (Formulario + Tabla)
+   ========================================= */
 .workspace {
     display: grid;
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 350px 1fr; /* Panel izquierdo fijo, derecho flexible */
     gap: 25px;
-    opacity: 0; transform: translateY(20px); transition: 0.4s ease; pointer-events: none;
+    align-items: start;
 }
-.workspace.active { opacity: 1; transform: translateY(0); pointer-events: all; }
 
-/* --- Formulario Izquierdo --- */
-.assignment-panel {
-    background: white; padding: 25px; border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); height: fit-content;
-    position: sticky; top: 90px; border-top: 5px solid var(--accent-color);
+@media (max-width: 900px) {
+    .workspace {
+        grid-template-columns: 1fr; /* Una columna en móviles/tablets */
+    }
 }
-.assignment-panel h2 { color: var(--primary-color); margin-top: 0; border-bottom: 2px solid #f4f6f8; padding-bottom: 10px; font-size: 1.4em; }
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
-.form-group input[type="text"], .form-group input[type="time"], select {
-    width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; transition: border-color 0.2s;
-}
-.form-group input:focus, select:focus { border-color: var(--primary-color); outline: none; }
 
-/* Checkboxes Días */
-.days-checkbox-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+/* Panel Izquierdo y Derecho General */
+.assignment-panel, .schedule-view {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid #eee;
+}
+
+/* =========================================
+   8. FORMULARIOS Y INPUTS
+   ========================================= */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+input[type="text"],
+input[type="time"],
+select,
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: #fff;
+    box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+    transition: border 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent-purple);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(61, 52, 139, 0.1);
+}
+
+/* Checkboxes de días */
+.days-checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
 .days-checkbox-group label {
-    display: flex; align-items: center; gap: 5px; cursor: pointer;
-    background-color: var(--bg-light); padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; transition: 0.2s;
+    font-weight: normal;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
 }
-.days-checkbox-group label:has(input:checked) {
-    background-color: var(--accent-color); border-color: var(--primary-color); color: white; font-weight: bold;
-}
+
+/* Botones de Acción en Formularios */
 .btn-assign {
-    width: 100%; background-color: var(--action-yellow); color: var(--text-color);
-    border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; transition: 0.2s;
+    width: 100%;
+    background-color: var(--accent-purple);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    font-size: 1rem;
+    margin-top: 10px;
 }
-.btn-assign:hover { background-color: #F18701; color: white; }
 
-/* --- Visualización Derecha (Cuadrícula) --- */
-.schedule-view {
-    background: white; padding: 25px; border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow-x: auto; border-top: 5px solid var(--accent-color);
+.btn-assign:hover {
+    background-color: #2a2461;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-.schedule-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;
-}
+
+/* =========================================
+   9. TABLA DE HORARIOS (Timetable Grid)
+   ========================================= */
 .timetable {
-    display: grid; grid-template-columns: 80px repeat(6, 1fr);
-    border: 1px solid #eee; border-radius: 8px; overflow: hidden; min-width: 800px; margin-top: 10px;
+    display: grid;
+    grid-template-columns: 80px repeat(6, 1fr); /* Columna hora + 6 días */
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    min-width: 800px; /* Asegura scroll horizontal si es muy pequeño */
 }
+
 .time-header, .day-header {
-    background-color: var(--primary-color); color: white; padding: 10px; text-align: center; font-weight: bold;
-    border-right: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1);
+    background-color: #9c94b8; /* Color del CSS base (thead) */
+    color: white;
+    font-weight: bold;
+    padding: 12px 5px;
+    text-align: center;
+    font-size: 0.9em;
+    border-right: 1px solid rgba(255,255,255,0.2);
 }
+
 .time-slot {
-    border-bottom: 1px solid #eee; border-right: 1px solid #eee; padding: 5px;
-    text-align: center; background: #fff; min-height: 80px; display: flex; flex-direction: column; gap: 5px;
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+    min-height: 50px;
+    font-size: 0.85em;
+    color: #666;
 }
-.time-slot:nth-child(7n+1) { background-color: #f7f7f7; font-weight: 500; justify-content: center; }
 
-/* Bloques de Horario */
+/* Bloque de hora ocupada */
 .slot-occupied {
-    background-color: #eef2ff; border-left: 4px solid var(--accent-color);
-    color: #333; font-size: 0.8em; padding: 6px; text-align: left;
-    border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.1s; cursor: pointer;
-}
-.slot-occupied:hover { transform: scale(1.05); background-color: #dce0ff; z-index: 10; }
-.slot-occupied strong { display: block; color: var(--primary-color); font-size: 1.1em; }
-
-/* --- MODAL STYLES (Asegurando Z-Index) --- */
-#edit-modal, #message-modal {
-    z-index: 2000 !important; /* Nivel 2 (Encima de navbar y sidebar) */
+    background-color: #e6f0ff;
+    border-left: 3px solid var(--primary-color);
+    padding: 4px;
+    margin: 2px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: var(--primary-color);
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 1000px) {
-    .workspace { grid-template-columns: 1fr; gap: 15px; } /* CORREGIDO */
-    .assignment-panel { position: static; top: auto; max-width: 100%; }
-    .page-content.shifted { margin-left: 0; }
+.slot-occupied:hover {
+    background-color: #d0e1fd;
 }
 
-@media (max-width: 768px) {
-    .page-content { padding-left: 10px; padding-right: 10px; }
-    .sedes-control { justify-content: flex-start; }
-    .add-sede-btn { margin-left: 0; width: 100%; margin-top: 10px; }
-    .sidebar { padding-top: 64px; }
-    .sidebar.active { width: 80%; left: 0; }
+/* =========================================
+   10. TARJETAS DE GRUPOS
+   ========================================= */
+.grid-cols-1 { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+
+@media (min-width: 768px) {
+    .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Estilo para la tarjeta individual de grupo */
+.bg-white.border.rounded-lg {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.bg-white.border.rounded-lg:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Etiquetas (Tags) dentro de las tarjetas */
+.bg-\[\#7678ED\] { background-color: var(--accent-light); }
+.text-white { color: white; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.text-gray-600 { color: #4b5563; }
+
+/* =========================================
+   11. MODALES
+   ========================================= */
+/* Reutilizando clases Tailwind hidden/fixed pero dando estilo CSS Base */
+.fixed.inset-0 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+}
+
+.bg-black.bg-opacity-50 {
+    background-color: rgba(0,0,0,0.6);
+    backdrop-filter: blur(3px);
+}
+
+.bg-white.rounded-xl {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: animatetop 0.4s;
+    /* Centrado */
+    margin: auto; 
+}
+
+@keyframes animatetop { 
+    from { transform: translateY(-50px); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+}
+
+/* Botones dentro del modal */
+.text-red-600 { color: #e74c3c; font-weight: bold; }
+.text-red-600:hover { color: #c0392b; }
+
+/* =========================================
+   12. RESPONSIVIDAD EXTRA
+   ========================================= */
+@media (max-width: 600px) {
+    .navbar { padding: 10px 15px; }
+    .navbar h1 { font-size: 1.2em; }
+    .page-content { padding: 15px; }
+    .workspace { grid-template-columns: 1fr; }
+    
+    /* Ajuste para que la tabla tenga scroll en móvil */
+    .overflow-x-auto {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+/* --- FOOTER --- */
+.main-footer {
+    background-color: #566a93;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-content p {
+    margin: 0;
+    font-size: 0.9em;
+}
+
+/* --- Social Icons --- */
+.social-login-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
+}
+.social-login-icons svg {
+    width: 30px;
+}
+.social-login-icons a {
+    text-decoration: none;
+}
+.social-icon-2,
+.social-icon-2-2,
+.social-icon-3,
+.social-icon-3-3,
+.social-icon-5,
+.social-icon-5-5,
+.social-icon-6,
+.social-icon-6-6 {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    margin: 0;
+}
+.icon svg {
+    fill: #111;
+}
+.socialcontainer {
+    height: 40px;
+    overflow: hidden;
+}
+.social-icon-2 svg,
+.social-icon-3 svg,
+.social-icon-5 svg,
+.social-icon-6 svg {
+    opacity: 0;
+    transition-duration: 0.5s;
+    transition-delay: 0.2s;
+}
+.social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
+    transition-duration: 0.4s;
+    background-color: rgba(0, 0, 0, 0);
+}
+.socialcontainer:hover .social-icon-2,
+.socialcontainer:hover .social-icon-3,
+.socialcontainer:hover .social-icon-5,
+.socialcontainer:hover .social-icon-6 {
+    transform: translateY(-40px);
+}
+.socialcontainer:hover svg {
+    opacity: 1;
+}
+.social-icon-2 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: linear-gradient(
+        72.44deg,
+        #ff7a00 11.92%,
+        #ff0169 51.56%,
+        #d300c5 85.69%
+    );
+}
+.social-icon-3 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #316ff6;
+}
+.social-icon-5 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #000000;
+}
+.social-icon-6 {
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
+    background: #25D366;
+}
+
+/* --- Media queries para responsividad --- */
+@media (max-width: 900px) {
+    /* (FIX) Apuntando a .page-content en lugar de .main-content */
+    .page-content {
+        /* Esto no tiene mucho efecto si solo hay 1 tarjeta en la columna, pero lo dejo */
+        grid-template-columns: repeat(2, 1fr); 
+    }
+}
+
+@media (max-width: 600px) {
+    .page-content {
+        grid-template-columns: 1fr;
+    }
+    
+    /* (FIX) En móviles, el menú no debe empujar el contenido, sino superponerse */
+    .page-content.active {
+        margin-left: 0; 
+    }
+
+    .action-bar { /* Esta clase no la encontré en tu HTML, pero estaba en tu CSS */
+        flex-direction: column;
+    }
+
+    .form-grid { /* Hacemos el formulario de 1 columna en móvil */
+        grid-template-columns: 1fr;
+    }
 }

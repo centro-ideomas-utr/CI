@@ -1,3 +1,28 @@
+    // --- Lógica del Menú Lateral (Sidebar) ---
+document.addEventListener('DOMContentLoaded', function() {
+    const menuIcon = document.getElementById('menu-icon');
+    const sidebar = document.getElementById('sidebar');
+    const pageContent = document.getElementById('page-content');
+
+    // Verificar que los elementos existan
+    if (menuIcon && sidebar && pageContent) {
+        menuIcon.addEventListener('click', () => {
+            // 1. Mostrar u ocultar el sidebar
+            sidebar.classList.toggle('active');
+
+            // 2. Empujar el contenido (Solo si es pantalla grande)
+            if (sidebar.classList.contains('active')) {
+                // Si es escritorio (mayor a 768px), empujamos el contenido
+                if (window.innerWidth > 768) {
+                    pageContent.style.marginLeft = '230px';
+                }
+            } else {
+                // Si se cierra, regresamos el margen a 0
+                pageContent.style.marginLeft = '0';
+            }
+        });
+    }
+});
     let sedes = JSON.parse('{{ sedes | tojson }}');
     
     // Lista global que contendrá los horarios cargados por AJAX (desde /api/horarios_base)
@@ -41,43 +66,103 @@
         }
     }
 
-    function renderSedes() {
-        const container = document.getElementById('sedes-container');
-        // Quitar botones existentes (dejando el título y el botón Add)
-        container.querySelectorAll('.sede-wrapper').forEach(wrapper => wrapper.remove());
+   function renderSedes() {
+    const container = document.getElementById('sedes-container');
+    
+    // Limpiamos solo los wrappers de sedes existentes, manteniendo el botón de "Añadir"
+    container.querySelectorAll('.sede-wrapper').forEach(e => e.remove());
+    
+    const addButton = container.querySelector('.add-sede-btn');
 
-        // El botón "Añadir Sede" debe ser el último, lo buscamos
-        const addButton = container.querySelector('.add-sede-btn');
+    sedes.forEach(sede => {
+        // 1. Crear el contenedor (wrapper)
+        const wrapper = document.createElement('div');
+        wrapper.className = 'sede-wrapper';
 
-        sedes.forEach(sede => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'sede-wrapper';
+        // 2. Crear el botón principal de la Sede
+        const btn = document.createElement('button');
+        btn.className = `sede-btn ${sede === selectedSede ? 'active' : ''}`;
+        btn.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${sede}`;
+        btn.onclick = () => selectSede(sede);
 
-            const button = document.createElement('button');
-            button.className = 'sede-btn';
-            if (sede === selectedSede) {
-                button.classList.add('active');
-            }
-            button.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${sede}`;
-            button.onclick = (e) => {
-                e.preventDefault();
-                selectSede(sede);
-            };
+        // 3. Crear el botón de Eliminar (X)
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-sede-btn';
+        delBtn.innerHTML = '<i class="fas fa-times"></i>';
+        delBtn.title = "Eliminar Sede";
+        
+        // Evento para eliminar
+        delBtn.onclick = (e) => {
+            e.stopPropagation(); // Evita que se seleccione la sede al hacer clic en eliminar
+            deleteSede(sede);
+        };
 
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'delete-sede-btn';
-            deleteButton.innerHTML = '<i class="fas fa-times"></i>';
-            deleteButton.title = `Eliminar Sede ${sede}`;
-            deleteButton.onclick = (e) => {
-                e.stopPropagation(); 
-                deleteSede(sede);
-            };
-
-            wrapper.appendChild(button);
-            wrapper.appendChild(deleteButton);
-            container.insertBefore(wrapper, addButton);
-        });
+        // 4. Unir todo
+        wrapper.appendChild(btn);
+        wrapper.appendChild(delBtn);
+        container.insertBefore(wrapper, addButton);
+    });
+}
+async function deleteSede(sedeName) {
+    // 1. Confirmación de seguridad
+    if (!confirm(`¿Estás seguro de eliminar la sede "${sedeName}"? Se eliminarán todos los horarios asociados.`)) {
+        return;
     }
+
+    try {
+        // 2. Llamada al Backend (Flask)
+        // Asumiendo que crearás una ruta en Python: @app.route('/eliminar_sede', methods=['POST'])
+        const res = await fetch('/eliminar_sede', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sede: sedeName })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // 3. Éxito: Actualizar interfaz
+            showMessage("Eliminado", `Sede ${sedeName} eliminada correctamente.`, "success");
+
+            // Remover de la lista local
+            sedes = sedes.filter(s => s !== sedeName);
+            
+            // Limpiar horarios locales de esa sede
+            HORARIOS_BASE = HORARIOS_BASE.filter(h => h.sede !== sedeName);
+
+            // Si eliminamos la sede que estábamos viendo, cambiar a otra o limpiar
+            if (selectedSede === sedeName) {
+                selectedSede = sedes.length > 0 ? sedes[0] : '';
+                if (selectedSede) {
+                    selectSede(selectedSede);
+                } else {
+                    // No quedan sedes
+                    document.getElementById('panel-title').textContent = "Sin Sedes";
+                    document.getElementById('current-sede-name').textContent = "...";
+                    document.getElementById('timetable').innerHTML = '<p class="text-center py-10">No hay sedes registradas.</p>';
+                    renderSedes();
+                }
+            } else {
+                // Solo renderizar botones si no cambió la vista actual
+                renderSedes();
+            }
+
+        } else {
+            showMessage("Error", data.message || "No se pudo eliminar la sede.", "error");
+        }
+
+    } catch (error) {
+        console.error(error);
+        // Fallback visual si no hay backend conectado aún:
+        // (Si solo quieres probar la interfaz visual, descomenta las líneas de abajo y comenta el fetch)
+        /*
+        sedes = sedes.filter(s => s !== sedeName);
+        renderSedes();
+        showMessage("Atención", "Sede eliminada solo visualmente (error de conexión).", "error");
+        */
+       showMessage("Error", "Error de conexión con el servidor.", "error");
+    }
+}
 
     function selectSede(sedeName) {
         selectedSede = sedeName;

@@ -62,14 +62,26 @@
                 <div class="section">
                     <h2 class="section-title">Publicar Nuevo Aviso</h2>
                       <div class="form-card">
-                          <form action="{{ url_for('publicar_aviso') }}" method="POST">
-                            <h3 class="card-title">Nuevo Mensaje</h3>
-                              <textarea name="mensaje" placeholder="Escribe tu aviso o comentario aquí..." required></textarea>
-                                                      <label for="fecha_evento" style="font-weight: bold; margin-top: 10px; display: block;">Fecha para el Calendario:</label>
-                             <input type="date" id="fecha_evento" name="fecha_evento" class="input-fecha" required>
-                                                       <button type="submit" class="btn-publicar">
-                            </button>
-                        </form>
+  
+
+<form action="{{ url_for('avisos') }}" method="POST">
+    <h3 class="card-title">Nuevo Mensaje</h3>
+    <textarea name="mensaje" placeholder="Escribe tu aviso o comentario aquí..." required></textarea>
+
+    <label for="fecha_evento" style="font-weight: bold; margin-top: 10px; display: block;">Fecha para el Calendario:</label>
+    <input type="date" id="fecha_evento" name="fecha_evento" class="input-fecha" required>
+
+    <!-- Opcional: Select para elegir grupo -->
+    <label for="id_grupo">Grupo:</label>
+    <select name="id_grupo" id="id_grupo">
+        <option value="1">Grupo 1</option>
+        <option value="2">Grupo 2</option>
+    </select>
+
+    <button type="submit" class="btn-publicar">Publicar Aviso</button>
+</form>
+
+
                     </div>
                 </div>
 
@@ -80,7 +92,7 @@
                 </div>
             </div> </div> </div> <footer class="main-footer">
     <div class="footer-content">
-      <p>Contacto:centrodeidiomas@utr.edu.mx | Tel: 449 975 5783</p>
+      <p>Contacto: centrodeidiomas@utr.edu.mx | Tel: 449 975 5783</p>
       <div class="social-login-icons">
         <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer">
           <div class="socialcontainer">

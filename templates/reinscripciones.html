@@ -4,40 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pantalla de Reinscripciones</title>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
-    <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reinscripciones.css') }}">
+    
+    <style>
+        /* --- ESTILOS ESPECÍFICOS --- */
+        .select-estado { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: 700; border: 1px solid transparent; cursor: pointer; outline: none; appearance: none; text-align: center; min-width: 95px; transition: all 0.3s ease; }
+        .select-estado.Activo { background-color: #eafaf1; color: #2ecc71; border-color: #2ecc71; }
+        .select-estado.Baja_temporal { background-color: #fef5e7; color: #f39c12; border-color: #f39c12; }
+        .select-estado.Baja { background-color: #fdedec; color: #e74c3c; border-color: #e74c3c; }
+        .select-estado::-ms-expand { display: none; }
+
+        /* Dashboard */
+        .general-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; width: 100%; margin-bottom: 10px; }
+        .stat-box { background: white; border-radius: 10px; padding: 12px 15px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.3s ease; border-left: 4px solid transparent; cursor: pointer; user-select: none; }
+        .stat-box:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .stat-box.active-filter-general { background-color: #f8f9fa; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-bottom: 3px solid #555; }
+        .icon-box { width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1em; flex-shrink: 0; }
+        .info-box { display: flex; flex-direction: column; }
+        .stat-num { font-size: 1.4em; font-weight: 800; line-height: 1; color: #333; }
+        .stat-desc { font-size: 0.75em; color: #888; font-weight: 600; text-transform: uppercase; margin-top: 3px; }
+        .stat-box.total { border-left-color: #48597a; } .stat-box.total .icon-box { background-color: #eef2f7; color: #48597a; }
+        .stat-box.active { border-left-color: #2ecc71; } .stat-box.active .icon-box { background-color: #eafaf1; color: #2ecc71; }
+        .stat-box.multi { border-left-color: #9b59b6; } .stat-box.multi .icon-box { background-color: #f5eef8; color: #9b59b6; }
+        .stat-box.warning { border-left-color: #f39c12; } .stat-box.warning .icon-box { background-color: #fef5e7; color: #f39c12; }
+        .stat-box.danger { border-left-color: #e74c3c; } .stat-box.danger .icon-box { background-color: #fdedec; color: #e74c3c; }
+
+        /* Filtros Idioma */
+        .stats-container { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; width: 100%; margin-bottom: 20px; }
+        .stat-card { background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); padding: 8px 15px; text-align: center; min-width: 100px; border-top: 3px solid #566a93; transition: all 0.2s; cursor: pointer; user-select: none; position: relative; border: 1px solid #eee; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card.active-filter { background-color: #e8f4fc; border-color: #566a93; transform: translateY(-3px); box-shadow: 0 4px 8px rgba(86, 106, 147, 0.2); }
+        .stat-number { font-size: 1.5em; font-weight: 800; color: #566a93; }
+        .stat-label { font-size: 0.75em; color: #666; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+
+        /* Vista Grupo */
+        .group-view-container { background-color: white; border-radius: 10px; padding: 20px; margin-top: 40px; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); border-top: 5px solid #e67e22; width: 100%; box-sizing: border-box; }
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .group-header h3 { margin: 0; color: #48597a; font-size: 1.4em; }
+        .group-details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background-color: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-label { font-size: 0.8em; color: #888; text-transform: uppercase; font-weight: bold; }
+        .detail-value { font-size: 1.1em; color: #333; font-weight: 600; }
+        .badge-count { background-color: #48597a; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em; }
+        
+        .fade-out-row { opacity: 0; transform: translateX(100px); transition: all 0.5s ease; background-color: #ffebee !important; }
+        .small-table table th { background-color: #e67e22; color: white; } 
+        .small-table table { margin-bottom: 0; }
+        .font-bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
+        .text-dark-blue { color: #34495e; font-weight: 600; }
+        
+        /* Estilo Checkbox Descuento */
+        .descuento-check { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; font-size: 0.95em; }
+        .descuento-check:hover { background-color: #f9f9f9; }
+        
+        /* Buscador */
+        .search-wrapper { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; margin-top: 5px; }
+        .search-container { position: relative; width: 100%; max-width: 600px; }
+        .search-input { width: 100%; padding: 10px 40px; border-radius: 50px; border: 2px solid #e0e0e0; font-size: 1em; outline: none; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .search-input:focus { border-color: #566a93; box-shadow: 0 4px 10px rgba(86, 106, 147, 0.15); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888; }
+        .clear-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #999; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <!-- NAVBAR -->
     <div class="navbar">
-        <div class="menu-icon" id="menu-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
+        <div class="menu-icon" id="menu-icon"><span></span><span></span><span></span></div>
         <h1>Reinscripciones</h1>
         <div class="profile"></div>
     </div>
 
-    <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
         <ul>
             <li><a href="{{ url_for('grupos') }}"><i class="fas fa-bell"></i><span>Grupos</span></a></li>
             <li><a href="{{ url_for('historial') }}"><i class="fas fa-graduation-cap"></i><span>Historial</span></a></li>
-            <li><a href="{{ url_for('Maestros') }}"><i class="fas fa-file-alt"></i><span>Maestros</span></a></li>
             <li><a href="{{ url_for('Horario') }}"><i class="fas fa-home"></i><span>Horario</span></a></li>
             <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-list-ul"></i><span>Reinscripciones</span></a></li>
             <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
     </nav>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main class="page-content"> 
-        <!-- Filtros de Botones -->
+        
+        <div class="general-stats-grid">
+            <div class="stat-box total" data-filter="total"><div class="icon-box"><i class="fas fa-users"></i></div><div class="info-box"><span class="stat-num">{{ stats.total_general }}</span><span class="stat-desc">Total Alumnos</span></div></div>
+            <div class="stat-box active" data-filter="Activo"><div class="icon-box"><i class="fas fa-user-check"></i></div><div class="info-box"><span class="stat-num">{{ stats.activos }}</span><span class="stat-desc">Activos</span></div></div>
+            <div class="stat-box multi" data-filter="multi"><div class="icon-box"><i class="fas fa-language"></i></div><div class="info-box"><span class="stat-num">{{ stats.multi_idioma }}</span><span class="stat-desc">+1 Idioma</span></div></div>
+            <div class="stat-box warning" data-filter="Baja temporal"><div class="icon-box"><i class="fas fa-user-clock"></i></div><div class="info-box"><span class="stat-num">{{ stats.bajas_temporal }}</span><span class="stat-desc">Baja Temporal</span></div></div>
+            <div class="stat-box danger" data-filter="Baja"><div class="icon-box"><i class="fas fa-user-times"></i></div><div class="info-box"><span class="stat-num">{{ stats.bajas }}</span><span class="stat-desc">Bajas</span></div></div>
+        </div>
+
+        <center><div class="stats-container">
+            {% if conteos %}
+                {% for item in conteos %}<div class="stat-card"><div class="stat-number">{{ item.total }}</div><div class="stat-label">{{ item.nombre }}</div></div>{% endfor %}
+            {% else %}
+                <div style="width:100%; text-align:center; color:#888;">Cargando estadísticas...</div>
+            {% endif %}
+        </div></center>
+
+        <div class="search-wrapper">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, matrícula o correo...">
+                <i class="fas fa-times clear-icon" id="clearSearch" style="display: none;"></i>
+            </div>
+        </div>
+
         <div class="buttons-container">
             <a href="{{ url_for('reinscripciones', tipo='REINSCRIPCIÓN ADULTOS REGULARES') }}" class="btn blue">REINSCRIPCIÓN ADULTOS REGULAR</a>
             <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN ADULTOS REGULAR') }}" class="btn orange">INSCRIPCIÓN ADULTOS REGULAR</a>
@@ -49,183 +123,126 @@
             <a href="{{ url_for('reinscripciones', tipo='INSCRIPCIÓN MENORES DESCUENTO') }}" class="btn magenta">INSCRIPCIÓN MENORES DESCUENTO</a>
         </div>
 
-        <!-- Tabla de Alumnos -->
         <div class="table-container">
-            <table>
+            <table id="tablaAlumnosPrincipal">
                 <thead>
                     <tr>
-                        <th>No.</th>
-                        <th>Matrícula</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Correo Electrónico</th>
-                        <th>Edad</th>
-                        <th>Expediente (Mongo)</th>
-                        <th>Tipo de Inscripión</th>
-                        
-                        <!-- NUEVA COLUMNA -->
-                        <th>Idioma</th>
-                        
-                        <th>Horario Inicial</th>
-                        <th>Nivel Actual</th>
-                        <th>Grupo Actual</th>
-                        <th>Maestro Actual</th>
-                        <th>ASIGNAR NIVEL</th>
-                        <th>ASIGNAR GRUPO</th>
-                        <th>ACCIONES</th>
-                        <th>Enviar Cobro</th>
+                        <th>No.</th><th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Correo</th><th>Edad</th>
+                        <th>Estado</th><th style="background-color:#8e44ad; color:white;">Idioma Ant.</th><th style="background-color:#8e44ad; color:white;">Maestro Ant.</th><th style="background-color:#8e44ad; color:white;">Calif. Ant.</th>
+                        <th>Expediente</th><th>Tipo</th><th>Idioma Actual</th><th>Horario</th>
+                        <th>Nivel</th><th>Grupo</th><th>Maestro</th>
+                        <th>ASIGNAR NIVEL</th><th>ASIGNAR GRUPO</th><th>ACCIONES</th><th>Cobro</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for alumno in alumnos %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td><span class="lila">{{ alumno.matricula }}</span></td>
-                        <td>{{ alumno.nombre }}</td>
-                        <td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td>
-                        <td>{{ alumno.correo_electronico }}</td>
-                        <td><span class="blue">{{ alumno.edad }}</span></td>
-
-                        {% set docs = alumno.documentos_urls %} 
-                                                  
-                        <!-- Botones de Expediente -->
+                    <tr data-estado="{{ alumno.estado }}" data-idiomas="{{ alumno.num_idiomas }}">
+                        <td>{{ loop.index }}</td><td><span class="lila">{{ alumno.matricula }}</span></td><td>{{ alumno.nombre }}</td><td>{{ alumno.apellido_p }} {{ alumno.apellido_m }}</td><td>{{ alumno.correo_electronico }}</td><td><span class="blue">{{ alumno.edad }}</span></td>
                         <td>
-                            {% if docs.comprobante_pago %}
-                                <a href="{{ docs.comprobante_pago }}" target="_blank" class="btn-expediente" title="Ver Comprobante de Pago"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i> Pago</button></a>
-                            {% endif %}
-                            {% if docs.identificacion %}
-                                <a href="{{ docs.identificacion }}" target="_blank" class="btn-expediente" title="Ver Identificación Oficial"><button class="btn-expediente-small"><i class="fas fa-id-card"></i> ID</button></a>
-                            {% endif %}
-                            {% if docs.acta_nacimiento %} 
-                                <a href="{{ docs.acta_nacimiento }}" target="_blank" class="btn-expediente" title="Ver Acta de Nacimiento"><button class="btn-expediente-small"><i class="fas fa-baby"></i> Acta</button></a>
-                            {% endif %}
-                            {% if docs.formato_descuento %} 
-                                <a href="{{ docs.formato_descuento }}" target="_blank" class="btn-expediente" title="Ver Formato de Descuento"><button class="btn-expediente-small"><i class="fas fa-percent"></i> Desc.</button></a>
-                            {% endif %}
-                            {% if docs.documentos_comprobatorios %} 
-                                <a href="{{ docs.documentos_comprobatorios }}" target="_blank" class="btn-expediente" title="Ver Documentos Comprobatorios Adicionales"><button class="btn-expediente-small"><i class="fas fa-file-pdf"></i> Comp.</button></a>
-                            {% endif %}
-                            
-                            {% set documentos_presentes_todos = docs.comprobante_pago or docs.identificacion or docs.acta_nacimiento or docs.formato_descuento or docs.documentos_comprobatorios %}
-                            {% if not documentos_presentes_todos %}<span class="lightred">N/A</span>{% endif %}
-                        </td>
-
-                        <!-- Etiqueta Tipo Inscripción -->
-                        <td>
-                            {% set tipo_inscripcion_clase = "" %}
-                            {% if 'REINSCRIPCIÓN ADULTOS REGULARES' in alumno.tipo_inscripcion %}{% set tipo_inscripcion_clase = "btn-blue-text" %}
-                            {% elif 'INSCRIPCIÓN ADULTOS REGULAR' in alumno.tipo_inscripcion %}{% set tipo_inscripcion_clase = "btn-orange-text" %}
-                            {% elif 'DESCUENTO' in alumno.tipo_inscripcion %}{% set tipo_inscripcion_clase = "btn-red-text" %}
-                            {% else %}{% set tipo_inscripcion_clase = "btn-green-text" %}{% endif %}
-                            <span class="{{ tipo_inscripcion_clase }}">{{ alumno.tipo_inscripcion }}</span>
-                        </td>
-
-                        <!-- COLUMNA IDIOMA -->
-                        <td>
-                            <span class="purple" style="font-weight: bold; text-transform: uppercase;">
-                                {{ alumno.idioma_inscrito or '---' }}
-                            </span>
-                        </td>
-
-                        <td>{{ alumno.horario or '---' }}</td>
-                        <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td>
-                        <td>{{ alumno.nombre_grupo or 'N/A' }}</td>
-                        <td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
-
-                        <!-- Selectors de Asignación -->
-                        <td>
-                            <select class="form-control select-curso" data-alumno-id="{{ alumno.id_alumno }}">
-                                <option value="">-- Seleccionar Nivel --</option>
-                                {% for curso in cursos %}
-                                    <option value="{{ curso.id_curso }}" {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>
-                                        {{ curso.nombre_completo }}
-                                    </option>
-                                {% endfor %}
+                            <select class="select-estado {{ (alumno.estado or 'Activo') | replace(' ', '_') }}" data-id-inscripcion="{{ alumno.id_inscripcion }}">
+                                <option value="Activo" {% if alumno.estado == 'Activo' %}selected{% endif %}>Activo</option>
+                                <option value="Baja temporal" {% if alumno.estado == 'Baja temporal' %}selected{% endif %}>Baja T.</option>
+                                <option value="Baja" {% if alumno.estado == 'Baja' %}selected{% endif %}>Baja</option>
                             </select>
                         </td>
-                        
+                        <td class="text-dark-blue">{{ alumno.idioma_ant }}</td><td class="text-dark-blue">{{ alumno.maestro_ant }}</td><td style="font-weight:bold; color:#e67e22;">{{ alumno.promedio_ant }}</td>
                         <td>
-                            <select class="form-control select-grupo" data-alumno-id="{{ alumno.id_alumno }}">
-                                <option value="">-- Seleccionar Grupo --</option>
-                                {% for grupo in grupos %}
-                                    <option value="{{ grupo.id_grupo }}" {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>
-                                        <!-- Muestra Info Completa: Nombre | Horario | Profesor -->
-                                        {{ grupo.grupo }} | {{ grupo.dias }} {{ grupo.hora }} ({{ grupo.nombre_profesor }})
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </td>
-
-                        <!-- Acciones: Guardar y Quitar -->
-                        <td>
-                            <div style="display: flex; gap: 5px;">
-                                <button class="btn green btn-guardar-asignacion" 
-                                        data-id="{{ alumno.id_alumno }}" 
-                                        title="Guardar Asignación"
-                                        style="padding: 6px 10px;">
-                                    <i class="fas fa-save"></i>
-                                </button>
-
-                                <button class="btn red btn-desasignar" 
-                                        data-id="{{ alumno.id_alumno }}" 
-                                        title="Quitar Grupo y Nivel"
-                                        style="padding: 6px 10px;">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
+                            {% set docs = alumno.documentos_urls %} 
+                            <div style="display:flex; gap:2px; flex-wrap:wrap;">
+                                {% if docs.comprobante_pago %}<a href="{{ docs.comprobante_pago }}" target="_blank" class="btn-expediente"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i></button></a>{% endif %}
+                                {% if docs.identificacion %}<a href="{{ docs.identificacion }}" target="_blank" class="btn-expediente"><button class="btn-expediente-small"><i class="fas fa-id-card"></i></button></a>{% endif %}
+                                {% if docs.acta_nacimiento %}<a href="{{ docs.acta_nacimiento }}" target="_blank" class="btn-expediente"><button class="btn-expediente-small"><i class="fas fa-baby"></i></button></a>{% endif %}
+                                {% if docs.formato_descuento %}<a href="{{ docs.formato_descuento }}" target="_blank" class="btn-expediente"><button class="btn-expediente-small"><i class="fas fa-percent"></i></button></a>{% endif %}
+                                {% if not (docs.comprobante_pago or docs.identificacion or docs.acta_nacimiento or docs.formato_descuento or docs.documentos_comprobatorios) %}<span class="lightred">N/A</span>{% endif %}
                             </div>
                         </td>
-                        
-                        <!-- Botón Cobrar -->
+                        <td><span class="btn-blue-text">{{ alumno.tipo_inscripcion }}</span></td>
+                        <td><span class="purple font-bold uppercase">{{ alumno.idioma_inscrito or '---' }}</span></td>
+                        <td>{{ alumno.horario or '---' }}</td>
+                        <td><span class="lightblue">{{ alumno.nivel_curso or 'N/A' }}</span></td><td>{{ alumno.nombre_grupo or 'N/A' }}</td><td><span class="green">{{ alumno.maestro or 'N/A' }}</span></td>
                         <td>
-                             <button class="btn magenta btn-cobrar" 
-                                    data-id="{{ alumno.id_alumno }}" 
-                                    data-nombre="{{ alumno.nombre }} {{ alumno.apellido_p }}" 
-                                    data-email="{{ alumno.correo_electronico }}" 
-                                    style="padding: 6px 10px;">
-                                <i class="fas fa-envelope-open-text"></i> Cobrar
-                            </button>
+                            <select class="form-control select-curso" data-id-inscripcion="{{ alumno.id_inscripcion }}">
+                                <option value="">-- Nivel --</option>
+                                {% for curso in cursos %}{% if curso.id_idioma == alumno.id_idioma %}<option value="{{ curso.id_curso }}" {% if alumno.id_curso == curso.id_curso %}selected{% endif %}>{{ curso.nombre_completo }}</option>{% endif %}{% endfor %}
+                            </select>
                         </td>
-
+                        <td>
+                            <select class="form-control select-grupo" data-id-inscripcion="{{ alumno.id_inscripcion }}">
+                                <option value="">-- Grupo --</option>
+                                {% set grupos_compatibles = 0 %}
+                                {% for grupo in grupos %}
+                                    {% if grupo.id_idioma == alumno.id_idioma and grupo.id_horario == alumno.id_horario_preferido %}
+                                        {% set grupos_compatibles = grupos_compatibles + 1 %}
+                                        <option value="{{ grupo.id_grupo }}" {% if alumno.id_grupo == grupo.id_grupo %}selected{% endif %}>{{ grupo.grupo }} | {{ grupo.dias }} {{ grupo.hora }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if grupos_compatibles == 0 %}<option value="" disabled>Sin grupos (Horario)</option>{% endif %}
+                            </select>
+                        </td>
+                        <td><div style="display: flex; gap: 5px;"><button class="btn green btn-guardar-asignacion" data-id-inscripcion="{{ alumno.id_inscripcion }}"><i class="fas fa-save"></i></button><button class="btn red btn-desasignar" data-id-inscripcion="{{ alumno.id_inscripcion }}"><i class="fas fa-trash-alt"></i></button></div></td>
+                        
+                        <td>
+                            {% if not alumno.cobro_enviado %}
+                             <button class="btn magenta btn-cobrar" type="button" data-id-alumno="{{ alumno.id_alumno }}" data-id-inscripcion="{{ alumno.id_inscripcion }}" data-nombre='{{ alumno.nombre }} {{ alumno.apellido_p }}' data-email="{{ alumno.correo_electronico }}"><i class="fas fa-envelope-open-text"></i></button>
+                            {% else %}
+                                <span style="color:#27ae60; font-weight:bold; font-size:0.8em;"><i class="fas fa-check"></i> Enviado</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="17" style="text-align:center;"><i class="fas fa-exclamation-triangle"></i> No hay alumnos registrados con este criterio.</td></tr>
+                    <tr><td colspan="21" style="text-align:center;">No hay alumnos pendientes.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <div id="vistaGrupoContainer" class="group-view-container">
+            <div class="group-header">
+                <h3><i class="fas fa-users"></i> Detalle del Grupo Seleccionado</h3>
+                <span class="badge-count" id="contadorGrupo">-- alumnos</span>
+            </div>
+            <div class="group-details-grid">
+                <div class="detail-item"><span class="detail-label">Idioma</span><span class="detail-value" id="viewIdioma">--</span></div>
+                <div class="detail-item"><span class="detail-label">Nivel</span><span class="detail-value" id="viewNivel">--</span></div>
+                <div class="detail-item"><span class="detail-label">Grupo</span><span class="detail-value" id="viewGrupo">--</span></div>
+                <div class="detail-item"><span class="detail-label">Docente</span><span class="detail-value" id="viewDocente">--</span></div>
+            </div>
+            <div class="table-container small-table">
+                <table id="tablaGrupoDetalle">
+                    <thead>
+                        <tr>
+                            <th>No.</th><th>Matrícula</th><th>Nombre</th><th>Apellido</th><th>Correo</th><th>Edad</th>
+                            <th>Estado</th><th style="background-color:#8e44ad; color:white;">Idioma Ant.</th><th style="background-color:#8e44ad; color:white;">Maestro Ant.</th><th style="background-color:#8e44ad; color:white;">Calif. Ant.</th>
+                            <th>Expediente</th><th>Tipo</th><th>Idioma Actual</th><th>Horario</th>
+                            <th>Nivel</th><th>Grupo</th><th>Maestro</th>
+                            <th>ASIGNAR NIVEL</th><th>ASIGNAR GRUPO</th><th>ACCIONES</th><th>Cobro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaGrupoBody">
+                        <tr><td colspan="21" style="text-align:center; padding: 20px; color: #888;">Seleccione un alumno arriba o guarde cambios para ver el grupo aquí.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
-    
-    <!-- MODAL DE COBRO -->
+
     <div id="cobroModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" data-modal-target="cobroModal">&times;</span>
-            <h2>Aplicar Descuentos y Enviar Cobro</h2>
+            <h2>Enviar Cobro</h2>
             <p><strong>Alumno:</strong> <span id="modalAlumnoNombre"></span></p>
-            <p><strong>Email:</strong> <span id="modalAlumnoEmail"></span></p>
-
             <div class="descuento-options">
-                <h3>Descuentos Disponibles ($1,870.00 MXN base)</h3>
-                <label class="descuento-radio"><input type="radio" name="descuento_aplicado" value="0.00" data-nombre="REGULAR" checked> REGULAR (Sin descuento)</label>
-                <label class="descuento-radio"><input type="radio" name="descuento_aplicado" value="0.10" data-nombre="FAM 10%"> FAM 10%</label>
-                <label class="descuento-radio"><input type="radio" name="descuento_aplicado" value="0.10" data-nombre="IDIOMAS 10%"> IDIOMAS 10%</label>
-                <label class="descuento-radio"><input type="radio" name="descuento_aplicado" value="0.20" data-nombre="20%"> 20% (EGRESADOS, ACTIVOS, FAM)</label>
-                <label class="descuento-radio"><input type="radio" name="descuento_aplicado" value="0.50" data-nombre="50%"> 50% AUTORI</label>
+                <h3>Selecciona los Descuentos ($1,870.00 MXN)</h3>
+                <label class="descuento-check"><input type="checkbox" class="check-desc" value="0.10" data-nombre="FAM 10%"> FAM 10%</label>
+                <label class="descuento-check"><input type="checkbox" class="check-desc" value="0.10" data-nombre="IDIOMAS 10%"> IDIOMAS 10%</label>
+                <label class="descuento-check"><input type="checkbox" class="check-desc" value="0.20" data-nombre="20%"> 20% (EGRESADOS/ACTIVOS)</label>
+                <label class="descuento-check"><input type="checkbox" class="check-desc" value="0.50" data-nombre="50%"> 50% AUTORI</label>
             </div>
-            
-            <div class="cobro-summary">
-                Costo Base: <span class="original">$1,870.00</span>
-                Total a Cobrar: <span class="final" id="totalACobrar">$1,870.00</span>
-            </div>
-
-            <div class="modal-actions">
-                <button id="btnEnviarCobro" class="btn green" style="padding: 10px 20px;">
-                    <i class="fas fa-paper-plane"></i> Enviar Cobro
-                </button>
-            </div>
+            <div class="cobro-summary">Total: <span class="final" id="totalACobrar">$1,870.00</span></div>
+            <div class="modal-actions"><button id="btnEnviarCobro" class="btn green"><i class="fas fa-paper-plane"></i> Enviar</button></div>
         </div>
     </div>
 
-    <!-- MODAL DE NOTIFICACIÓN -->
     <div id="notificationModal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <span class="close-btn" data-modal-target="notificationModal">&times;</span>
@@ -235,9 +252,15 @@
     </div>
     
     <script>
+    const GLOBAL_CURSOS = {{ cursos | tojson }} || [];
+    const GLOBAL_GRUPOS = {{ grupos | tojson }} || [];
     const COSTO_BASE = 1870.00; 
+    
     let currentAlumnoId = null;
+    let currentInscripcionId = null; // Para identificar qué botón borrar
     let currentAlumnoEmail = null;
+    let filtroIdiomaActivo = null; 
+    let filtroGeneralActivo = null; 
 
     function showNotification(type, message, reload = false) {
         const modal = document.getElementById('notificationModal');
@@ -250,89 +273,267 @@
     }
 
     function calcularTotal() {
-        const radio = document.querySelector('#cobroModal input[name="descuento_aplicado"]:checked');
-        if (!radio) return;
-        const desc = parseFloat(radio.value);
-        const total = COSTO_BASE * (1.0 - desc);
-        const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-        document.getElementById('totalACobrar').textContent = formatter.format(total);
-        return { total: total, nombre: radio.getAttribute('data-nombre'), pct: desc * 100 };
+        // Sumar checkboxes seleccionados
+        const checkboxes = document.querySelectorAll('.check-desc:checked');
+        let totalDesc = 0;
+        let nombres = [];
+        
+        checkboxes.forEach(cb => {
+            totalDesc += parseFloat(cb.value);
+            nombres.push(cb.getAttribute('data-nombre'));
+        });
+        
+        // Tope 100%
+        if(totalDesc > 1) totalDesc = 1;
+
+        const total = COSTO_BASE * (1.0 - totalDesc);
+        const totalEl = document.getElementById('totalACobrar');
+        if(totalEl) totalEl.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total);
+        return { total: total, nombre: nombres.join(', ') || 'REGULAR', pct: totalDesc * 100 };
+    }
+
+    function actualizarColorSelect(select) {
+        select.classList.remove('Activo', 'Baja_temporal', 'Baja');
+        const clase = select.value.replace(' ', '_');
+        select.classList.add(clase);
+    }
+
+    function aplicarFiltros() {
+        const tableRows = document.querySelectorAll('#tablaAlumnosPrincipal tbody tr');
+        const input = document.getElementById('searchInput');
+        const terminoBusqueda = input ? input.value.toLowerCase().trim() : '';
+        const clearBtn = document.getElementById('clearSearch');
+        if(clearBtn) clearBtn.style.display = terminoBusqueda.length > 0 ? 'block' : 'none';
+
+        tableRows.forEach(row => {
+            if(row.cells.length < 2) return;
+            let mostrar = true;
+            if (filtroGeneralActivo && filtroGeneralActivo !== 'total') {
+                const estadoFila = row.getAttribute('data-estado');
+                const numIdiomas = parseInt(row.getAttribute('data-idiomas') || 0);
+                if (filtroGeneralActivo === 'multi') { if (numIdiomas <= 1) mostrar = false; } 
+                else { if (estadoFila !== filtroGeneralActivo) mostrar = false; }
+            }
+            if (mostrar && filtroIdiomaActivo) {
+                const celdaIdioma = row.querySelector('td:nth-child(13)'); 
+                if (celdaIdioma && celdaIdioma.textContent.trim().toUpperCase() !== filtroIdiomaActivo) mostrar = false;
+            }
+            if (mostrar && terminoBusqueda.length > 0) {
+                const txt = row.innerText.toLowerCase();
+                if (!txt.includes(terminoBusqueda)) mostrar = false;
+            }
+            row.style.display = mostrar ? '' : 'none';
+        });
+    }
+
+    function cargarVistaGrupo(idGrupo) {
+        const container = document.getElementById('vistaGrupoContainer');
+        const tbody = document.getElementById('tablaGrupoBody');
+        if(!idGrupo || !tbody) return;
+
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('viewIdioma').textContent = 'Cargando...';
+
+        fetch(`/api/alumnos_por_grupo/${idGrupo}`)
+        .then(r => r.json())
+        .then(data => {
+            if(data.status === 'success') {
+                const g = data.grupo || {};
+                document.getElementById('viewIdioma').textContent = g.idioma || '--';
+                document.getElementById('viewNivel').textContent = g.nivel || '--';
+                document.getElementById('viewGrupo').textContent = `${g.grupo || 'S/N'} (${g.numero_salon})`;
+                document.getElementById('viewDocente').textContent = g.profesor || 'Sin asignar';
+                document.getElementById('contadorGrupo').textContent = `${data.total} alumnos`;
+                
+                tbody.innerHTML = '';
+                if(data.total === 0) {
+                    tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;">El grupo está vacío.</td></tr>';
+                } else {
+                    data.alumnos.forEach((al, index) => {
+                        let docsHtml = '<div style="display:flex; gap:2px; flex-wrap:wrap;">';
+                        const d = al.documentos_urls || {};
+                        if(d.comprobante_pago) docsHtml += `<a href="${d.comprobante_pago}" target="_blank" class="btn-expediente"><button class="btn-expediente-small"><i class="fas fa-file-invoice-dollar"></i></button></a>`;
+                        if(d.identificacion) docsHtml += `<a href="${d.identificacion}" target="_blank" class="btn-expediente"><button class="btn-expediente-small"><i class="fas fa-id-card"></i></button></a>`;
+                        docsHtml += '</div>';
+
+                        const estadoClase = (al.estado || 'Activo').replace(' ', '_');
+                        const selEstado = `<select class="select-estado ${estadoClase}" data-id-inscripcion="${al.id_inscripcion}"><option value="Activo" ${al.estado === 'Activo' ? 'selected' : ''}>Activo</option><option value="Baja temporal" ${al.estado === 'Baja temporal' ? 'selected' : ''}>Baja T.</option><option value="Baja" ${al.estado === 'Baja' ? 'selected' : ''}>Baja</option></select>`;
+
+                        let selectCursoHtml = `<select class="form-control select-curso" data-id-inscripcion="${al.id_inscripcion}"><option value="">-- Nivel --</option>`;
+                        GLOBAL_CURSOS.forEach(c => { if(c.id_idioma == al.id_idioma) selectCursoHtml += `<option value="${c.id_curso}" ${al.id_curso == c.id_curso ? 'selected' : ''}>${c.nombre_completo}</option>`; });
+                        selectCursoHtml += `</select>`;
+
+                        let selectGrupoHtml = `<select class="form-control select-grupo" data-id-inscripcion="${al.id_inscripcion}"><option value="">-- Grupo --</option>`;
+                        GLOBAL_GRUPOS.forEach(grp => { if(grp.id_idioma == al.id_idioma && grp.id_horario == al.id_horario_preferido) selectGrupoHtml += `<option value="${grp.id_grupo}" ${al.id_grupo == grp.id_grupo ? 'selected' : ''}>${grp.grupo} | ${grp.dias} ${grp.hora}</option>`; });
+                        selectGrupoHtml += `</select>`;
+
+                        // Botón Cobrar Condicional
+                        let btnCobro = '';
+                        if(!al.cobro_enviado) {
+                            btnCobro = `<button class="btn magenta btn-cobrar" type="button" data-id-alumno="${al.id_alumno}" data-id-inscripcion="${al.id_inscripcion}" data-nombre="${al.nombre}" data-email="${al.correo_electronico}"><i class="fas fa-envelope-open-text"></i></button>`;
+                        } else {
+                            btnCobro = `<span style="color:#27ae60; font-weight:bold; font-size:0.8em;"><i class="fas fa-check"></i> Enviado</span>`;
+                        }
+
+                        const row = `<tr>
+                            <td>${index + 1}</td><td class="lila font-bold">${al.matricula}</td><td>${al.nombre}</td><td>${al.apellido_p}</td><td>${al.correo_electronico}</td><td class="blue">${al.edad || '--'}</td>
+                            <td>${selEstado}</td>
+                            <td class="text-dark-blue">${al.idioma_ant || '---'}</td><td class="text-dark-blue">${al.maestro_ant || '---'}</td><td style="font-weight:bold; color:#e67e22;">${al.promedio_ant || '---'}</td>
+                            <td>${docsHtml}</td><td>${al.tipo_inscripcion || ''}</td><td class="purple font-bold uppercase">${al.idioma_inscrito || '---'}</td><td>${al.horario || '---'}</td>
+                            <td class="lightblue">${al.nivel_curso || 'N/A'}</td><td>${al.nombre_grupo || 'N/A'}</td><td class="green">${al.maestro || 'N/A'}</td>
+                            <td>${selectCursoHtml}</td><td>${selectGrupoHtml}</td>
+                            <td><div style="display: flex; gap: 5px;"><button class="btn green btn-guardar-asignacion" data-id-inscripcion="${al.id_inscripcion}"><i class="fas fa-save"></i></button><button class="btn red btn-desasignar" data-id-inscripcion="${al.id_inscripcion}"><i class="fas fa-trash-alt"></i></button></div></td>
+                            <td>${btnCobro}</td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                }
+            }
+        })
+        .catch(err => console.error("Error cargando grupo:", err));
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         
-        // Close buttons
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.onclick = function() { document.getElementById(this.getAttribute('data-modal-target')).style.display = 'none'; }
-        });
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        if(searchInput) {
+            searchInput.addEventListener('keyup', aplicarFiltros);
+            clearSearch.addEventListener('click', function() { searchInput.value = ''; aplicarFiltros(); searchInput.focus(); });
+        }
 
-        // Radio change
-        document.querySelectorAll('input[name="descuento_aplicado"]').forEach(r => r.addEventListener('change', calcularTotal));
-
-        // Boton Cobrar
-        document.querySelectorAll('.btn-cobrar').forEach(btn => {
-            btn.addEventListener('click', function() {
-                currentAlumnoId = this.getAttribute('data-id');
-                currentAlumnoEmail = this.getAttribute('data-email');
-                document.getElementById('modalAlumnoNombre').textContent = this.getAttribute('data-nombre');
-                document.getElementById('modalAlumnoEmail').textContent = currentAlumnoEmail;
-                document.querySelector('input[data-nombre="REGULAR"]').checked = true;
-                calcularTotal();
-                document.getElementById('cobroModal').style.display = 'block';
+        document.querySelectorAll('.stat-box').forEach(box => {
+            box.addEventListener('click', function() {
+                const filtro = this.getAttribute('data-filter');
+                if(filtroGeneralActivo === filtro) { filtroGeneralActivo = null; this.classList.remove('active-filter-general'); } 
+                else { filtroGeneralActivo = filtro; document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active-filter-general')); this.classList.add('active-filter-general'); }
+                aplicarFiltros();
             });
         });
 
-        // Enviar Cobro
-        document.getElementById('btnEnviarCobro').addEventListener('click', function() {
-            const info = calcularTotal();
-            this.disabled = true; this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            
-            fetch("{{ url_for('enviar_cobro_factura') }}", {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_alumno: currentAlumnoId, total_a_cobrar: info.total, descuentos_aplicados: info.nombre, porcentaje_aplicado: info.pct })
-            })
-            .then(r => r.json())
-            .then(d => {
-                document.getElementById('cobroModal').style.display = 'none';
-                showNotification(d.status, d.message);
-            })
-            .finally(() => { this.disabled = false; this.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Cobro'; });
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const idiomaSeleccionado = this.querySelector('.stat-label').textContent.trim().toUpperCase();
+                if (filtroIdiomaActivo === idiomaSeleccionado) { filtroIdiomaActivo = null; this.classList.remove('active-filter'); } 
+                else { filtroIdiomaActivo = idiomaSeleccionado; document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter')); this.classList.add('active-filter'); }
+                aplicarFiltros();
+            });
         });
 
-        // Guardar Asignación
-        document.querySelectorAll('.btn-guardar-asignacion').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const row = this.closest('tr');
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('select-estado')) {
+                const select = e.target;
+                actualizarColorSelect(select);
+                fetch('/actualizar_estado_alumno', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_inscripcion: select.getAttribute('data-id-inscripcion'), nuevo_estado: select.value }) })
+                .then(r => r.json()).then(d => { if(d.status !== 'success') showNotification('error', 'Error al actualizar estado'); })
+                .catch(console.error);
+            }
+            // Recalcular si cambian checkboxes
+            if (e.target.classList.contains('check-desc')) calcularTotal();
+        });
+
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('button'); if (!target) return;
+
+            // 1. COBRAR
+            if (target.classList.contains('btn-cobrar')) {
+                currentAlumnoId = target.getAttribute('data-id-alumno');
+                currentInscripcionId = target.getAttribute('data-id-inscripcion'); // Guardamos referencia
+                const nombre = target.getAttribute('data-nombre');
+                const email = target.getAttribute('data-email');
+
+                if (!currentAlumnoId) { console.error("ID no encontrado"); return; }
+
+                document.getElementById('modalAlumnoNombre').textContent = nombre || 'Alumno';
+                
+                // Reset checkboxes
+                document.querySelectorAll('.check-desc').forEach(cb => cb.checked = false);
+                calcularTotal();
+                
+                document.getElementById('cobroModal').style.display = 'block';
+                return;
+            }
+
+            // 2. GUARDAR
+            if (target.classList.contains('btn-guardar-asignacion')) {
+                const row = target.closest('tr');
                 const id_curso = row.querySelector('.select-curso').value;
                 const id_grupo = row.querySelector('.select-grupo').value;
-                
+                const id_inscripcion = target.getAttribute('data-id-inscripcion');
                 if (!id_curso || !id_grupo) return showNotification('error', 'Selecciona Nivel y Grupo');
-                
-                this.disabled = true; this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                fetch("{{ url_for('asignar_grupo_curso') }}", {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_alumno: this.getAttribute('data-id'), id_grupo, id_curso })
+                target.disabled = true; target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                fetch("{{ url_for('asignar_grupo_curso') }}", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_inscripcion, id_grupo, id_curso }) })
+                .then(r => r.json()).then(d => {
+                    if(d.status === 'success') {
+                        showNotification('success', 'Guardado', false);
+                        if (row.closest('#tablaAlumnosPrincipal')) { row.classList.add('fade-out-row'); setTimeout(() => { row.remove(); }, 500); }
+                        cargarVistaGrupo(id_grupo);
+                    } else { showNotification('error', d.message); }
                 })
-                .then(r => r.json())
-                .then(d => showNotification(d.status, d.message, true))
-                .finally(() => { this.disabled = false; this.innerHTML = '<i class="fas fa-save"></i>'; });
-            });
+                .finally(() => { target.disabled = false; target.innerHTML = '<i class="fas fa-save"></i>'; });
+            }
+
+            // 3. DESASIGNAR
+            if (target.classList.contains('btn-desasignar')) {
+                if(!confirm("¿Quitar Grupo?")) return;
+                const row = target.closest('tr');
+                const idInscripcion = target.getAttribute('data-id-inscripcion');
+                const tablaOrigen = row.closest('table').id;
+                target.disabled = true; target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                fetch("/desasignar_grupo_curso", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_inscripcion: idInscripcion }) })
+                .then(r => r.json()).then(d => {
+                    if(d.status === 'success') {
+                        showNotification('success', 'Desasignado', false);
+                        if (tablaOrigen === 'tablaGrupoDetalle') {
+                            const rowClone = row.cloneNode(true);
+                            const cells = rowClone.querySelectorAll('td');
+                            // Limpiar celdas (indices aproximados)
+                            if(cells.length > 17) { cells[14].innerText='---'; cells[15].innerText='N/A'; cells[16].innerText='N/A'; cells[17].innerText='N/A'; }
+                            const s1=rowClone.querySelector('.select-curso'); if(s1)s1.value="";
+                            const s2=rowClone.querySelector('.select-grupo'); if(s2)s2.value="";
+                            const b1=rowClone.querySelector('.btn-desasignar'); if(b1){b1.disabled=false; b1.innerHTML='<i class="fas fa-trash-alt"></i>';}
+                            const b2=rowClone.querySelector('.btn-guardar-asignacion'); if(b2){b2.disabled=false; b2.innerHTML='<i class="fas fa-save"></i>';}
+                            document.querySelector('#tablaAlumnosPrincipal tbody').appendChild(rowClone);
+                            row.remove();
+                        } else { window.location.reload(); }
+                    } else { showNotification('error', d.message); }
+                })
+                .finally(() => { if(row && row.parentNode) target.disabled = false; target.innerHTML = '<i class="fas fa-trash-alt"></i>'; });
+            }
         });
 
-        // Desasignar
-        document.querySelectorAll('.btn-desasignar').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if(!confirm("¿Quitar Grupo y Nivel a este alumno?")) return;
-                this.disabled = true; this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        document.querySelectorAll('.close-btn').forEach(btn => { btn.onclick = function() { document.getElementById(this.getAttribute('data-modal-target')).style.display = 'none'; } });
+        
+        // ENVIAR COBRO Y ELIMINAR BOTÓN
+        document.getElementById('btnEnviarCobro').addEventListener('click', function() {
+            const info = calcularTotal();
+            this.disabled = true; this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch("{{ url_for('enviar_cobro_factura') }}", { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    id_alumno: currentAlumnoId, 
+                    id_inscripcion: currentInscripcionId, // Dato para DB
+                    total_a_cobrar: info.total, 
+                    descuentos_aplicados: info.nombre, 
+                    porcentaje_aplicado: info.pct 
+                }) 
+            })
+            .then(r => r.json()).then(d => { 
+                document.getElementById('cobroModal').style.display = 'none'; 
+                showNotification(d.status, d.message);
                 
-                fetch("/desasignar_grupo_curso", { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_alumno: this.getAttribute('data-id') })
-                })
-                .then(r => r.json())
-                .then(d => showNotification(d.status, d.message, true))
-                .finally(() => { this.disabled = false; this.innerHTML = '<i class="fas fa-trash-alt"></i>'; });
-            });
+                // Eliminar botón visualmente
+                if(d.status === 'success' && currentInscripcionId) {
+                    // Buscar botón por ID Inscripción (más preciso)
+                    const botones = document.querySelectorAll(`button[data-id-inscripcion="${currentInscripcionId}"].btn-cobrar`);
+                    botones.forEach(btn => {
+                        const celda = btn.parentNode;
+                        celda.innerHTML = '<span style="color:#27ae60; font-weight:bold; font-size:0.8em;"><i class="fas fa-check"></i> Enviado</span>';
+                    });
+                }
+            })
+            .finally(() => { this.disabled = false; this.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar'; });
         });
     });
     </script>

@@ -14,11 +14,21 @@
         .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Estilos específicos para la grilla de horarios */
+        .time-slot { height: 60px; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; position: relative; }
+        .slot-occupied { 
+            position: absolute; width: 95%; top: 2px; left: 2px; bottom: 2px; 
+            background: #e0e7ff; border-left: 4px solid #3D348B; 
+            color: #3D348B; font-size: 0.75rem; padding: 4px; 
+            overflow: hidden; cursor: pointer; border-radius: 4px; 
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+        .slot-occupied:hover { transform: scale(1.05); box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; background: #c7d2fe; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col bg-[#f4f6f8]">
 
-    <!-- Navbar -->
     <div class="navbar" onclick="if(isSidebarOpen && event.target.closest('#sidebar') === null) { toggleMenu(); }">
         <div class="flex items-center">
             <div class="menu-icon cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition" onclick="toggleMenu()">
@@ -26,131 +36,215 @@
             </div>
             <h1 class="text-xl md:text-2xl font-semibold ml-4">Gestión Académica</h1>
         </div>
-        <div class="profile"><i class="fas fa-user-circle text-3xl hover:text-gray-300 cursor-pointer"></i></div>
+        <div class="profile flex items-center justify-center text-[#3D348B] font-bold bg-white rounded-full w-10 h-10 cursor-pointer hover:bg-gray-200">
+            <i class="fas fa-user"></i>
+        </div>
     </div>
 
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div>
-            <ul>
-                <li><a href="{{ url_for('gestion_horarios_base') }}" class="active"><i class="fas fa-calendar-alt w-6"></i> Horarios y Grupos</a></li>
-                <li><a href="{{ url_for('gestion_cursos') }}"><i class="fas fa-layer-group w-6"></i> Gestión de Cursos</a></li>
-                <li><a href="{{ url_for('gestion_personal') }}"><i class="fas fa-users w-6"></i> Personal</a></li>
-                <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-user-graduate w-6"></i> Alumnos</a></li>
-            </ul>
-        </div>
-        <div class="p-4 border-t border-gray-700">
-            <ul><li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Salir</a></li></ul>
+         <ul>
+            <li><a href="{{ url_for('historial') }}"><i class="fas fa-graduation-cap"></i><span>Historial</span></a></li>
+            <li><a href="{{ url_for('reinscripciones') }}"><i class="fas fa-list-ul"></i><span>Reinscripciones</span></a></li>
+            <li><a href="{{ url_for('inicio') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="page-content" id="page-content">
         
-        <div class="bg-white rounded-t-xl shadow-sm flex border-b border-gray-200 mb-0 flex-wrap">
+        <div class="bg-white rounded-t-xl shadow-sm flex border-b border-gray-200 mb-0 flex-wrap overflow-hidden">
             <button onclick="switchTab('horarios')" id="btn-horarios" class="tab-btn active flex-1 md:flex-none text-center">
                 <i class="fas fa-clock mr-2"></i> Horarios Base
             </button>
-            
-            <!-- PESTAÑA GRUPOS: AHORA CON ICONO -->
             <button onclick="switchTab('grupos')" id="btn-grupos" class="tab-btn flex-1 md:flex-none text-center">
                 <i class="fas fa-chalkboard-teacher mr-2"></i> Grupos y Salones
             </button>
-            
             <button onclick="switchTab('cursos')" id="btn-cursos" class="tab-btn flex-1 md:flex-none text-center">
                 <i class="fas fa-book-open mr-2"></i> Cursos y Académico
             </button>
         </div>
 
-        <!-- VISTA 1: HORARIOS BASE -->
         <div id="view-horarios" class="view-section active">
-            <div class="sedes-control mb-4 rounded-t-none" id="sedes-container">
-                <h3 class="text-lg font-semibold" style="margin: 0 15px 0 0; color: var(--primary-color);">Sedes:</h3>
-                <button class="sede-btn add-sede-btn" onclick="addSede()"><i class="fas fa-plus"></i> Añadir Sede</button>
+            <div class="sedes-control mb-4 rounded-b-lg bg-white p-4 shadow-sm flex items-center gap-4 flex-wrap" id="sedes-container">
+                <h3 class="text-lg font-bold text-[#3D348B]">Sedes:</h3>
+                <button class="sede-btn add-sede-btn border-2 border-dashed border-[#3D348B] text-[#3D348B] hover:bg-blue-50 px-4 py-1 rounded-full font-bold text-sm transition" onclick="addSede()">
+                    <i class="fas fa-plus"></i> Añadir
+                </button>
             </div>
+
             <div class="workspace active" id="workspace-container-horarios">
                 <div class="assignment-panel">
-                    <h2 id="panel-title">Crear Franja Horaria</h2>
+                    <h2 class="text-[#3D348B] text-lg font-bold border-b pb-2 mb-4">Crear Franja Horaria</h2>
                     <form id="assign-form" class="space-y-5" action="{{ url_for('guardar_horario_base') }}" method="POST">
                         <input type="hidden" name="sede" id="sede_input_hidden">
-                        <div class="form-group"><label>Días:</label><div class="days-checkbox-group"><label><input type="checkbox" name="dias[]" value="1"> Lunes</label><label><input type="checkbox" name="dias[]" value="2"> Martes</label><label><input type="checkbox" name="dias[]" value="3"> Miércoles</label><label><input type="checkbox" name="dias[]" value="4"> Jueves</label><label><input type="checkbox" name="dias[]" value="5"> Viernes</label><label><input type="checkbox" name="dias[]" value="6"> Sábado</label></div></div>
-                        <div class="form-group"><label>Horario:</label><div class="time-input-group flex gap-4"><input type="time" name="hora_inicio" required><input type="time" name="hora_fin" required></div></div>
-                        <div class="form-actions"><button type="submit" class="btn-assign"><i class="fas fa-clock mr-2"></i> Registrar Horario</button></div>
+                        
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-2">Días:</label>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="dias[]" value="1" class="accent-[#3D348B]"> Lunes</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="dias[]" value="2" class="accent-[#3D348B]"> Martes</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="dias[]" value="3" class="accent-[#3D348B]"> Miércoles</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="dias[]" value="4" class="accent-[#3D348B]"> Jueves</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="dias[]" value="5" class="accent-[#3D348B]"> Viernes</label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="dias[]" value="6" class="accent-[#3D348B]"> Sábado</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-2">Horario:</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="time" name="hora_inicio" required class="w-full p-2 border rounded text-sm">
+                                <span class="text-gray-400">-</span>
+                                <input type="time" name="hora_fin" required class="w-full p-2 border rounded text-sm">
+                            </div>
+                        </div>
+
+                        <div class="form-actions pt-2">
+                            <button type="submit" class="btn-assign bg-[#3D348B] hover:bg-[#2a2461] text-white py-2 rounded-lg font-bold w-full transition shadow-md">
+                                <i class="fas fa-clock mr-2"></i> Registrar Horario
+                            </button>
+                        </div>
                     </form>
                 </div>
+
                 <div class="schedule-view">
                     <div class="schedule-header border-b pb-2 mb-4 flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">Horarios en <span id="current-sede-name" class="text-[#3D348B]">...</span></h2>
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            Horarios en <span id="current-sede-name" class="text-[#3D348B] underline decoration-2 decoration-[#F7B801]">...</span>
+                        </h2>
                         <div class="flex gap-2">
-                            <button onclick="editSede()" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded" title="Renombrar Sede"><i class="fas fa-pen"></i></button>
-                            <button onclick="deleteSede()" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded" title="Eliminar Sede"><i class="fas fa-trash-alt"></i></button>
+                            <button onclick="editSede()" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-2 rounded transition" title="Renombrar Sede"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteSede()" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded transition" title="Eliminar Sede"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
-                    <div class="timetable overflow-x-auto" id="timetable"><p class="text-center text-gray-500 py-10">Cargando...</p></div>
+                    <div class="timetable overflow-x-auto border border-gray-200 rounded-lg" id="timetable">
+                        <p class="text-center text-gray-500 py-10">Cargando...</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 2: GESTIÓN DE GRUPOS -->
         <div id="view-grupos" class="view-section">
-            <div class="workspace active" style="opacity: 1; transform: translateY(0);">
+            <div class="workspace active">
                 <div class="assignment-panel">
-                    <h2 class="text-[#3D348B] border-b-2 border-gray-100 pb-2 mb-4 text-xl font-bold">Crear Nuevo Grupo</h2>
+                    <h2 class="text-[#3D348B] border-b pb-2 mb-4 text-lg font-bold">Crear Nuevo Grupo</h2>
                     <form id="grupo-form" class="space-y-4">
-                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Curso (Idioma y Nivel):</label><select name="id_curso" class="w-full p-2 border border-gray-300 rounded" required><option value="" disabled selected>-- Selecciona --</option>{% for curso in cursos %}<option value="{{ curso.id_curso }}">{{ curso.idioma }} - {{ curso.club if curso.club else curso.nivel }}</option>{% endfor %}</select></div>
-                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Docente:</label><select name="id_profesor" class="w-full p-2 border border-gray-300 rounded" required><option value="" disabled selected>-- Selecciona --</option>{% for profe in profesores %}<option value="{{ profe.id_profesor }}">{{ profe.nombre_completo }}</option>{% endfor %}</select></div>
-                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Nombre Grupo:</label><input type="text" name="nombre_grupo" placeholder="Ej. ING-A1-2024" class="w-full p-2 border border-gray-300 rounded" required></div>
-                        <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Salón:</label><input type="text" name="salon" placeholder="Ej. B-101" class="w-full p-2 border border-gray-300 rounded" required></div>
-                        <div class="form-actions"><button type="submit" class="btn-assign bg-[#F7B801] hover:bg-[#F18701] text-[#333]"><i class="fas fa-plus-circle mr-2"></i> Crear Grupo</button></div>
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-1">Curso (Idioma y Nivel):</label>
+                            <select name="id_curso" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#3D348B] outline-none" required>
+                                <option value="" disabled selected>-- Selecciona --</option>
+                                {% for curso in cursos %}
+                                <option value="{{ curso.id_curso }}">{{ curso.idioma }} - {{ curso.club if curso.club else curso.nivel }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-1">Docente:</label>
+                            <select name="id_profesor" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#3D348B] outline-none" required>
+                                <option value="" disabled selected>-- Selecciona --</option>
+                                {% for profe in profesores %}
+                                <option value="{{ profe.id_profesor }}">{{ profe.nombre_completo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-1">Asignar Horario:</label>
+                            <select name="id_horario" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#3D348B] outline-none" required>
+                                <option value="" disabled selected>-- Selecciona Horario --</option>
+                                {% for h in horarios %}
+                                <option value="{{ h.id_horario }}">{{ h.detalle }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-1">Nombre Grupo:</label>
+                            <input type="text" name="nombre_grupo" placeholder="Ej. ING-A1-2024" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#3D348B] outline-none" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-bold text-gray-600 mb-1">Salón:</label>
+                            <input type="text" name="salon" placeholder="Ej. B-101" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#3D348B] outline-none" required>
+                        </div>
+
+                        <div class="form-actions pt-2">
+                            <button type="submit" class="btn-assign bg-[#F7B801] hover:bg-[#F18701] text-[#333] font-bold w-full py-2 rounded-lg shadow transition">
+                                <i class="fas fa-plus-circle mr-2"></i> Crear Grupo
+                            </button>
+                        </div>
                     </form>
                 </div>
+
                 <div class="schedule-view">
                     <div class="schedule-header flex justify-between items-center mb-4 border-b pb-2">
                         <h2 class="text-xl font-bold text-[#3D348B]">Grupos Activos</h2>
                         <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">{{ grupos|length }} Grupos</span>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                         {% if grupos %}
                             {% for g in grupos %}
-                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 relative group hover:shadow-md transition">
-                                <div class="absolute top-2 right-2 flex gap-2">
-                                    <button onclick="openEditGrupo({{ g.id_grupo }})" class="text-gray-300 hover:text-[#3D348B] transition" title="Editar"><i class="fas fa-edit"></i></button>
-                                    <button onclick="deleteGrupo({{ g.id_grupo }})" class="text-gray-300 hover:text-red-500 transition" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 relative group hover:shadow-md transition duration-200 flex flex-col justify-between">
+                                <div>
+                                    <div class="absolute top-2 right-2 flex gap-2">
+                                        <button onclick="openEditGrupo({{ g.id_grupo }})" class="text-gray-300 hover:text-[#3D348B] transition p-1" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button onclick="deleteGrupo({{ g.id_grupo }})" class="text-gray-300 hover:text-red-500 transition p-1" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                        <span class="bg-[#7678ED] text-white text-xs font-bold px-2 py-1 rounded">{{ g.idioma }}</span>
+                                        {% if g.club %}
+                                            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded border border-purple-200"><i class="fas fa-star mr-1"></i> {{ g.club }}</span>
+                                        {% else %}
+                                            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">{{ g.nivel }}</span>
+                                        {% endif %}
+                                        <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded border border-green-200 flex items-center" title="Alumnos inscritos">
+                                            <i class="fas fa-users text-[10px] mr-1"></i>{{ g.cantidad_alumnos }}
+                                        </span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-[#3D348B] mb-1">{{ g.nombre_grupo }}</h3>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <p class="truncate"><i class="fas fa-user-tie w-5 text-center text-[#F7B801]"></i> {{ g.profesor }}</p>
+                                        <p><i class="fas fa-door-open w-5 text-center text-[#F7B801]"></i> Salón: <strong>{{ g.numero_salon }}</strong></p>
+                                        <div class="pt-2 mt-2 border-t border-dashed border-gray-200">
+                                            {% if g.dias %}
+                                                <p class="text-xs text-gray-600 font-semibold"><i class="far fa-clock text-[#F7B801] mr-1"></i> {{ g.dias }} | {{ g.hora }}</p>
+                                                <p class="text-[10px] text-gray-400 pl-4">Sede: {{ g.sede }}</p>
+                                            {% else %}
+                                                <p class="text-xs text-gray-400 italic"><i class="far fa-clock mr-1"></i> Sin horario asignado</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="bg-[#7678ED] text-white text-xs font-bold px-2 py-1 rounded">{{ g.idioma }}</span>
-                                    {% if g.club %}
-                                        <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded border border-purple-200"><i class="fas fa-star mr-1"></i> {{ g.club }}</span>
-                                    {% else %}
-                                        <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">{{ g.nivel }}</span>
-                                    {% endif %}
-                                    <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded border border-green-200" title="Alumnos inscritos"><i class="fas fa-users text-[10px] mr-1"></i>{{ g.cantidad_alumnos }}</span>
-                                </div>
-                                <h3 class="text-lg font-bold text-[#3D348B] mb-1">{{ g.nombre_grupo }}</h3>
-                                <div class="text-sm text-gray-600">
-                                    <p class="truncate"><i class="fas fa-user-tie w-5 text-center"></i> {{ g.profesor }}</p>
-                                    <p><i class="fas fa-door-open w-5 text-center"></i> Salón: <strong>{{ g.numero_salon }}</strong></p>
-                                    {% if g.dias %}
-                                        <p class="text-xs text-gray-500 mt-2 pt-2 border-t font-semibold"><i class="far fa-clock text-[#F7B801]"></i> {{ g.dias }} | {{ g.hora }} ({{ g.sede }})</p>
-                                    {% else %}
-                                        <p class="text-xs text-gray-400 mt-2 pt-2 border-t"><i>Sin horario asignado</i></p>
-                                    {% endif %}
+                                
+                                <div class="pt-3 mt-2 border-t border-gray-100 flex justify-center">
+                                    <a href="{{ url_for('gestion_asistencia', id_grupo=g.id_grupo) }}" 
+                                    class="flex-1 bg-gray-100 text-gray-700 text-xs px-3 py-2 rounded hover:bg-gray-200 transition text-center font-bold flex items-center justify-center gap-1"
+                                    title="Ver Asistencia">
+                                    <i class="fas fa-list-ul"></i> Asistencias
+                                    </a>
+
+                                    <a href="{{ url_for('calificacion') }}?id_grupo={{ g.id_grupo }}" 
+                                    class="flex-1 bg-[#3D348B] text-white text-xs px-3 py-2 rounded hover:bg-[#2a2461] transition text-center font-bold flex items-center justify-center gap-1"
+                                    title="Ver Calificaciones">
+                                    <i class="fas fa-star"></i> Calificaciones
+                                    </a>
                                 </div>
                             </div>
                             {% endfor %}
                         {% else %}
-                            <div class="col-span-full text-center py-10 text-gray-400">No hay grupos registrados.</div>
+                            <div class="col-span-full text-center py-10 text-gray-400 bg-gray-50 rounded-lg border border-dashed">No hay grupos registrados.</div>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 3: GESTIÓN DE CURSOS Y CLUBES -->
         <div id="view-cursos" class="view-section">
             <div class="workspace active">
                 <div class="assignment-panel">
-                    <h2 class="text-[#3D348B] border-b-2 border-gray-100 pb-2 mb-4 text-xl font-bold">Definir Académico</h2>
+                    <h2 class="text-[#3D348B] border-b pb-2 mb-4 text-lg font-bold">Definir Académico</h2>
                     <form id="curso-form" class="space-y-4">
                         <div class="flex gap-4 p-1 bg-gray-100 rounded-lg">
                             <label class="flex-1 text-center cursor-pointer">
@@ -165,16 +259,16 @@
                         <div class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Idioma:</label><select name="id_idioma" class="w-full p-2 border border-gray-300 rounded" required>{% for idioma in idiomas %}<option value="{{ idioma.id_idioma }}">{{ idioma.nombre }}</option>{% endfor %}</select></div>
                         <div id="campo-nivel" class="form-group"><label class="block text-sm font-bold text-gray-600 mb-1">Nivel:</label><select name="nivel" class="w-full p-2 border border-gray-300 rounded"><option value="">-- Nivel --</option>{% for nivel in niveles %}<option value="{{ nivel }}">{{ nivel }}</option>{% endfor %}</select></div>
                         <div id="campo-club" class="form-group hidden"><label class="block text-sm font-bold text-gray-600 mb-1">Nombre del Club:</label><input type="text" name="club" placeholder="Ej. Speaking Club" class="w-full p-2 border border-gray-300 rounded"><input type="hidden" name="nivel_club" value="Conv"></div>
-                        <div class="form-actions"><button type="submit" class="btn-assign bg-[#7678ED] hover:bg-[#3D348B] text-white"><i class="fas fa-save mr-2"></i> Guardar Definición</button></div>
+                        <div class="form-actions pt-2"><button type="submit" class="btn-assign bg-[#7678ED] hover:bg-[#3D348B] text-white py-2 rounded-lg font-bold w-full shadow"><i class="fas fa-save mr-2"></i> Guardar Definición</button></div>
                     </form>
                 </div>
                 <div class="schedule-view">
                     <div class="schedule-header flex justify-between items-center mb-4 border-b pb-2">
                         <h2 class="text-xl font-bold text-[#3D348B]">Catálogo Académico</h2>
                     </div>
-                    <div class="overflow-y-auto max-h-[600px]">
+                    <div class="overflow-y-auto max-h-[600px] border border-gray-200 rounded-lg">
                         <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                                 <tr><th class="px-4 py-3">Idioma</th><th class="px-4 py-3">Tipo</th><th class="px-4 py-3">Detalle</th><th class="px-4 py-3 text-right">Acción</th></tr>
                             </thead>
                             <tbody>
@@ -184,7 +278,7 @@
                                     <td class="px-4 py-3">{% if c.club %}<span class="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded">Club</span>{% else %}<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">Curso</span>{% endif %}</td>
                                     <td class="px-4 py-3">{% if c.club %} {{ c.club }} {% else %} Nivel {{ c.nivel }} {% endif %}</td>
                                     <td class="px-4 py-3 text-right">
-                                        <button onclick="openEditCurso({{ c.id_curso }})" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
+                                        <button onclick="openEditCurso({{ c.id_curso }})" class="text-blue-500 hover:text-blue-700 mr-3"><i class="fas fa-edit"></i></button>
                                         <button onclick="deleteCurso({{ c.id_curso }})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
@@ -197,17 +291,27 @@
         </div>
     </div>
 
-    <!-- MODALES -->
     <div id="edit-grupo-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2000] flex justify-center items-center backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
-            <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-bold text-[#3D348B]">Editar Grupo</h2><button onclick="document.getElementById('edit-grupo-modal').classList.add('hidden')" class="text-gray-400"><i class="fas fa-times"></i></button></div>
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md animate-fade-in-down">
+            <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-bold text-[#3D348B]">Editar Grupo</h2><button onclick="document.getElementById('edit-grupo-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
             <form id="edit-grupo-form" class="space-y-4">
                 <input type="hidden" id="edit-id-grupo" name="id_grupo">
-                <div class="form-group"><label>Curso:</label><select id="edit-id-curso" name="id_curso" class="w-full p-2 border rounded" required>{% for curso in cursos %}<option value="{{ curso.id_curso }}">{{ curso.idioma }} - {{ curso.club if curso.club else curso.nivel }}</option>{% endfor %}</select></div>
-                <div class="form-group"><label>Docente:</label><select id="edit-id-profesor" name="id_profesor" class="w-full p-2 border rounded" required>{% for profe in profesores %}<option value="{{ profe.id_profesor }}">{{ profe.nombre_completo }}</option>{% endfor %}</select></div>
-                <div class="form-group"><label>Nombre:</label><input type="text" id="edit-nombre-grupo" name="nombre_grupo" class="w-full p-2 border rounded" required></div>
-                <div class="form-group"><label>Salón:</label><input type="text" id="edit-salon" name="salon" class="w-full p-2 border rounded" required></div>
-                <button type="submit" class="w-full bg-[#3D348B] text-white py-2 rounded font-bold">Guardar Cambios</button>
+                <div class="form-group"><label class="block text-sm font-bold text-gray-600">Curso:</label><select id="edit-id-curso" name="id_curso" class="w-full p-2 border rounded" required>{% for curso in cursos %}<option value="{{ curso.id_curso }}">{{ curso.idioma }} - {{ curso.club if curso.club else curso.nivel }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label class="block text-sm font-bold text-gray-600">Docente:</label><select id="edit-id-profesor" name="id_profesor" class="w-full p-2 border rounded" required>{% for profe in profesores %}<option value="{{ profe.id_profesor }}">{{ profe.nombre_completo }}</option>{% endfor %}</select></div>
+                
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-gray-600">Horario:</label>
+                    <select id="edit-id-horario" name="id_horario" class="w-full p-2 border rounded" required>
+                        <option value="" disabled>-- Selecciona --</option>
+                        {% for h in horarios %}
+                        <option value="{{ h.id_horario }}">{{ h.detalle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group"><label class="block text-sm font-bold text-gray-600">Nombre:</label><input type="text" id="edit-nombre-grupo" name="nombre_grupo" class="w-full p-2 border rounded" required></div>
+                <div class="form-group"><label class="block text-sm font-bold text-gray-600">Salón:</label><input type="text" id="edit-salon" name="salon" class="w-full p-2 border rounded" required></div>
+                <button type="submit" class="w-full bg-[#3D348B] hover:bg-[#2a2461] text-white py-2 rounded font-bold shadow transition">Guardar Cambios</button>
             </form>
         </div>
     </div>
@@ -237,20 +341,109 @@
 
     <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2000] flex justify-center items-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-[#3D348B]">Editar Horario</h2>
+                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
             <form id="edit-form" class="space-y-4">
                 <input type="hidden" id="edit-id-horario">
-                <div class="form-group"><label>Sede:</label><select id="edit-sede" class="w-full p-2 border rounded"></select></div>
-                <div class="form-group"><label>Días:</label><div class="grid grid-cols-3 gap-2"><label><input type="checkbox" class="edit-day-cb" value="Lun"> Lun</label><label><input type="checkbox" class="edit-day-cb" value="Mar"> Mar</label><label><input type="checkbox" class="edit-day-cb" value="Mié"> Mié</label><label><input type="checkbox" class="edit-day-cb" value="Jue"> Jue</label><label><input type="checkbox" class="edit-day-cb" value="Vie"> Vie</label><label><input type="checkbox" class="edit-day-cb" value="Sáb"> Sáb</label></div></div>
-                <div class="form-group"><label>Horario:</label><div class="flex gap-2"><input type="time" id="edit-hora-inicio" class="w-full p-2 border rounded"><input type="time" id="edit-hora-fin" class="w-full p-2 border rounded"></div></div>
-                <div class="flex justify-between pt-4 border-t"><button type="button" onclick="deleteHorario()" class="text-red-600">Eliminar</button><button type="submit" class="bg-[#3D348B] text-white px-4 py-2 rounded">Guardar</button></div>
+                <div class="form-group">
+                    <label class="block font-bold text-gray-600 text-sm">Sede:</label>
+                    <select id="edit-sede" class="w-full p-2 border rounded bg-gray-50"></select>
+                </div>
+                <div class="form-group">
+                    <label class="block font-bold text-gray-600 text-sm">Días:</label>
+                    <div class="grid grid-cols-3 gap-2 mt-1">
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="edit-day-cb accent-[#3D348B]" value="Lun"> <span class="text-sm">Lun</span></label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="edit-day-cb accent-[#3D348B]" value="Mar"> <span class="text-sm">Mar</span></label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="edit-day-cb accent-[#3D348B]" value="Mié"> <span class="text-sm">Mié</span></label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="edit-day-cb accent-[#3D348B]" value="Jue"> <span class="text-sm">Jue</span></label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="edit-day-cb accent-[#3D348B]" value="Vie"> <span class="text-sm">Vie</span></label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="edit-day-cb accent-[#3D348B]" value="Sáb"> <span class="text-sm">Sáb</span></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="block font-bold text-gray-600 text-sm">Horario:</label>
+                    <div class="flex gap-2">
+                        <input type="time" id="edit-hora-inicio" class="w-full p-2 border rounded" required>
+                        <span class="self-center text-gray-400">-</span>
+                        <input type="time" id="edit-hora-fin" class="w-full p-2 border rounded" required>
+                    </div>
+                </div>
+                <div class="flex justify-between pt-4 border-t mt-4">
+                    <button type="button" onclick="deleteHorario()" class="text-red-500 hover:text-red-700 font-bold text-sm px-3 py-2 rounded hover:bg-red-50 transition">
+                        <i class="fas fa-trash-alt mr-1"></i> Eliminar
+                    </button>
+                    <button type="submit" class="bg-[#3D348B] hover:bg-[#2a2461] text-white px-6 py-2 rounded font-bold shadow transition">
+                        <i class="fas fa-save mr-1"></i> Guardar
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
+       <footer class="main-footer">
+    <div class="footer-content">
+      <p>Contacto: info@centroidiomas.edu | Tel: (123) 456-7890</p>
+      <div class="social-login-icons">
+        <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer">
+          <div class="socialcontainer">
+            <div class="icon social-icon-2-2">
+              <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
+                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
+              </svg>
+            </div>
+            <div class="social-icon-2">
+              <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
+                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
+              </svg>
+            </div>
+          </div>
+        </a>
+        <a href="https://www.facebook.com/share/1Cf7KRJFKm/" target="_blank" rel="noopener noreferrer">
+          <div class="socialcontainer">
+            <div class="icon social-icon-3-3">
+              <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
+                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
+              </svg>
+            </div>
+            <div class="social-icon-3">
+              <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
+                <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
+              </svg>
+            </div>
+          </div>
+        </a>
+        <a href="https://www.tiktok.com/@centrodeidiomasutr?_t=ZS-8zg1HTdLcZM&_r=1" target="_blank" rel="noopener noreferrer">
+            <div class="socialcontainer">
+              <div class="icon social-icon-5-5">
+                 <svg viewBox="0 0 448 512" fill="white" height="1.4em">
+                    <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
+                </svg>
+              </div>
+              <div class="social-icon-5">
+                 <svg viewBox="0 0 448 512" fill="white" height="1.4em">
+                    <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
+                </svg>
+              </div>
+            </div>
+        </a>
+        <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer">
+            <div class="socialcontainer">
+              <div class="icon social-icon-6-6">
+                <svg fill="white" viewBox="0 0 16 16" height="1.4em">
+                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
+                </svg>
+              </div>
+            </div>
+        </a>
+      </div>
+    </div>
+  </footer>
     <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[2100] flex justify-center items-center">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm text-center">
             <h3 id="modal-title" class="text-lg font-bold mb-2"></h3><p id="modal-text"></p>
-            <button onclick="document.getElementById('message-modal').classList.add('hidden'); if(document.getElementById('modal-title').classList.contains('text-green-700')) location.reload();" class="bg-[#3D348B] text-white font-bold py-2 px-6 rounded-lg">Aceptar</button>
+            <button onclick="document.getElementById('message-modal').classList.add('hidden'); if(document.getElementById('modal-title').classList.contains('text-green-700')) location.reload();" class="bg-[#3D348B] text-white font-bold py-2 px-6 rounded-lg mt-4">Aceptar</button>
         </div>
     </div>
 
@@ -259,110 +452,127 @@
     function toggleMenu(){ document.getElementById('sidebar').classList.toggle('active'); if(window.innerWidth>1000) document.getElementById('page-content').classList.toggle('shifted'); }
     function showMessage(t,x,y='success'){ const m=document.getElementById('message-modal'); document.getElementById('modal-title').textContent=t; document.getElementById('modal-title').className=y==='success'?'text-lg font-bold mb-2 text-green-700':'text-lg font-bold mb-2 text-[#F35B04]'; document.getElementById('modal-text').textContent=x; m.classList.remove('hidden'); }
 
-    // --- SEDES ---
+    // --- LOGICA DE SEDES ---
     async function editSede(){ const o=selectedSede; const n=prompt("Nuevo nombre:",o); if(n&&n!==o){ try{ const r=await fetch('/editar_sede',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_name:o,new_name:n})}); if((await r.json()).status==='success') location.reload(); }catch{showMessage('Error','Error','error');}}}
     async function deleteSede(){ if(confirm("¿Borrar sede y horarios?")) { try{ const r=await fetch('/eliminar_sede',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:selectedSede})}); if((await r.json()).status==='success') location.reload(); }catch{showMessage('Error','Error','error');}}}
+    function addSede(){ const n=prompt("Nueva Sede:"); if(n&&!sedes.includes(n)){sedes.push(n); selectSede(n);} }
 
-    // --- VALIDACION Y ENVIO (HORARIOS) ---
+    // --- LOGICA DE HORARIOS (CREAR/EDITAR) ---
     document.getElementById('assign-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        // 1. Validar Sede
         const sede = document.getElementById('sede_input_hidden').value;
-        if (!sede || sede.trim() === "") {
-            return showMessage('Error', 'Debes seleccionar o añadir una Sede primero.', 'error');
-        }
-        // 2. Validar Días
+        if (!sede || sede.trim() === "") return showMessage('Error', 'Debes seleccionar o añadir una Sede primero.', 'error');
         const dias = document.querySelectorAll('#assign-form input[name="dias[]"]:checked');
-        if (dias.length === 0) {
-            return showMessage('Error', 'Debes marcar al menos un día.', 'error');
-        }
-        // 3. Validar Horas
+        if (dias.length === 0) return showMessage('Error', 'Debes marcar al menos un día.', 'error');
         const inputs = document.querySelectorAll('#assign-form input[type="time"]');
-        for(let i of inputs) if(!i.value) return showMessage('Error', 'Debes definir la hora de inicio y fin.', 'error');
-
-        await fetch(e.target.action, {method:'POST', body:new FormData(e.target)}); 
-        location.reload();
+        for(let i of inputs) if(!i.value) return showMessage('Error', 'Debes definir hora de inicio y fin.', 'error');
+        await fetch(e.target.action, {method:'POST', body:new FormData(e.target)}); location.reload();
     });
 
+    // ABRIR MODAL EDITAR HORARIO (Al hacer clic en la grilla)
+    function openEditModal(id) {
+        const horario = HORARIOS_BASE.find(h => h.id === id);
+        if (!horario) return;
+        document.getElementById('edit-id-horario').value = horario.id;
+
+        // Llenar sedes
+        const sedeSelect = document.getElementById('edit-sede'); sedeSelect.innerHTML = '';
+        sedes.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = s; if (s === horario.sede) opt.selected = true; sedeSelect.appendChild(opt); });
+
+        // Días checkboxes
+        const diasActivos = horario.dias_str ? horario.dias_str.split(',').map(d => d.trim()) : [];
+        document.querySelectorAll('.edit-day-cb').forEach(cb => { cb.checked = diasActivos.includes(cb.value); });
+
+        // Horas
+        document.getElementById('edit-hora-inicio').value = horario.time; 
+        document.getElementById('edit-hora-fin').value = horario.end_time; 
+        document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    // GUARDAR EDICIÓN HORARIO
     document.getElementById('edit-form').addEventListener('submit', async(e)=>{
         e.preventDefault();
-        const d=Array.from(document.querySelectorAll('.edit-day-cb:checked')).map(c=>c.value);
-        if(!d.length) return showMessage('Error', 'Selecciona un día', 'error');
-        await fetch('/editar_horario_base',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_horario:document.getElementById('edit-id-horario').value,sede:document.getElementById('edit-sede').value,dias:d,hora_inicio:document.getElementById('edit-hora-inicio').value,hora_fin:document.getElementById('edit-hora-fin').value})}); location.reload(); 
+        const diasSeleccionados = Array.from(document.querySelectorAll('.edit-day-cb:checked')).map(c => c.value);
+        if(!diasSeleccionados.length) return showMessage('Error', 'Selecciona un día', 'error');
+        try {
+            const res = await fetch('/editar_horario_base', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    id_horario: document.getElementById('edit-id-horario').value,
+                    sede: document.getElementById('edit-sede').value,
+                    dias: diasSeleccionados,
+                    hora_inicio: document.getElementById('edit-hora-inicio').value,
+                    hora_fin: document.getElementById('edit-hora-fin').value
+                })
+            });
+            if((await res.json()).status === 'success') location.reload(); else showMessage('Error', 'No se pudo actualizar', 'error');
+        } catch(err) { showMessage('Error', 'Error de conexión', 'error'); }
     });
+
+    // ELIMINAR HORARIO
+    async function deleteHorario(){ 
+        const id = document.getElementById('edit-id-horario').value;
+        if(confirm("¿Eliminar este horario?")) { 
+            try {
+                const r = await fetch(`/eliminar_horario_base/${id}`, {method:'POST'}); 
+                const data = await r.json();
+                if(data.status === 'success') location.reload(); 
+                else showMessage('Error', data.message, 'error'); 
+            } catch { showMessage('Error','Error de conexión','error'); }
+        }
+    }
 
     // --- CURSOS ---
     function toggleCursoForm(){ const t=document.querySelector('input[name="tipo_registro"]:checked').value; document.getElementById('campo-nivel').className=t==='curso'?'form-group':'form-group hidden'; document.getElementById('campo-club').className=t==='curso'?'form-group hidden':'form-group'; }
-    
-    document.getElementById('curso-form').addEventListener('submit',async function(e){ 
-        e.preventDefault(); 
-        const tipo = document.querySelector('input[name="tipo_registro"]:checked').value;
-        if(tipo === 'curso' && !document.querySelector('select[name="nivel"]').value) return showMessage('Error', 'Selecciona un Nivel', 'error');
-        if(tipo === 'club' && !document.querySelector('input[name="club"]').value) return showMessage('Error', 'Escribe nombre del Club', 'error');
-
-        const f=new FormData(this); 
-        if(tipo==='club') f.set('nivel','Conv'); 
-        await fetch('/guardar_curso',{method:'POST',body:f}); location.reload(); 
-    });
+    document.getElementById('curso-form').addEventListener('submit',async function(e){ e.preventDefault(); const tipo = document.querySelector('input[name="tipo_registro"]:checked').value; if(tipo === 'curso' && !document.querySelector('select[name="nivel"]').value) return showMessage('Error', 'Selecciona un Nivel', 'error'); if(tipo === 'club' && !document.querySelector('input[name="club"]').value) return showMessage('Error', 'Escribe nombre del Club', 'error'); const f=new FormData(this); if(tipo==='club') f.set('nivel','Conv'); await fetch('/guardar_curso',{method:'POST',body:f}); location.reload(); });
     async function deleteCurso(id){ if(confirm("¿Borrar?")) { await fetch(`/eliminar_curso/${id}`,{method:'POST'}); location.reload(); }}
 
-    // --- EDITAR CURSO ---
-    function toggleEditCursoForm(){ 
-        const t=document.querySelector('input[name="edit_tipo_registro"]:checked').value; 
-        document.getElementById('edit-campo-nivel').className=t==='curso'?'form-group':'form-group hidden'; 
-        document.getElementById('edit-campo-club').className=t==='curso'?'form-group hidden':'form-group'; 
-    }
-    async function openEditCurso(id) {
-        try {
-            const res = await fetch(`/api/curso_detail/${id}`); const data = await res.json();
-            if(data.status === 'success') {
-                const c = data.curso; document.getElementById('edit-id-curso-academico').value = c.id_curso; document.getElementById('edit-id-idioma').value = c.id_idioma;
-                if (c.club && c.club.trim() !== "") { document.querySelector('input[name="edit_tipo_registro"][value="club"]').checked = true; document.getElementById('edit-club').value = c.club; document.getElementById('edit-nivel').value = ""; } 
-                else { document.querySelector('input[name="edit_tipo_registro"][value="curso"]').checked = true; document.getElementById('edit-nivel').value = c.nivel; document.getElementById('edit-club').value = ""; }
-                toggleEditCursoForm(); document.getElementById('edit-curso-modal').classList.remove('hidden');
-            }
-        } catch(e) { showMessage('Error', 'Error cargando', 'error'); }
-    }
-    document.getElementById('edit-curso-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        if (document.querySelector('input[name="edit_tipo_registro"]:checked').value === 'curso') { formData.set('club', ''); } else { formData.set('nivel', 'Conv'); }
-        try { const res = await fetch('/editar_curso', { method: 'POST', body: formData }); if ((await res.json()).status === 'success') location.reload(); } catch { showMessage('Error', 'Error al guardar', 'error'); }
-    });
+    // EDITAR CURSO
+    function toggleEditCursoForm(){ const t=document.querySelector('input[name="edit_tipo_registro"]:checked').value; document.getElementById('edit-campo-nivel').className=t==='curso'?'form-group':'form-group hidden'; document.getElementById('edit-campo-club').className=t==='curso'?'form-group hidden':'form-group'; }
+    async function openEditCurso(id) { try { const res = await fetch(`/api/curso_detail/${id}`); const data = await res.json(); if(data.status === 'success') { const c = data.curso; document.getElementById('edit-id-curso-academico').value = c.id_curso; document.getElementById('edit-id-idioma').value = c.id_idioma; if (c.club && c.club.trim() !== "") { document.querySelector('input[name="edit_tipo_registro"][value="club"]').checked = true; document.getElementById('edit-club').value = c.club; document.getElementById('edit-nivel').value = ""; } else { document.querySelector('input[name="edit_tipo_registro"][value="curso"]').checked = true; document.getElementById('edit-nivel').value = c.nivel; document.getElementById('edit-club').value = ""; } toggleEditCursoForm(); document.getElementById('edit-curso-modal').classList.remove('hidden'); } } catch(e) { showMessage('Error', 'Error cargando', 'error'); } }
+    document.getElementById('edit-curso-form').addEventListener('submit', async function(e) { e.preventDefault(); const formData = new FormData(this); if (document.querySelector('input[name="edit_tipo_registro"]:checked').value === 'curso') { formData.set('club', ''); } else { formData.set('nivel', 'Conv'); } try { const res = await fetch('/editar_curso', { method: 'POST', body: formData }); if ((await res.json()).status === 'success') location.reload(); } catch { showMessage('Error', 'Error al guardar', 'error'); } });
 
     // --- GRUPOS ---
-    document.getElementById('grupo-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        // Validación extra si quieres asegurar selects
-        if(!this.id_curso.value || !this.id_profesor.value || !this.nombre_grupo.value.trim() || !this.salon.value.trim()) return showMessage('Error', 'Campos vacíos', 'error');
-        await fetch('/guardar_grupo', {method:'POST', body:new FormData(this)}); location.reload();
-    });
-
-    async function openEditGrupo(id){ const r=await fetch(`/api/grupo_detail/${id}`); const d=await r.json(); if(d.status==='success'){ const g=d.grupo; document.getElementById('edit-id-grupo').value=g.id_grupo; document.getElementById('edit-id-curso').value=g.id_curso; document.getElementById('edit-id-profesor').value=g.id_profesor; document.getElementById('edit-nombre-grupo').value=g.grupo; document.getElementById('edit-salon').value=g.numero_salon; document.getElementById('edit-grupo-modal').classList.remove('hidden'); }}
+    document.getElementById('grupo-form').addEventListener('submit', async function(e) { e.preventDefault(); if(!this.id_curso.value || !this.id_profesor.value || !this.nombre_grupo.value.trim() || !this.salon.value.trim() || !this.id_horario.value) return showMessage('Error', 'Campos vacíos', 'error'); await fetch('/guardar_grupo', {method:'POST', body:new FormData(this)}); location.reload(); });
+    
+    async function openEditGrupo(id){ 
+        const r=await fetch(`/api/grupo_detail/${id}`); const d=await r.json(); 
+        if(d.status==='success'){ const g=d.grupo; document.getElementById('edit-id-grupo').value=g.id_grupo; document.getElementById('edit-id-curso').value=g.id_curso; document.getElementById('edit-id-profesor').value=g.id_profesor; document.getElementById('edit-nombre-grupo').value=g.grupo; document.getElementById('edit-salon').value=g.numero_salon; 
+        if(g.id_horario) document.getElementById('edit-id-horario').value = g.id_horario; else document.getElementById('edit-id-horario').value = "";
+        document.getElementById('edit-grupo-modal').classList.remove('hidden'); }
+    }
     document.getElementById('edit-grupo-form').addEventListener('submit',async function(e){e.preventDefault(); await fetch('/editar_grupo',{method:'POST',body:new FormData(this)}); location.reload();});
     async function deleteGrupo(id){ if(confirm("¿Borrar grupo?")){ await fetch(`/eliminar_grupo/${id}`,{method:'POST'}); location.reload(); }}
-    async function deleteHorario(){ if(confirm("¿Borrar?")) { await fetch(`/eliminar_horario_base/${document.getElementById('edit-id-horario').value}`,{method:'POST'}); location.reload(); }}
 
     // --- CARGA INICIAL ---
     let sedes=JSON.parse('{{ sedes | tojson }}'), HORARIOS_BASE=[], selectedSede=sedes.length>0?sedes[0]:'';
     const dayNames=['Lun','Mar','Mié','Jue','Vie','Sáb'], timeSlots=['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+    
     function renderSedes(){ const c=document.getElementById('sedes-container'); c.querySelectorAll('.sede-wrapper').forEach(e=>e.remove()); sedes.forEach(s=>{ const w=document.createElement('div'); w.className='sede-wrapper'; const b=document.createElement('button'); b.className=`sede-btn ${s===selectedSede?'active':''}`; b.innerHTML=`<i class="fas fa-map-marker-alt"></i> ${s}`; b.onclick=()=>selectSede(s); w.appendChild(b); c.insertBefore(w,c.querySelector('.add-sede-btn')); }); }
     function selectSede(s){ selectedSede=s; document.getElementById('current-sede-name').textContent=s; document.getElementById('sede_input_hidden').value=s; renderSedes(); populateTimetable(); }
-    function addSede(){ const n=prompt("Sede:"); if(n&&!sedes.includes(n)){sedes.push(n); selectSede(n);} }
-    function populateTimetable(){ const t=document.getElementById('timetable'); t.innerHTML=`<div class="time-header">Hora</div>`+dayNames.map(d=>`<div class="day-header">${d}</div>`).join(''); timeSlots.forEach(tm=>{ const l=document.createElement('div'); l.className='time-slot bg-gray-50 font-bold flex items-center justify-center'; l.textContent=tm; t.appendChild(l); for(let d=1;d<=6;d++){ const c=document.createElement('div'); c.className='time-slot relative'; HORARIOS_BASE.filter(h=>h.sede===selectedSede&&h.day===d&&h.time===tm).forEach(m=>{ const s=document.createElement('div'); s.className='slot-occupied cursor-pointer hover:scale-105 transition shadow-sm'; s.innerHTML=`<strong>${m.time} - ${m.end_time}</strong>`; s.onclick=(e)=>{e.stopPropagation(); openEditModal(m.id);}; c.appendChild(s); }); t.appendChild(c); } }); }
+    
+    function populateTimetable(){ 
+        const t=document.getElementById('timetable'); t.innerHTML=`<div class="time-header">Hora</div>`+dayNames.map(d=>`<div class="day-header">${d}</div>`).join(''); 
+        timeSlots.forEach(tm=>{ 
+            const l=document.createElement('div'); l.className='time-slot bg-gray-50 font-bold flex items-center justify-center text-xs text-gray-500'; l.textContent=tm; t.appendChild(l); 
+            for(let d=1;d<=6;d++){ 
+                const c=document.createElement('div'); c.className='time-slot relative'; 
+                // Filtrar horarios que coincidan con Sede, Día y HoraInicio
+                HORARIOS_BASE.filter(h=>h.sede===selectedSede&&h.day===d&&h.time===tm).forEach(m=>{ 
+                    const s=document.createElement('div'); s.className='slot-occupied'; 
+                    s.innerHTML=`<strong>${m.time} - ${m.end_time}</strong>`; 
+                    s.onclick=(e)=>{e.stopPropagation(); openEditModal(m.id);}; // ¡AQUÍ SE ABRE LA EDICIÓN!
+                    c.appendChild(s); 
+                }); 
+                t.appendChild(c); 
+            } 
+        }); 
+    }
 
     window.onload = async function() {
-        const res = await fetch('/api/horarios_base');
-        HORARIOS_BASE = await res.json();
+        const res = await fetch('/api/horarios_base'); HORARIOS_BASE = await res.json();
         [...new Set(HORARIOS_BASE.map(h=>h.sede))].forEach(s=>{if(!sedes.includes(s))sedes.push(s)});
-        
-        // SELECCIONAR AUTOMÁTICAMENTE LA PRIMERA SEDE
-        if(sedes.length > 0) {
-            selectSede(sedes[0]);
-        } else {
-            renderSedes();
-        }
-        populateTimetable();
+        if(sedes.length > 0) selectSede(sedes[0]); else renderSedes(); populateTimetable();
     };
 </script>
 </body>

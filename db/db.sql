@@ -15,8 +15,6 @@ CREATE TABLE alumnos (
         'INSCRIPCIÓN ADULTOS REGULAR','INSCRIPCIÓN ADULTO DESCUENTO',
         'INSCRIPCIÓN MENORES REGULAR','INSCRIPCIÓN MENORES DESCUENTO'
     ),
-    id_curso INT,
-    id_grupo INT,
     id_expediente_mongo CHAR(24),
     contraseña VARCHAR(255),
 	reset_token VARCHAR(100),
@@ -65,7 +63,10 @@ CREATE TABLE profesores (
     genero enum('M','H'),
     reset_token VARCHAR(100),
     token_expiration DATETIME DEFAULT NULL,
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    valor_hora float,
+    tasa_iva float,
+    tasa_isr_retenido float
 );
 
 CREATE TABLE staff (
@@ -81,13 +82,14 @@ CREATE TABLE staff (
     genero enum('M','H'),
     reset_token VARCHAR(100),
 	token_expiration DATETIME DEFAULT NULL,
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    valor_hora float,
+    tasa_iva float,
+    tasa_isr_retenido float
 );
 
 alter table grupos add constraint foreign key (id_horario) references horario (id_horario);
 alter table cursos add constraint foreign key (id_idioma) references idioma (id_idioma);
-alter table alumnos add constraint foreign key (id_curso) references cursos (id_curso);
-alter table alumnos add constraint foreign key (id_grupo) references grupos (id_grupo);
 alter table grupos add constraint foreign key (id_profesor) references profesores(id_profesor);
 
 create table comentarios(
@@ -108,8 +110,10 @@ create table asistencias(
 	id_alumno int,
 	id_profesor int,
 	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_clase DATE NOT NULL,  
 );
 
+ALTER TABLE asistencias ADD UNIQUE KEY uk_asistencia_dia (id_alumno, id_grupo, fecha_clase);
 alter table asistencias add constraint foreign key (id_grupo) references grupos (id_grupo);
 alter table asistencias add constraint foreign key (id_alumno) references alumnos (id_alumno);
 alter table asistencias add constraint foreign key (id_profesor) references profesores (id_profesor);
@@ -151,7 +155,8 @@ create table calificaciones_ninos(
     id_grupo int,
 	id_alumno int,
 	id_profesor int,
-	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    parcial ENUM('1','2','3')
 );
 
 alter table calificaciones_ninos add constraint foreign key (id_grupo) references grupos (id_grupo);
@@ -176,7 +181,8 @@ create table calificaciones_lsm(
     id_grupo int,
 	id_alumno int,
 	id_profesor int,
-	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    parcial ENUM('1','2','3')
 );
 
 alter table calificaciones_lsm add constraint foreign key (id_grupo) references grupos (id_grupo);
@@ -213,7 +219,8 @@ create table calificaciones_prof(
     id_grupo int,
 	id_alumno int,
 	id_profesor int,
-	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    parcial ENUM('1','2','3')
 );
 
 alter table calificaciones_prof add constraint foreign key (id_grupo) references grupos (id_grupo);
@@ -291,12 +298,27 @@ CREATE TABLE inscripciones_idioma (
     id_idioma INT NOT NULL,
     id_horario INT NOT NULL,
     fecha_inscripcion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    cobro_enviado BOOLEAN DEFAULT 0,
+    id_grupo INT,
+    id_curso INT,
+    estado ENUM('Activo','Baja temporal','Baja') DEFAULT 'Activo',
+    calificacion_final DECIMAL(4,2),
     UNIQUE KEY uk_alumno_idioma_horario (id_alumno, id_idioma, id_horario)
 );
 
+alter table inscripciones_idioma ADD CONSTRAINT fk_insc_grupo FOREIGN KEY (id_grupo) REFERENCES grupos(id_grupo),
+alter table inscripciones_idioma ADD CONSTRAINT fk_insc_curso FOREIGN KEY (id_curso) REFERENCES cursos(id_curso);
 alter table inscripciones_idioma add constraint foreign key (id_alumno) references alumnos (id_alumno);
 alter table inscripciones_idioma add constraint foreign key (id_idioma) references idioma (id_idioma);
 alter table inscripciones_idioma add constraint foreign key (id_horario) references horario (id_horario);
+
+UPDATE inscripciones_idioma ii
+JOIN alumnos a ON ii.id_alumno = a.id_alumno
+SET 
+    ii.id_grupo = a.id_grupo,
+    ii.id_curso = a.id_curso,
+    ii.estado = a.estado
+WHERE a.id_grupo IS NOT NULL;
 
 create table utr_data(
     id_utr_data int not null auto_increment primary key,
