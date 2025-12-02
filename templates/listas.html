@@ -3,391 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Asistencia</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Tomar Asistencia</title>
     <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/listas.css') }}">
-    <style>
-        /* --- UTILIDADES --- */
-        .hidden-col { display: none !important; }
-
-        /* --- CHECKBOX PERSONALIZADO --- */
-        .attendance-check {
-            -webkit-appearance: none; appearance: none;
-            width: 24px; height: 24px;
-            border: 2px solid #d1d5db; border-radius: 6px;
-            cursor: pointer; position: relative;
-            transition: all 0.2s ease; vertical-align: middle;
-            background-color: white;
-        }
-        .attendance-check:hover { border-color: #566a93; background-color: #f8fafc; }
-        .attendance-check:checked {
-            background-color: #2ecc71; border-color: #2ecc71;
-            transform: scale(1.05);
-        }
-        .attendance-check:checked::after {
-            content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900;
-            color: white; font-size: 14px;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-
-        /* --- BOTÓN COMENTARIOS --- */
-        .btn-obs-pretty {
-            width: 36px; height: 36px; border-radius: 50%; border: none;
-            background-color: #e0f2fe; color: #0284c7;
-            cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .btn-obs-pretty:hover { background-color: #0284c7; color: white; transform: translateY(-2px); }
-
-        /* --- HISTORIAL COMENTARIOS --- */
-        .obs-item {
-            background: #ffffff; border: 1px solid #f3f4f6; padding: 15px;
-            margin-bottom: 12px; border-radius: 8px; border-left: 4px solid #566a93;
-            position: relative; transition: transform 0.2s;
-        }
-        .obs-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #9ca3af; margin-bottom: 8px; font-weight: 700; }
-        .obs-text { font-size: 0.95rem; color: #4b5563; line-height: 1.5; white-space: pre-wrap; }
-        .obs-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
-        .obs-btn { cursor: pointer; font-size: 0.9rem; color: #d1d5db; background: none; border: none; transition: 0.2s; }
-        .obs-btn:hover { color: #566a93; }
-        .obs-btn.delete:hover { color: #ef4444; }
-        .editing-mode { border-color: #F7B801 !important; background-color: #fffdf5 !important; }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
 <div class="navbar">
     <div class="menu-icon" id="menu-icon"><span></span><span></span><span></span></div>
-    <h1>{{ grupo.grupo }} - {{ grupo.idioma }} ({{ grupo.nivel }})</h1>
-    <div class="profile"><i class="fas fa-user-circle" style="font-size: 30px; color: white;"></i></div>
+    <h1>
+        {% if session.rol == 'staff' %}Consulta de Asistencia{% else %}Tomar Asistencia{% endif %}
+    </h1>
+    <div class="profile">{{ session.get('nombre', 'P')[0] }}</div>
 </div>
 
 <nav class="sidebar" id="sidebar">
     <ul>
-        <li><a href="{{ url_for('grupos') }}"><i class="fas fa-arrow-left"></i><span>Volver a Grupos</span></a></li>
-        <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
-        <li><a href="{{ url_for('calificacion') }}"><i class="fas fa-graduation-cap"></i><span>Calificaciones</span></a></li>
-        <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
-        <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-home"></i><span>Home</span></a></li>
-        <li><a href="{{ url_for('registro') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        {% if session.rol == 'staff' %}
+            <!-- Menú para Staff (ajusta las rutas según tu app) -->
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <!-- Puedes agregar más opciones de staff aquí -->
+        {% else %}
+            <!-- Menú para Docentes -->
+            <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-arrow-left"></i><span>Volver a Clases</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+        {% endif %}
+        <li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
 
-<div class="page-content">
-
-    <div class="date-navigation">
-        <button class="nav-btn" id="prev-week-btn"><i class="fas fa-chevron-left"></i> Semana Ant.</button>
-        <div class="current-date-display">
-            <i class="far fa-calendar-alt" style="margin-right:8px;"></i>
-            <span id="date-range-label">Cargando...</span>
+<main class="page-content">
+    <div class="content-wrapper">
+        
+        <!-- Encabezado del Grupo -->
+        <div class="header-card">
+            <div class="group-info">
+                <h2>{{ grupo.idioma }} - {{ grupo.nivel }}</h2>
+                <p><i class="fas fa-users"></i> {{ grupo.grupo }} &nbsp;|&nbsp; <i class="fas fa-door-open"></i> Salón: {{ grupo.numero_salon }}</p>
+                <p class="schedule"><i class="far fa-clock"></i> {{ grupo.dias }} {{ grupo.hora }}</p>
+                {% if session.rol == 'staff' %}
+                    <p style="color: #e74c3c; font-weight: bold; margin-top: 5px;"><i class="fas fa-lock"></i> Modo Vista (Staff)</p>
+                {% endif %}
+            </div>
+            <div class="date-control">
+                <label>Fecha de Clase:</label>
+                <input type="date" id="fecha-clase" class="input-fecha">
+            </div>
         </div>
-        <button class="nav-btn" id="next-week-btn">Semana Sig. <i class="fas fa-chevron-right"></i></button>
-    </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 50px;">No.</th>
-                    <th>Matrícula</th>
-                    <th>Nombre</th>
-                    <th style="text-align:center; width: 60px;">Obs.</th> 
-                    
-                    <th id="th-clase0" class="col-day-0 text-center">Lunes</th>
-                    <th id="th-clase1" class="col-day-1 text-center">Martes</th>
-                    <th id="th-clase2" class="col-day-2 text-center">Miércoles</th>
-                    <th id="th-clase3" class="col-day-3 text-center">Jueves</th>
-                    <th id="th-clase4" class="col-day-4 text-center">Viernes</th>
-                    <th id="th-clase5" class="col-day-5 text-center">Sábado</th>
-                    <th style="text-align:center; color: #e74c3c;">FALTAS</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if alumnos %}
-                    {% for alumno in alumnos %}
-                    <tr data-id-alumno="{{ alumno.id_alumno }}">
-                        <td>{{ loop.index }}</td>
-                        <td style="font-family: monospace; font-weight: bold; color: #566a93;">{{ alumno.matricula }}</td>
-                        <td style="font-weight: 600; color: #374151;">{{ alumno.nombre_completo }}</td>
-                        
-                        <td style="text-align:center;">
-                            <div style="display: flex; justify-content: center;">
-                                <button class="btn-obs-pretty" onclick="openObservation({{ alumno.id_alumno }}, '{{ alumno.nombre_completo }}')" title="Ver Observaciones">
+        <!-- Tabla de Alumnos -->
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Alumno</th>
+                        <!-- Columnas de conteo -->
+                        <th style="text-align: center;" title="Total Asistencias"><i class="fas fa-check-circle"></i></th>
+                        <th style="text-align: center;" title="Total Faltas"><i class="fas fa-times-circle"></i></th>
+                        <th style="text-align: center;">Estado Hoy</th>
+                        <th style="text-align: center;">Obs.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if alumnos %}
+                        {% for alumno in alumnos %}
+                        <tr id="row-{{ alumno.id_alumno }}">
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="student-info">
+                                    <span class="nombre">{{ alumno.nombre_completo }}</span>
+                                    <span class="matricula">{{ alumno.matricula }}</span>
+                                </div>
+                            </td>
+                            
+                            <!-- Contadores -->
+                            <td style="text-align: center;">
+                                <span class="badge-count green">{{ alumno.total_asistencias }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="badge-count red">{{ alumno.total_faltas }}</span>
+                            </td>
+
+                            <!-- Botones Asistencia (Deshabilitados para Staff) -->
+                            <td class="acciones">
+                                <div class="toggle-attendance">
+                                    <input type="radio" id="asist-{{ alumno.id_alumno }}" name="status-{{ alumno.id_alumno }}" value="1" 
+                                           onchange="marcarAsistencia('{{ alumno.id_alumno }}', true)"
+                                           {% if session.rol == 'staff' %}disabled{% endif %}>
+                                    <label for="asist-{{ alumno.id_alumno }}" class="btn-option btn-present {% if session.rol == 'staff' %}disabled-opt{% endif %}">
+                                        <i class="fas fa-check"></i>
+                                    </label>
+
+                                    <input type="radio" id="falta-{{ alumno.id_alumno }}" name="status-{{ alumno.id_alumno }}" value="0"
+                                           onchange="marcarAsistencia('{{ alumno.id_alumno }}', false)"
+                                           {% if session.rol == 'staff' %}disabled{% endif %}>
+                                    <label for="falta-{{ alumno.id_alumno }}" class="btn-option btn-absent {% if session.rol == 'staff' %}disabled-opt{% endif %}">
+                                        <i class="fas fa-times"></i>
+                                    </label>
+                                </div>
+                                <span id="status-msg-{{ alumno.id_alumno }}" class="status-msg"></span>
+                            </td>
+
+                            <!-- Botón Comentarios -->
+                            <td style="text-align: center;">
+                                <button class="btn-comment" onclick="openCommentModal('{{ alumno.id_alumno }}', '{{ alumno.nombre_completo }}')">
                                     <i class="far fa-comment-dots"></i>
                                 </button>
-                            </div>
-                        </td>
-                        
-                        <td class="text-center col-day-0"><input type="checkbox" class="attendance-check" data-day="0"></td>
-                        <td class="text-center col-day-1"><input type="checkbox" class="attendance-check" data-day="1"></td>
-                        <td class="text-center col-day-2"><input type="checkbox" class="attendance-check" data-day="2"></td>
-                        <td class="text-center col-day-3"><input type="checkbox" class="attendance-check" data-day="3"></td>
-                        <td class="text-center col-day-4"><input type="checkbox" class="attendance-check" data-day="4"></td>
-                        <td class="text-center col-day-5"><input type="checkbox" class="attendance-check" data-day="5"></td>
-                        
-                        <td style="text-align: center; font-weight: bold; color: #bdc3c7; font-size: 1.1em;">0</td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr><td colspan="11" style="text-align:center; padding: 40px; color: #9ca3af; font-style: italic;">No hay alumnos inscritos en este grupo.</td></tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="6" class="empty-msg">No hay alumnos inscritos.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
 
-    <div class="buttons">
-        <button class="btn" id="print-btn"><i class="fas fa-print"></i> Imprimir Lista</button>
     </div>
-    
-    <div id="observation-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 id="modal-title" style="color: #3D348B;">Observaciones</h2>
-            <p id="modal-alumno-name" style="color: #6b7280; font-weight: 600; margin-bottom: 20px; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px;"></p>
-            
-            <div id="history-section" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
-                <div id="history-list"><p style="color: #999; text-align: center;">Cargando...</p></div>
-            </div>
+</main>
 
-            <div class="add-section" style="border-top: 1px solid #f3f4f6; pt-4;">
-                <h4 id="form-title" style="margin: 0 0 8px 0; font-size: 0.85em; color: #555; text-transform: uppercase;">Nueva Observación:</h4>
-                <textarea id="new-observation-text" rows="3" placeholder="Escribe aquí..." style="width:100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px;"></textarea>
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button id="cancel-edit-btn" class="btn" style="background-color: #9ca3af; display: none;">Cancelar</button>
-                    <button id="save-observation-btn" class="btn" style="flex: 1; background-color: #3D348B;">Guardar Observación</button>
-                </div>
+<!-- MODAL DE COMENTARIOS -->
+<div id="commentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeCommentModal()">&times;</span>
+        <h3>Observaciones: <span id="modal-student-name" style="color: #566a93;"></span></h3>
+        
+        <!-- Historial de Comentarios -->
+        <div id="comments-list" class="comments-list">
+            <p class="loading">Cargando historial...</p>
+        </div>
+
+        <!-- Formulario Nuevo Comentario (Solo visible para Maestros) -->
+        {% if session.rol == 'maestro' %}
+        <div class="new-comment-form">
+            <textarea id="comment-text" placeholder="Escribe una observación sobre el alumno..."></textarea>
+            <div class="form-actions">
+                <button id="btn-cancel-edit" onclick="cancelEdit()" style="display:none;">Cancelar Edición</button>
+                <button id="btn-save-comment" onclick="saveComment()">Guardar Comentario</button>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
-<footer class="main-footer"><div class="footer-content"><p>Centro de Idiomas UTR</p></div></footer>
+<footer class="main-footer">
+    <div class="footer-content"><p>Centro de Idiomas UTR</p></div>
+</footer>
 
 <script>
-// VARIABLES GLOBALES
-const ID_GRUPO = {{ id_grupo }}; 
-const DIAS_CLASE_STR = "{{ grupo.dias }}"; 
-const CURRENT_USER_ID = {{ session.get('user_id', 0) }}; 
+    // Variables de sesión para JS
+    const USER_ROLE = "{{ session.rol }}"; 
+    const USER_ID = {{ session.get('user_id') | tojson }};
 
-let currentDate = new Date(); 
-let currentWeekDates = []; 
-let currentStudentId = null; 
-let editingCommentId = null; 
+    // 1. Menú Lateral
+    const menuIcon = document.getElementById('menu-icon');
+    const sidebar = document.getElementById('sidebar');
+    if(menuIcon) menuIcon.addEventListener('click', () => sidebar.classList.toggle('active'));
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. CONFIGURAR DÍAS VISIBLES
-    const dayMap = { 'Lun': 0, 'Mar': 1, 'Mié': 2, 'Jue': 3, 'Vie': 4, 'Sáb': 5 };
-    let activeDayIndexes = [0,1,2,3,4];
-    if(DIAS_CLASE_STR && DIAS_CLASE_STR.trim() !== "") {
-        activeDayIndexes = DIAS_CLASE_STR.split(',').map(d => dayMap[d.trim()]).filter(d => d !== undefined);
-    }
+    // 2. Fecha por defecto (Hoy)
+    const fechaInput = document.getElementById('fecha-clase');
+    const hoy = new Date().toISOString().split('T')[0];
+    fechaInput.value = hoy;
 
-    // 2. FECHAS Y TABLA
-    function getMonday(d) { var day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1); return new Date(d.setDate(diff)); }
+    const ID_GRUPO = {{ id_grupo | tojson }};
 
-    function updateTableDates(referenceDate) {
-        const monday = getMonday(referenceDate);
-        const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        currentWeekDates = []; 
-        const saturday = new Date(monday); saturday.setDate(monday.getDate() + 5); 
-        document.getElementById('date-range-label').innerText = `SEMANA: ${monday.toLocaleDateString('es-ES', {day:'numeric', month:'short'})} - ${saturday.toLocaleDateString('es-ES', {day:'numeric', month:'short'})}`.toUpperCase();
-        const todayReal = new Date(); todayReal.setHours(0,0,0,0);
-
-        for(let i=0; i<=5; i++){
-            let colDate = new Date(monday); colDate.setDate(monday.getDate() + i);
-            let yyyy = colDate.getFullYear(), mm = String(colDate.getMonth()+1).padStart(2,'0'), dd = String(colDate.getDate()).padStart(2,'0');
-            if(i<6) currentWeekDates.push(`${yyyy}-${mm}-${dd}`);
-
-            const th = document.getElementById(`th-clase${i}`);
-            const cells = document.querySelectorAll(`.col-day-${i}`);
-
-            if (activeDayIndexes.includes(i)) {
-                if(th) th.classList.remove('hidden-col');
-                cells.forEach(c => c.classList.remove('hidden-col'));
-                let isToday = colDate.getTime() === todayReal.getTime();
-                if(isToday) {
-                    th.innerHTML = `${daysOfWeek[i]} <span class="date-subtext">${colDate.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})}</span> <span class="badge-hoy">HOY</span>`;
-                    th.classList.add('th-today');
-                } else {
-                    th.innerHTML = `${daysOfWeek[i]} <span class="date-subtext">${colDate.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})}</span>`;
-                    th.classList.remove('th-today');
-                }
-            } else {
-                if(th) th.classList.add('hidden-col');
-                cells.forEach(c => c.classList.add('hidden-col'));
-            }
+    // --- LÓGICA ASISTENCIA ---
+    async function marcarAsistencia(idAlumno, asistio) {
+        if (USER_ROLE !== 'maestro') {
+            alert("Solo los docentes pueden modificar la asistencia.");
+            return;
         }
-        cargarAsistencias();
-    }
-
-    // --- FUNCIÓN PARA CALCULAR FALTAS ---
-    function actualizarContadorFaltas(row) {
-        let faltas = 0;
-        const checkboxes = row.querySelectorAll('.attendance-check');
+        const fecha = fechaInput.value;
+        const msgSpan = document.getElementById(`status-msg-${idAlumno}`);
         
-        // Fecha de hoy YYYY-MM-DD
-        const hoy = new Date();
-        const hoyStr = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+        if(!fecha) { alert("Selecciona una fecha."); return; }
 
-        checkboxes.forEach(cb => {
-            const dayIndex = cb.getAttribute('data-day');
-            const fechaColumna = currentWeekDates[dayIndex];
-            const parentTd = cb.closest('td');
-
-            // Contar falta si:
-            // 1. Es día de clase (visible).
-            // 2. La fecha es HOY o ANTERIOR (no futuro).
-            // 3. NO está marcado.
-            if (!parentTd.classList.contains('hidden-col') && fechaColumna <= hoyStr && !cb.checked) {
-                faltas++;
-            }
-        });
-
-        const celdaFaltas = row.querySelector('td:last-child');
-        celdaFaltas.innerText = faltas;
-        
-        if(faltas > 0) celdaFaltas.style.color = "#e74c3c"; // Rojo
-        else celdaFaltas.style.color = "#bdc3c7"; // Gris
-    }
-
-    // 3. CARGAR ASISTENCIAS
-    async function cargarAsistencias() {
-        document.querySelectorAll('.attendance-check').forEach(cb => cb.checked = false);
+        msgSpan.textContent = "...";
         try {
-            const res = await fetch('/api/obtener_asistencias', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ fechas: currentWeekDates, id_grupo: ID_GRUPO })
+            const res = await fetch('/api/guardar_asistencia', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id_alumno: idAlumno, id_grupo: ID_GRUPO, fecha: fecha, asistio: asistio })
             });
             const data = await res.json();
-            
-            data.forEach(r => {
-                const row = document.querySelector(`tr[data-id-alumno="${r.id_alumno}"]`);
-                if(row) {
-                    const idx = currentWeekDates.indexOf(r.fecha_clase);
-                    if(idx !== -1) {
-                        const cb = row.querySelector(`.attendance-check[data-day="${idx}"]`);
-                        if(cb) cb.checked = (r.asistencia === 1);
-                    }
-                }
-            });
-
-            // Calcular faltas después de cargar los datos
-            document.querySelectorAll('tbody tr').forEach(row => actualizarContadorFaltas(row));
-
+            if(data.status === 'success') {
+                msgSpan.textContent = "Ok"; msgSpan.style.color = "#2ecc71";
+                setTimeout(() => { msgSpan.textContent = ""; }, 1000);
+            } else {
+                msgSpan.textContent = "Err"; msgSpan.style.color = "red";
+            }
         } catch(e) { console.error(e); }
     }
 
-    // 4. GUARDAR ASISTENCIA
-    async function guardarAsistencia(checkbox) {
-        const row = checkbox.closest('tr');
-        const fecha = currentWeekDates[checkbox.getAttribute('data-day')];
+    // --- LÓGICA COMENTARIOS ---
+    let currentStudentId = null;
+    let editingCommentId = null;
+
+    function openCommentModal(id, name) {
+        currentStudentId = id;
+        document.getElementById('modal-student-name').textContent = name;
+        document.getElementById('commentModal').style.display = 'flex';
         
-        // Actualizar visualmente inmediato
-        actualizarContadorFaltas(row);
-
-        try {
-            const res = await fetch('/api/guardar_asistencia', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id_alumno: row.getAttribute('data-id-alumno'), id_grupo: ID_GRUPO, fecha: fecha, asistio: checkbox.checked })
-            });
-            const d = await res.json();
-            if(d.status !== 'success') {
-                alert("Error al guardar.");
-                checkbox.checked = !checkbox.checked; 
-                actualizarContadorFaltas(row); // Revertir
-            }
-        } catch(e) { 
-            alert("Error conexión"); 
-            checkbox.checked = !checkbox.checked; 
-            actualizarContadorFaltas(row); // Revertir
-        }
+        // Si es maestro, reseteamos el formulario de edición
+        if (USER_ROLE === 'maestro') cancelEdit(); 
+        
+        loadComments(id);
     }
 
-    document.querySelector('tbody').addEventListener('change', (e) => {
-        if(e.target.classList.contains('attendance-check')) guardarAsistencia(e.target);
-    });
-
-    // 5. COMENTARIOS
-    const modal = document.getElementById('observation-modal');
-    const historyList = document.getElementById('history-list');
-    const newObsText = document.getElementById('new-observation-text');
-    const saveObsBtn = document.getElementById('save-observation-btn');
-    const cancelEditBtn = document.getElementById('cancel-edit-btn');
-    const formTitle = document.getElementById('form-title');
-
-    function resetCommentForm() {
-        editingCommentId = null; newObsText.value = ""; saveObsBtn.innerText = "Guardar Observación";
-        formTitle.innerText = "Nueva Observación:"; cancelEditBtn.style.display = "none";
-        newObsText.classList.remove('editing-mode');
+    function closeCommentModal() {
+        document.getElementById('commentModal').style.display = 'none';
     }
 
-    window.openObservation = function(idAlumno, nombre) {
-        currentStudentId = idAlumno;
-        document.getElementById('modal-alumno-name').innerText = nombre;
-        resetCommentForm();
-        modal.style.display = 'block';
-        cargarComentarios(idAlumno);
-    };
-
-    async function cargarComentarios(id) {
-        historyList.innerHTML = '<p style="text-align:center; color:#666;">Cargando...</p>';
+    async function loadComments(id) {
+        const listDiv = document.getElementById('comments-list');
+        listDiv.innerHTML = '<p class="loading">Cargando...</p>';
+        
         try {
             const res = await fetch(`/api/obtener_comentarios/${id}`);
             const data = await res.json();
-            if(data.status === 'success' && data.comentarios.length > 0) {
-                historyList.innerHTML = '';
-                data.comentarios.forEach(c => {
-                    const div = document.createElement('div'); div.className = 'obs-item';
-                    const isOwner = (c.id_profesor === CURRENT_USER_ID);
-                    let btns = isOwner ? `<div class="obs-actions"><button class="obs-btn" onclick='iniciarEdicion(${JSON.stringify(c)})'><i class="fas fa-pen"></i></button><button class="obs-btn delete" onclick="eliminarComentario(${c.id_comentario})"><i class="fas fa-trash"></i></button></div>` : '';
-                    div.innerHTML = `${btns}<div class="obs-meta"><span>${c.profesor||'Instructor'}</span><span>${c.fecha}</span></div><div class="obs-text">${c.descripcion}</div>`;
-                    historyList.appendChild(div);
-                });
-            } else { historyList.innerHTML = '<p style="text-align:center; color:#999;">Sin observaciones.</p>'; }
-        } catch(e) { historyList.innerHTML = '<p style="color:red;">Error.</p>'; }
+            
+            listDiv.innerHTML = '';
+            if(data.comentarios.length === 0) {
+                listDiv.innerHTML = '<p class="empty-msg-small">Sin observaciones registradas.</p>';
+                return;
+            }
+
+            data.comentarios.forEach(c => {
+                // Solo el dueño (profe) puede editar/borrar, y solo si el rol actual es maestro
+                // (Para asegurar que un profe no edite comentarios de otro si hubiera compartido)
+                const isOwner = (c.id_profesor == USER_ID) && (USER_ROLE === 'maestro');
+                
+                const item = document.createElement('div');
+                item.className = 'comment-item';
+                
+                // Usamos innerHTML con template string seguro
+                item.innerHTML = `
+                    <div class="comment-meta">
+                        <span>${c.profesor}</span>
+                        <span>${c.fecha}</span>
+                    </div>
+                    <p>${c.descripcion}</p>
+                    ${isOwner ? `
+                    <div class="comment-tools">
+                        <i class="fas fa-pen" title="Editar" onclick="editComment(${c.id_comentario}, '${c.descripcion.replace(/'/g, "\\'")}')"></i>
+                        <i class="fas fa-trash" title="Borrar" onclick="deleteComment(${c.id_comentario})"></i>
+                    </div>` : ''}
+                `;
+                listDiv.appendChild(item);
+            });
+        } catch(e) { listDiv.innerHTML = '<p class="error">Error al cargar</p>'; }
     }
 
-    window.iniciarEdicion = function(c) {
-        editingCommentId = c.id_comentario; newObsText.value = c.descripcion; newObsText.focus();
-        newObsText.classList.add('editing-mode'); saveObsBtn.innerText = "Actualizar";
-        formTitle.innerText = "Editando:"; cancelEditBtn.style.display = "block";
-    };
-    cancelEditBtn.onclick = resetCommentForm;
+    // Funciones de edición solo disponibles si existen los elementos (Maestro)
+    async function saveComment() {
+        const textArea = document.getElementById('comment-text');
+        if(!textArea) return; // Seguridad si es staff (elemento no existe)
 
-    saveObsBtn.onclick = async function() {
-        const txt = newObsText.value.trim(); if(!txt) return alert("Escribe algo.");
-        saveObsBtn.disabled = true;
-        const pl = { id_alumno: currentStudentId, descripcion: txt };
-        if(editingCommentId) pl.id_comentario = editingCommentId;
+        const text = textArea.value;
+        if(!text.trim()) return;
+
+        const payload = {
+            id_alumno: currentStudentId,
+            descripcion: text,
+            id_comentario: editingCommentId
+        };
+
         try {
-            const res = await fetch('/api/guardar_comentario', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(pl) });
-            if((await res.json()).status === 'success') { resetCommentForm(); cargarComentarios(currentStudentId); } 
-            else alert("Error al guardar");
-        } catch(e) { alert("Error conexión"); } finally { saveObsBtn.disabled = false; }
-    };
+            const res = await fetch('/api/guardar_comentario', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            if((await res.json()).status === 'success') {
+                cancelEdit();
+                loadComments(currentStudentId);
+            }
+        } catch(e) { alert('Error al guardar'); }
+    }
 
-    window.eliminarComentario = async function(id) {
-        if(!confirm("¿Borrar?")) return;
+    function editComment(id, text) {
+        if (USER_ROLE !== 'maestro') return;
+        editingCommentId = id;
+        document.getElementById('comment-text').value = text;
+        document.getElementById('btn-save-comment').textContent = "Actualizar";
+        document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+    }
+
+    function cancelEdit() {
+        if (USER_ROLE !== 'maestro') return;
+        editingCommentId = null;
+        document.getElementById('comment-text').value = "";
+        document.getElementById('btn-save-comment').textContent = "Guardar Comentario";
+        document.getElementById('btn-cancel-edit').style.display = 'none';
+    }
+
+    async function deleteComment(id) {
+        if (USER_ROLE !== 'maestro') return;
+        if(!confirm("¿Borrar comentario?")) return;
         try {
-            const res = await fetch('/api/eliminar_comentario', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id_comentario: id }) });
-            if((await res.json()).status === 'success') cargarComentarios(currentStudentId); else alert("Error al borrar");
-        } catch(e) { alert("Error conexión"); }
-    };
-
-    // UI GENERAL
-    document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
-    window.onclick = (e) => { if(e.target == modal) modal.style.display = 'none'; };
-    document.getElementById('prev-week-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 7); updateTableDates(currentDate); });
-    document.getElementById('next-week-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 7); updateTableDates(currentDate); });
-    document.getElementById('print-btn').addEventListener('click', () => window.print());
-    const menuIcon = document.getElementById('menu-icon'); const sidebar = document.getElementById('sidebar');
-    menuIcon.addEventListener('click', () => sidebar.classList.toggle('active'));
+            await fetch('/api/eliminar_comentario', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id_comentario: id })
+            });
+            loadComments(currentStudentId);
+        } catch(e) { alert('Error al borrar'); }
+    }
     
-    updateTableDates(currentDate);
-});
+    // Cerrar modal al hacer clic fuera
+    window.onclick = (ev) => { if(ev.target == document.getElementById('commentModal')) closeCommentModal(); }
 </script>
 
 </body>

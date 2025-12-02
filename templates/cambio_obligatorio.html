@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Jersey+10+Charted&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/Login.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='imagen/ci.png') }}">
+    
+    <!-- Estilos adicionales para esta vista específica -->
     <style>
         .alert-security {
             background-color: #f39c12; /* Naranja de advertencia */
@@ -19,16 +21,70 @@
             text-align: left;
             font-size: 0.95rem;
         }
+        
+        /* Estilos para la sección fiscal */
+        .fiscal-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+        }
+        
+        .fiscal-title {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group-fiscal {
+            margin-bottom: 15px;
+        }
+
+        .form-group-fiscal label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        /* Reutilizamos estilos de tus inputs pero ajustados */
+        .fiscal-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: white;
+            box-sizing: border-box; /* Importante para que no se salga */
+        }
+        
+        .fiscal-input:focus {
+            border-color: #566a93;
+            outline: none;
+        }
+        
+        select.fiscal-input {
+            cursor: pointer;
+        }
+        
+        option {
+            background-color: #333;
+            color: white;
+        }
     </style>
 </head>
 <body class="your_css_selector_here"> 
     <main class="contenedor">
-        <div class="contenido">
+        <div class="contenido" style="max-width: 500px;"> <!-- Un poco más ancho para los datos -->
             <h1>Configurar Cuenta</h1>
             
             <div class="alert-security">
                 <strong>Acción Requerida:</strong><br>
-                Por motivos de seguridad, detectamos que es tu primer inicio de sesión o que tu contraseña es temporal. Debes crear una contraseña personal para continuar.
+                Por motivos de seguridad, detectamos que es tu primer inicio de sesión. Debes configurar tu cuenta para continuar.
             </div>
 
             {% if error %}
@@ -38,6 +94,48 @@
             {% endif %}
 
             <form class="formulario-login" action="{{ url_for('cambiar_contrasena_inicial') }}" method="POST">
+                
+                <!-- SECCIÓN FISCAL (SOLO SI ES MAESTRO) -->
+                {% if is_maestro %}
+                <div class="fiscal-section">
+                    <div class="fiscal-title">📋 Información Fiscal Obligatoria</div>
+                    <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">
+                        Para poder procesar tus pagos de nómina, necesitamos que registres tus datos fiscales actuales.
+                    </p>
+
+                    <div class="form-group-fiscal">
+                        <label>RFC con Homoclave</label>
+                        <input class="fiscal-input" type="text" name="rfc" required placeholder="Ej. XAXX010101000" maxlength="13" style="text-transform: uppercase;">
+                    </div>
+                    
+                    <div class="form-group-fiscal">
+                        <label>Razón Social (Nombre Completo)</label>
+                        <input class="fiscal-input" type="text" name="razon_social" required placeholder="Tal cual aparece en tu constancia">
+                    </div>
+
+                    <div class="form-group-fiscal">
+                        <label>Código Postal Fiscal</label>
+                        <input class="fiscal-input" type="text" name="codigo_postal" required placeholder="Ej. 20000" maxlength="5" pattern="\d{5}">
+                    </div>
+
+                    <div class="form-group-fiscal">
+                        <label>Régimen Fiscal</label>
+                        <select class="fiscal-input" name="regimen_fiscal" required>
+                            <option value="" disabled selected>-- Selecciona --</option>
+                            <option value="626">626 - RESICO (Simplificado de Confianza)</option>
+                            <option value="612">612 - Personas Físicas con Act. Empresarial</option>
+                            <option value="605">605 - Sueldos y Salarios</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-fiscal">
+                        <label>Cuenta CLABE (18 dígitos)</label>
+                        <input class="fiscal-input" type="text" name="cuenta_clabe" required placeholder="Para depósitos" maxlength="18" pattern="\d{18}">
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- SECCIÓN CONTRASEÑA -->
                 <div class="campo">
                     <input class="registro_field" type="password" id="nueva_contrasena" name="nueva_contrasena" placeholder="Nueva Contraseña Personal" required minlength="8">
                 </div>
@@ -61,9 +159,19 @@
         document.querySelector('.formulario-login').addEventListener('submit', function(e) {
             const nueva = document.getElementById('nueva_contrasena').value;
             const confirmar = document.getElementById('confirmar_contrasena').value;
+            
             if (nueva !== confirmar) {
                 e.preventDefault();
                 alert("Las contraseñas no coinciden.");
+                return;
+            }
+            
+            // Validación extra para RFC si es maestro
+            const rfcInput = document.querySelector('input[name="rfc"]');
+            if(rfcInput && rfcInput.value.length < 12){
+                 e.preventDefault();
+                 alert("El RFC parece incompleto.");
+                 return;
             }
         });
     </script>

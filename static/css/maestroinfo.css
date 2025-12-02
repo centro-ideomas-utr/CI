@@ -1,28 +1,47 @@
-/* --- Estilos específicos para la vista de detalles (maestroinfo.html) --- */
+.content-wrapper {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-/* Contenedor principal de la información */
+h2 {
+    color: #566a93;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+    font-size: 2rem;
+}
+
+/* Tarjeta base */
 .info-card {
     background-color: white;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     padding: 25px;
     margin-bottom: 25px;
+    /* Borde superior por defecto (Datos Personales) */
+    border-top: 5px solid #566a93;
 }
 
-/* Encabezado de la sección (Datos Personales, Fiscales, Documentos) */
+/* Encabezados de tarjetas */
 .info-card h3 {
     color: #566a93;
     border-bottom: 2px solid #eee;
     padding-bottom: 10px;
     margin-bottom: 15px;
+    margin-top: 0;
     font-size: 1.4em;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* Grid para mostrar los datos clave */
+/* Grid de Datos */
 .detail-grid {
     display: grid;
-    /* Adapta las columnas automáticamente, mínimo 250px por columna */
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
 }
@@ -39,94 +58,208 @@
     margin: 0;
     padding-left: 5px;
     font-size: 1.1em;
-    word-wrap: break-word; 
+    word-wrap: break-word;
+    color: #333;
 }
 
-/* --- Lista de Documentos --- */
+/* Lista de Documentos (Tu Grid) */
 .document-list {
     list-style: none;
     padding: 0;
-    /* Adapta las columnas de la lista de documentos */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    margin: 0;
+    /* Tu grid original para documentos */
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 15px;
 }
 
-.document-list li {
+/* Ítem de documento */
+.doc-item {
     padding: 10px;
     border-bottom: 1px dashed #ddd;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #fff;
+    transition: background-color 0.2s;
 }
 
-/* Estilo para el enlace de documentos (funcionales) */
-.doc-link {
-    color: #2ecc71; /* Verde de éxito */
-    text-decoration: none;
+.doc-item:hover {
+    background-color: #f9f9f9;
+}
+
+.doc-name {
     font-weight: 600;
-    white-space: nowrap;
+    color: #555;
+    font-size: 0.95rem;
 }
 
-.doc-link:hover {
-    text-decoration: underline;
-}
-
-/* Estilo para el estado de documentos faltantes */
-.status-missing {
-    color: #e74c3c; /* Rojo de alerta */
+/* Estados */
+.doc-status.missing {
+    color: #e74c3c; /* Rojo */
     font-style: italic;
     font-size: 0.9em;
 }
+.doc-status.ok {
+    color: #2ecc71; /* Verde */
+    font-size: 0.9em;
+}
 
-/* --- Botones de Acción (Editar y Volver) --- */
+/* Botones de la barra inferior */
 .action-bar-back {
     text-align: left;
     margin-top: 30px;
     display: flex;
     gap: 15px;
-    /* Asegura que los botones se centren si no hay mucho espacio */
     justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 25px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    transition: opacity 0.2s;
 }
 
 .back-btn {
-    background-color: #7f8c8d; /* Gris estándar */
-    padding: 10px 25px;
-    text-decoration: none;
+    background-color: #000000; 
+    color: rgb(0, 0, 0);
+}
+.back-btn:hover { background-color: #000000; }
+
+.view-btn {
+    background-color: #566a93; 
+    color: white;
+}
+.view-btn:hover { opacity: 0.9; }
+
+
+/* ============================================================
+   2. NUEVOS ESTILOS FUNCIONALES (Para que sirva la edición)
+   ============================================================ */
+
+/* Botones de iconos pequeños (Subir, Editar, Borrar en la lista) */
+.doc-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
-.back-btn:hover {
-    background-color: #95a5a6;
+.btn-icon {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.1em;
+    transition: transform 0.2s;
+    border-radius: 4px;
+}
+.btn-icon:hover { transform: scale(1.2); background-color: #f0f0f0; }
+
+.btn-view { color: #2ecc71; } /* Verde para ver */
+.btn-upload { color: #f39c12; } /* Naranja para subir/reemplazar */
+.btn-delete { color: #e74c3c; } /* Rojo para borrar */
+
+/* --- VENTANA MODAL (Necesaria para los formularios emergentes) --- */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+    overflow-y: auto;
 }
 
-/* Sobrescribe el estilo genérico del botón de edición para que se vea bien en la barra */
-#edit-personal-btn {
-    padding: 10px 25px;
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    margin: 20px;
+    animation: fadeIn 0.3s ease-out;
 }
 
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 1.8em;
+    cursor: pointer;
+    color: #aaa;
+    line-height: 1;
+}
+.close-modal:hover { color: #333; }
 
-/* ========================================================== */
-/* === ESTILOS DEL MODAL DE EDICIÓN (Aprovecha estilos de añadiradmin.css) === */
-/* ========================================================== */
-
-/* Nota: Las clases .modal-overlay, .modal, .modal-body, .form-section, .form-group-inline 
-   son heredadas y reutilizadas de añadiradmin.css, asegurando consistencia. */
-
-.form-section legend {
-    color: #3D348B; /* Color más oscuro para el encabezado del fieldset */
+/* Estilos de Formulario dentro del Modal */
+.fs-group {
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background-color: #fff;
+}
+.fs-group legend {
+    color: #3D348B; /* Tu color original */
+    font-weight: bold;
+    padding: 0 5px;
 }
 
+.form-group { margin-bottom: 10px; text-align: left; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem; }
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
 
-/* Media Query para responsividad */
+.row { display: flex; gap: 10px; } /* Para inputs en línea */
+
+/* Botón principal del modal */
+.btn-save-modal, .btn-main {
+    width: 100%;
+    background: #566a93;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+.btn-save-modal:hover, .btn-main:hover { background: #4a5b82; }
+
+/* Animación */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive original */
 @media (max-width: 768px) {
-    .detail-grid, .document-list {
-        grid-template-columns: 1fr;
-    }
-    .action-bar-back {
-        flex-direction: column;
-    }
-    .action-bar-back .btn {
-        width: 100%;
-        text-align: center;
-    }
+    .detail-grid, .document-list { grid-template-columns: 1fr; }
+    .action-bar-back { flex-direction: column; }
+    .action-bar-back .btn { width: 100%; justify-content: center; }
+    .row { flex-direction: column; gap: 0; }
 }

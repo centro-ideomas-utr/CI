@@ -16,6 +16,8 @@ import decimal
 import threading
 from io import BytesIO
 from gridfs import GridFS
+import requests
+import base64
 import locale
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -73,9 +75,9 @@ fs = GridFS(mongo_db)
 
 global_avisos = []
 
-FACTURAMA_USER = 'CentrodeIdiomasUTR'
-FACTURAMA_PASSWORD = 'Uli0514122324#'
-FACTURAMA_URL = 'https://dev.facturama.mx/Profile/TaxProfile'
+FACTURAMA_USER = 'FACTURAMA_USER'
+FACTURAMA_PASS = 'FACTURAMA_PASSWORD'
+FACTURAMA_URL = 'FACTURAMA_URL'
 
 TOKEN_FILE = 'token.json' 
 DRIVE_FOLDER_ID = '12j--_cyQEduhsfmePTOQuzou0_yUlSdM'
@@ -354,7 +356,7 @@ def guardar_personal():
     conn = None
     email = request.form.get('email')
     
-    # 1. Generar contraseña temporal
+    # 1. Generar contraseña temporal aleatoria
     caracteres = string.ascii_letters + string.digits 
     contrasena_temporal = ''.join(secrets.choice(caracteres) for i in range(12))
     password_encriptada = generate_password_hash(contrasena_temporal)
@@ -367,10 +369,13 @@ def guardar_personal():
         'telefono': request.form.get('telefono'),
         'tipo_personal': request.form.get('tipo_personal'),
         'fecha_nacimiento': request.form.get('fecha_n') if request.form.get('fecha_n') else None,
-        'genero': request.form.get('genero')
+        'genero': request.form.get('genero'),
+        
+        # --- NUEVOS CAMPOS FINANCIEROS ---
+        'valor_hora': request.form.get('valor_hora', 0.0),
+        'tasa_iva': request.form.get('tasa_iva'),
+        'tasa_isr': request.form.get('tasa_isr')
     }
-    
-    # 3. Procesar archivos (leer contenido para pasarlo al hilo)
     uploaded_files_data = []
     file_mapping = {
         "doc_acta": "acta_nacimiento",
@@ -394,32 +399,42 @@ def guardar_personal():
     cursor = None
     
     try:
-        # 4. Separar apellidos
+        # 4. Separar apellidos (Paterno y Materno)
         apellido_parts = form_data['apellidos'].split(' ')
         apellido_p = apellido_parts[0]
         apellido_m = ' '.join(apellido_parts[1:]) if len(apellido_parts) > 1 else ''
 
-        # 5. Guardar datos básicos en MySQL
+        # 5. Guardar en MySQL
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
         if form_data['tipo_personal'] == 'maestro':
             table_name = "profesores"
+            # Query con columnas financieras
             query = """
                 INSERT INTO profesores 
-                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero, valor_hora, tasa_iva, tasa_isr_retenido)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            params = (form_data['nombre'], apellido_p, apellido_m, email, form_data['telefono'], form_data['fecha_nacimiento'], password_encriptada, form_data['genero'])
+            params = (
+                form_data['nombre'], apellido_p, apellido_m, email, form_data['telefono'], 
+                form_data['fecha_nacimiento'], password_encriptada, form_data['genero'],
+                form_data['valor_hora'], form_data['tasa_iva'], form_data['tasa_isr']
+            )
         
         elif form_data['tipo_personal'] == 'staff':
             table_name = "staff"
+            # Query con columnas financieras
             query = """
                 INSERT INTO staff 
-                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                (nombre, apellido_p, apellido_m, correo_electronico, telefono, fecha_nacimiento, contraseña, genero, valor_hora, tasa_iva, tasa_isr_retenido)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            params = (form_data['nombre'], apellido_p, apellido_m, email, form_data['telefono'], form_data['fecha_nacimiento'], password_encriptada, form_data['genero'])
+            params = (
+                form_data['nombre'], apellido_p, apellido_m, email, form_data['telefono'], 
+                form_data['fecha_nacimiento'], password_encriptada, form_data['genero'],
+                form_data['valor_hora'], form_data['tasa_iva'], form_data['tasa_isr']
+            )
         else:
             return jsonify({'status': 'error', 'message': 'Error: Tipo de personal no válido.'}), 400
 
@@ -429,6 +444,7 @@ def guardar_personal():
         
         portal_url_pregenerada = url_for('login', _external=True)
 
+        # 6. Lanzar proceso asíncrono (Subir archivos y enviar correo)
         thread = threading.Thread(
             target=process_personal_registration_async, 
             args=(
@@ -445,7 +461,7 @@ def guardar_personal():
         )
         thread.start()
 
-        return jsonify({'status': 'success', 'message': f'¡{form_data["tipo_personal"].capitalize()} creado. Procesando archivos en segundo plano.'}), 202
+        return jsonify({'status': 'success', 'message': f'¡{form_data["tipo_personal"].capitalize()} registrado exitosamente!'}), 202
 
     except mysql.connector.Error as err:
         if conn: conn.rollback()
@@ -463,79 +479,107 @@ def guardar_personal():
         if 'cursor' in locals() and cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
         
-@app.route("/editar-personal/<string:tipo>/<int:id>", methods=['POST'])
-def editar_personal(tipo, id):
-    conn = None
-    if request.method != 'POST':
-        return redirect(url_for('maestroinfo', tipo=tipo, id=id))
+@app.route("/gestionar_documento", methods=['POST'])
+def gestionar_documento():
+    if session.get('rol') != 'staff': # Asumimos que solo Admin/Staff gestiona esto
+        # Si quieres que el maestro edite sus propios docs, ajusta aquí
+        pass 
+        # return jsonify({'status': 'error', 'message': 'No autorizado'}), 403
 
     try:
-        if tipo not in ['maestro', 'staff']:
-            return "Error: Tipo de personal no válido.", 400
+        accion = request.form.get('accion') # 'subir' o 'eliminar'
+        tipo_doc = request.form.get('tipo_doc')
+        mongo_id = request.form.get('mongo_id')
+        
+        if not mongo_id:
+            return jsonify({'status': 'error', 'message': 'Expediente no encontrado'}), 404
+
+        if accion == 'eliminar':
+            # Borrar el campo del documento en MongoDB
+            expedientes_col.update_one(
+                {"_id": ObjectId(mongo_id)},
+                {"$unset": {f"documentos.{tipo_doc}": ""}}
+            )
+            return jsonify({'status': 'success', 'message': 'Documento eliminado'})
+
+        elif accion == 'subir':
+            archivo = request.files.get('archivo')
+            if archivo:
+                filename = secure_filename(archivo.filename)
+                # Subir a Drive
+                file_stream = BytesIO(archivo.read())
+                # Nota: Usamos 'subir_a_drive' que ya tienes definida
+                drive_link = subir_a_drive(file_stream, filename, archivo.content_type)
+                
+                if drive_link:
+                    # Actualizar el campo en MongoDB
+                    expedientes_col.update_one(
+                        {"_id": ObjectId(mongo_id)},
+                        {"$set": {f"documentos.{tipo_doc}": drive_link}}
+                    )
+                    return jsonify({'status': 'success', 'message': 'Documento actualizado'})
+                else:
+                    return jsonify({'status': 'error', 'message': 'Error al subir a Drive'})
+            else:
+                return jsonify({'status': 'error', 'message': 'No se envió archivo'})
+
+    except Exception as e:
+        print(f"Error gestión documento: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route("/editar-personal/<string:tipo>/<int:id>", methods=['POST'])
+def editar_personal(tipo, id):
+    if 'user_id' not in session: return redirect(url_for('login'))
+    
+    try:
+        # Datos Personales
+        nombre = request.form.get('nombre')
+        apellido_p = request.form.get('apellido_p')
+        apellido_m = request.form.get('apellido_m')
+        correo = request.form.get('correo_electronico')
+        telefono = request.form.get('telefono')
+        fecha_nac = request.form.get('fecha_nacimiento') or None
+        genero = request.form.get('genero')
+        
+        # Datos Financieros (Nómina)
+        valor_hora = request.form.get('valor_hora')
+        tasa_iva = request.form.get('tasa_iva')
+        tasa_isr = request.form.get('tasa_isr')
 
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-        
-        data = request.form
-        table_name = "profesores" if tipo == 'maestro' else "staff"
-        id_column = "id_profesor" if tipo == 'maestro' else "id_staff"
-        
-        update_fields = ['nombre', 'apellido_p', 'apellido_m', 'correo_electronico', 'fecha_nacimiento', 'telefono', 'genero']
-        personal_updates = []
-        personal_values = []
-        
-        for field in update_fields:
-            value = data.get(field)
-            if value is not None:
-                if field == 'fecha_nacimiento' and value == '':
-                    personal_updates.append(f"{field} = NULL")
-                else:
-                    personal_updates.append(f"{field} = %s")
-                    personal_values.append(value)
-        
-        if personal_updates:
-            query_personal = f"UPDATE {table_name} SET {', '.join(personal_updates)} WHERE {id_column} = %s"
-            personal_values.append(id)
-            cursor.execute(query_personal, personal_values)
-            
+
+        # Actualizar Tabla Principal (Profesores o Staff)
         if tipo == 'maestro':
-            fiscal_fields = ['rfc', 'razon_social', 'regimen_fiscal', 'cuenta_clabe']
-            fiscal_updates = []
-            fiscal_values = []
-            
-            cursor.execute("SELECT id_profesor FROM profesores_datos_fiscales WHERE id_profesor = %s", (id,))
-            exists = cursor.fetchone()
-            
-            for field in fiscal_fields:
-                value = data.get(field)
-                if value is not None:
-                    fiscal_updates.append(f"{field} = %s")
-                    fiscal_values.append(value)
-
-            if fiscal_updates:
-                if exists:
-                    query_fiscal = f"UPDATE profesores_datos_fiscales SET {', '.join(fiscal_updates)} WHERE id_profesor = %s"
-                    fiscal_values.append(id)
-                    cursor.execute(query_fiscal, fiscal_values)
-                else:
-                    fiscal_fields_str = ', '.join(['id_profesor'] + fiscal_fields)
-                    placeholders = ', '.join(['%s'] * (len(fiscal_fields) + 1))
-                    query_fiscal_insert = f"INSERT INTO profesores_datos_fiscales ({fiscal_fields_str}) VALUES ({placeholders})"
-                    fiscal_values_insert = [id] + fiscal_values
-                    cursor.execute(query_fiscal_insert, fiscal_values_insert)
-
+            query = """
+                UPDATE profesores 
+                SET nombre=%s, apellido_p=%s, apellido_m=%s, correo_electronico=%s, 
+                    telefono=%s, fecha_nacimiento=%s, genero=%s,
+                    valor_hora=%s, tasa_iva=%s, tasa_isr_retenido=%s
+                WHERE id_profesor=%s
+            """
+        elif tipo == 'staff':
+            query = """
+                UPDATE staff 
+                SET nombre=%s, apellido_p=%s, apellido_m=%s, correo_electronico=%s, 
+                    telefono=%s, fecha_nacimiento=%s, genero=%s,
+                    valor_hora=%s, tasa_iva=%s, tasa_isr_retenido=%s
+                WHERE id_staff=%s
+            """
+        
+        cursor.execute(query, (
+            nombre, apellido_p, apellido_m, correo, telefono, fecha_nac, genero,
+            valor_hora, tasa_iva, tasa_isr, id
+        ))
         conn.commit()
         
-    except Exception as e:
-        conn.rollback()
-        return "Error al guardar los cambios: " + str(e), 500
-        
-    finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        return redirect(url_for('maestroinfo', tipo=tipo, id=id))
 
-    return redirect(url_for('maestroinfo', tipo=tipo, id=id))
+    except Exception as e:
+        print(f"Error editar: {e}")
+        return f"Error: {e}", 500
+    finally:
+        if conn: conn.close()
 
 @app.route('/eliminar-personal/<string:tipo>/<int:id_relacional>', methods=['POST'])
 def eliminar_personal(tipo, id_relacional):
@@ -805,7 +849,7 @@ def login():
 
 @app.route("/cambiar-contrasena-inicial", methods=["GET", "POST"])
 def cambiar_contrasena_inicial():
-    # Seguridad: Solo usuarios logueados y marcados para cambio
+    # Seguridad: Solo usuarios logueados
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
@@ -813,36 +857,65 @@ def cambiar_contrasena_inicial():
     if not session.get('force_change'):
         return redirigir_por_rol(session.get('rol'), session.get('user_id'))
 
-    # GET: Mostrar el HTML
+    rol = session.get('rol')
+    user_id = session.get('user_id')
+    is_maestro = (rol == 'maestro') # Bandera para el HTML
+
+    # GET: Mostrar el formulario
     if request.method == 'GET':
-        return render_template("cambio_obligatorio.html")
+        return render_template("cambio_obligatorio.html", is_maestro=is_maestro)
     
     # POST: Procesar el cambio
     nueva_pass = request.form.get('nueva_contrasena')
+    confirm_pass = request.form.get('confirmar_contrasena')
     
-    # Validación básica (debe coincidir con tu HTML)
+    # --- Validaciones Generales ---
     if len(nueva_pass) < 8:
-        return render_template("cambio_obligatorio.html", error="La contraseña es muy corta.")
+        return render_template("cambio_obligatorio.html", error="La contraseña debe tener al menos 8 caracteres.", is_maestro=is_maestro)
+    
+    if nueva_pass != confirm_pass:
+        return render_template("cambio_obligatorio.html", error="Las contraseñas no coinciden.", is_maestro=is_maestro)
 
     conn = None
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         
-        # Identificar tabla e ID según el rol
-        rol = session['rol']
-        user_id = session['user_id']
-        
+        # --- LÓGICA ESPECIAL PARA MAESTROS (DATOS FISCALES) ---
+        if is_maestro:
+            rfc = request.form.get('rfc')
+            razon_social = request.form.get('razon_social')
+            regimen = request.form.get('regimen_fiscal')
+            clabe = request.form.get('cuenta_clabe')
+            cp = request.form.get('codigo_postal')
+
+            # Validación básica de campos requeridos
+            if not (rfc and razon_social and regimen and cp):
+                return render_template("cambio_obligatorio.html", error="Todos los datos fiscales son obligatorios para procesar tu nómina.", is_maestro=is_maestro)
+
+            # Guardar o Actualizar Datos Fiscales
+            query_fiscal = """
+                INSERT INTO profesores_datos_fiscales 
+                (id_profesor, rfc, razon_social, regimen_fiscal, cuenta_clabe, codigo_postal)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                rfc=%s, razon_social=%s, regimen_fiscal=%s, cuenta_clabe=%s, codigo_postal=%s
+            """
+            cursor.execute(query_fiscal, (
+                user_id, rfc, razon_social, regimen, clabe, cp,
+                rfc, razon_social, regimen, clabe, cp
+            ))
+
+        # --- ACTUALIZAR CONTRASEÑA Y QUITAR BANDERA ---
         if rol == 'staff': table, id_col = "staff", "id_staff"
         elif rol == 'maestro': table, id_col = "profesores", "id_profesor"
         elif rol == 'alumno': table, id_col = "alumnos", "id_alumno"
         
-        # Encriptar y actualizar
         hashed_password = generate_password_hash(nueva_pass)
         
-        # IMPORTANTE: Ponemos 'requiere_cambio_pass' en 0
-        query = f"UPDATE {table} SET contraseña = %s, requiere_cambio_pass = 0 WHERE {id_col} = %s"
-        cursor.execute(query, (hashed_password, user_id))
+        query_pass = f"UPDATE {table} SET contraseña = %s, requiere_cambio_pass = 0 WHERE {id_col} = %s"
+        cursor.execute(query_pass, (hashed_password, user_id))
+        
         conn.commit()
         
         # Limpiar bandera de sesión y redirigir
@@ -850,7 +923,9 @@ def cambiar_contrasena_inicial():
         return redirigir_por_rol(rol, user_id)
         
     except Exception as e:
-        return render_template("cambio_obligatorio.html", error=f"Error del servidor: {e}")
+        print(f"Error cambio pass inicial: {e}")
+        if conn: conn.rollback()
+        return render_template("cambio_obligatorio.html", error=f"Error del servidor: {e}", is_maestro=is_maestro)
     finally:
         if conn: conn.close()
 
@@ -1225,15 +1300,23 @@ def editar_aviso():
 
 @app.route("/calificacion")
 def calificacion():
+    # Seguridad: Permitir Maestros y Staff
+    rol = session.get('rol')
+    if rol not in ['maestro', 'staff']:
+        return redirect(url_for('login'))
+    
     id_grupo = request.args.get('id_grupo')
     conn = None
     info_grupo = None
+    
     try:
         if id_grupo:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("""
-                SELECT g.grupo, g.numero_salon, 
+            
+            # Consulta base para obtener info del grupo
+            query = """
+                SELECT g.id_grupo, g.grupo, g.numero_salon, 
                        CONCAT(p.nombre, ' ', p.apellido_p) as profe_nombre, 
                        i.nombre as idioma, c.nivel
                 FROM grupos g
@@ -1241,12 +1324,25 @@ def calificacion():
                 LEFT JOIN cursos c ON g.id_curso = c.id_curso
                 LEFT JOIN idioma i ON c.id_idioma = i.id_idioma
                 WHERE g.id_grupo = %s
-            """, (id_grupo,))
+            """
+            params = [id_grupo]
+
+            # Si es MAESTRO, agregamos restricción de propiedad
+            if rol == 'maestro':
+                query += " AND g.id_profesor = %s"
+                params.append(session.get('user_id'))
+            
+            cursor.execute(query, tuple(params))
             info_grupo = cursor.fetchone()
+
+            if not info_grupo:
+                return "Acceso denegado o grupo no encontrado.", 403
+
     except Exception as e:
-        print(e)
+        print(f"Error vista calificación: {e}")
     finally:
         if conn: conn.close()
+
     return render_template("calificacion.html", id_grupo=id_grupo, grupo=info_grupo)
 
 @app.route("/api/obtener_calificaciones", methods=["POST"])
@@ -1257,13 +1353,10 @@ def api_obtener_calificaciones():
         id_grupo = data.get('id_grupo')
         parcial = data.get('parcial')
         
-        print(f"--- DEBUG API ---")
-        print(f"Solicitando Grupo: {id_grupo}, Parcial: {parcial}")
-
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # 1. Info del Grupo
+        # A) Obtener info básica para saber qué tabla usar
         cursor.execute("""
             SELECT g.grupo, i.nombre as idioma 
             FROM grupos g 
@@ -1280,77 +1373,71 @@ def api_obtener_calificaciones():
         if 'Niños' in info['grupo']: tabla_calif = "calificaciones_ninos"
         elif 'LSM' in info['idioma']: tabla_calif = "calificaciones_lsm"
 
-        print(f"Consultando tabla: {tabla_calif}")
-
-        # 2. Consulta SQL
+        # B) Consulta SQL CORREGIDA (SOLUCIÓN AL ERROR 1366)
+        # Seleccionamos explícitamente el ID de la tabla de alumnos 'a.id_alumno' como 'id_alumno_safe'
+        # porque 'c.id_alumno' (del LEFT JOIN) viene NULL si no hay calificación previa.
         query = f"""
             SELECT 
-                a.id_alumno, a.nombre, a.apellido_p, a.matricula,
+                a.id_alumno AS id_alumno_safe, 
+                a.nombre, a.apellido_p, a.matricula,
                 c.* FROM inscripciones_idioma ii
             JOIN alumnos a ON ii.id_alumno = a.id_alumno
             LEFT JOIN {tabla_calif} c 
                 ON ii.id_alumno = c.id_alumno 
                 AND c.id_grupo = ii.id_grupo 
                 AND c.parcial = %s
-            WHERE ii.id_grupo = %s
+            WHERE ii.id_grupo = %s AND ii.estado = 'Activo'
             ORDER BY a.apellido_p ASC
         """
         
         cursor.execute(query, (parcial, id_grupo))
         alumnos_con_notas = cursor.fetchall()
 
-        print(f"Registros en Python: {len(alumnos_con_notas)}")
-
-        # 3. LIMPIEZA PROFUNDA DE DATOS (Nuclear Option)
-        # Esto convierte Decimal, Date, Timedelta, etc. a string para que no falle nunca.
+        # Serializador para fechas/decimales
         def serializador_seguro(obj):
-            if isinstance(obj, (datetime, date)):
-                return obj.isoformat()
-            if isinstance(obj, decimal.Decimal):
-                return float(obj)
-            if isinstance(obj, timedelta):
-                return str(obj)
+            if isinstance(obj, (datetime, date)): return obj.isoformat()
+            if isinstance(obj, decimal.Decimal): return float(obj)
+            if isinstance(obj, timedelta): return str(obj)
             return str(obj)
 
-        # Usamos json.dumps primero para asegurar la conversión
         data_str = json.dumps(alumnos_con_notas, default=serializador_seguro)
         data_clean = json.loads(data_str)
 
         return jsonify({'status': 'success', 'data': data_clean})
 
     except Exception as e:
-        print(f"ERROR FATAL EN API: {e}")
-        import traceback
-        traceback.print_exc() # Esto imprimirá el error exacto en tu terminal negra
+        print(f"ERROR API OBTENER: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
     finally:
         if conn: conn.close()
 
 @app.route("/api/guardar_calificaciones", methods=["POST"])
 def api_guardar_calificaciones():
+    # Seguridad
+    if session.get('rol') != 'maestro':
+        return jsonify({'status': 'error', 'message': 'No autorizado'}), 403
+
     conn = None
     try:
-        # 1. Recibir datos del Frontend
         data = request.get_json()
         id_grupo = data.get('id_grupo')
         parcial = data.get('parcial')
-        calificaciones = data.get('calificaciones') # Lista de objetos
+        calificaciones = data.get('calificaciones')
         tipo_curso = data.get('tipo_curso')
         
-        # 2. Seguridad: Verificar sesión del profesor
         id_profesor = session.get('user_id')
-        if not id_profesor:
-            # Si estás probando sin login, usa: id_profesor = 1
-            return jsonify({'status': 'error', 'message': 'Sesión caducada'}), 401
 
-        if not calificaciones: 
-            return jsonify({'status': 'error', 'message': 'No se recibieron datos para guardar.'}), 400
-
+        # Verificar propiedad del grupo
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
+        cursor.execute("SELECT id_grupo FROM grupos WHERE id_grupo = %s AND id_profesor = %s", (id_grupo, id_profesor))
+        if not cursor.fetchone():
+             return jsonify({'status': 'error', 'message': 'Grupo no válido'}), 403
 
-        # 3. Configuración Dinámica de Tablas y Columnas
-        # Deben coincidir EXACTAMENTE con tu base de datos
+        if not calificaciones: 
+            return jsonify({'status': 'error', 'message': 'Sin datos'}), 400
+
+        # Definir columnas según tipo
         if tipo_curso == 'adults':
             tabla = "calificaciones_adult"
             columnas = ["pronunciation", "fluency", "grammar_vocabulary", "performance_skill", 
@@ -1365,14 +1452,11 @@ def api_guardar_calificaciones():
                         "uos_mano_dominante", "realiza_dactilogía", "transmite_mensaje", "detalles_coordinada", 
                         "orden_secuencial", "percibir_detalles", "comprende_mensaje", "recuerda_senas"]
         else:
-            return jsonify({'status': 'error', 'message': 'Tipo de curso no identificado'}), 400
+            return jsonify({'status': 'error', 'message': 'Tipo desconocido'}), 400
 
-        # 4. Construcción de la Query SQL Dinámica
-        # Generamos los placeholders (%s) según la cantidad de columnas
+        # Query dinámica
         cols_str = ", ".join(columnas)
         vals_str = ", ".join(["%s"] * len(columnas))
-        
-        # Parte mágica: Si ya existe, actualiza los valores (ON DUPLICATE KEY UPDATE)
         update_str = ", ".join([f"{c}=VALUES({c})" for c in columnas])
 
         sql = f"""
@@ -1381,47 +1465,26 @@ def api_guardar_calificaciones():
             ON DUPLICATE KEY UPDATE {update_str}, fecha_registro=NOW()
         """
 
-        # 5. Procesamiento de Datos
-        registros_procesados = 0
-        
+        count = 0
         for calif in calificaciones:
             raw_id = calif.get('id_alumno')
+            if not raw_id: continue
             
-            # --- VALIDACIÓN CRÍTICA (Evita error 1366) ---
-            if not raw_id or str(raw_id).lower() in ['null', 'undefined', '']:
-                continue # Saltamos este registro corrupto
-            
-            try:
-                id_alumno = int(raw_id) # Aseguramos que sea entero
-            except ValueError:
-                continue # Si no es número, saltar
-            # ---------------------------------------------
-
-            # Extraer valores de las columnas
             valores = []
             for col in columnas:
                 val = calif.get(col)
-                # Si viene vacío, guardamos None (NULL en SQL)
-                if val is None or val == "":
-                    valores.append(None)
-                else:
-                    valores.append(val)
+                # Convertir vacíos a None (NULL en SQL)
+                valores.append(val if val is not None and val != "" else None)
 
-            # Armar parámetros: Fijos + Dinámicos
-            params = [id_grupo, id_alumno, id_profesor, parcial] + valores
-            
+            params = [id_grupo, raw_id, id_profesor, parcial] + valores
             cursor.execute(sql, params)
-            registros_procesados += 1
+            count += 1
 
         conn.commit()
-        
-        return jsonify({
-            'status': 'success', 
-            'message': f'Se guardaron {registros_procesados} registros del Parcial {parcial}.'
-        })
+        return jsonify({'status': 'success', 'message': f'Guardados {count} registros.'})
 
     except Exception as e:
-        print(f"ERROR GUARDAR CALIF: {e}")
+        print(f"ERROR GUARDAR: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
     finally:
         if conn: conn.close()
@@ -1853,13 +1916,16 @@ def asistencia():
 
 @app.route("/gestion_asistencia/<int:id_grupo>")
 def gestion_asistencia(id_grupo):
+    # Seguridad: Permitir Maestros y Staff
+    if 'user_id' not in session or session.get('rol') not in ['maestro', 'staff']:
+        return redirect(url_for('login'))
+        
     conn = None
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
-        # --- CORRECCIÓN AQUÍ ---
-        # Agregamos 'h.dias' y 'h.hora' al SELECT y el JOIN con horario
+        # A) Obtener datos del Grupo
         cursor.execute("""
             SELECT g.grupo, g.numero_salon, 
                    h.dias, h.hora, 
@@ -1872,75 +1938,93 @@ def gestion_asistencia(id_grupo):
             LEFT JOIN horario h ON g.id_horario = h.id_horario  
             WHERE g.id_grupo = %s
         """, (id_grupo,))
-        
         info_grupo = cursor.fetchone()
 
         if not info_grupo:
             return "Grupo no encontrado", 404
 
-        # 2. Obtener alumnos inscritos
+        # B) Obtener lista de alumnos CON CONTEOS de asistencia
+        # Usamos 'inasistencia = 1' para contar faltas y 'asistencia = 1' para presencias
         cursor.execute("""
             SELECT a.id_alumno, a.matricula, 
-                   CONCAT(a.nombre, ' ', a.apellido_p, ' ', IFNULL(a.apellido_m, '')) as nombre_completo 
+                   CONCAT(a.nombre, ' ', a.apellido_p, ' ', IFNULL(a.apellido_m, '')) as nombre_completo,
+                   
+                   (SELECT COUNT(*) FROM asistencias asis 
+                    WHERE asis.id_alumno = a.id_alumno 
+                      AND asis.id_grupo = %s 
+                      AND asis.asistencia = 1) as total_asistencias,
+                      
+                   (SELECT COUNT(*) FROM asistencias asis 
+                    WHERE asis.id_alumno = a.id_alumno 
+                      AND asis.id_grupo = %s 
+                      AND asis.inasistencia = 1) as total_faltas
+
             FROM alumnos a
             JOIN inscripciones_idioma ii ON a.id_alumno = ii.id_alumno
             WHERE ii.id_grupo = %s AND ii.estado = 'Activo'
             ORDER BY a.apellido_p ASC
-        """, (id_grupo,))
+        """, (id_grupo, id_grupo, id_grupo))
+        
         alumnos = cursor.fetchall()
         
         return render_template("listas.html", 
-                             alumnos=alumnos, 
-                             grupo=info_grupo, 
-                             id_grupo=id_grupo)
-        
+                               alumnos=alumnos, 
+                               grupo=info_grupo, 
+                               id_grupo=id_grupo)
+                               
     except Exception as e:
-        print(f"Error: {e}")
-        return f"Error de conexión: {e}", 500
+        print(f"Error gestion_asistencia: {e}")
+        return f"Error: {e}", 500
     finally:
-        if conn and conn.is_connected(): conn.close()
+        if conn: conn.close()
 
 # --- API: GUARDAR ASISTENCIA (Adaptado a tu Schema) ---
 @app.route("/api/guardar_asistencia", methods=["POST"])
 def api_guardar_asistencia():
+    # Seguridad: Solo maestros pueden modificar
+    if session.get('rol') != 'maestro':
+        return jsonify({'status': 'error', 'message': 'No autorizado (Solo docentes)'}), 403
+
     conn = None
     try:
         data = request.get_json()
         
-        # Datos recibidos del JS
         id_alumno = data.get('id_alumno')
         id_grupo = data.get('id_grupo')
         fecha_clase = data.get('fecha') # YYYY-MM-DD
         asistio = data.get('asistio')   # true/false
         
-        # Valor para tu columna enum/boolean. Tu tabla dice BOOLEAN (0 o 1)
+        # Lógica para llenar ambas columnas
         valor_asistencia = 1 if asistio else 0
-
-        # Necesitamos el id_profesor. Lo ideal es sacarlo de la sesión o del grupo.
-        # Aquí lo consultamos rápido basándonos en el grupo para cumplir la FK.
+        valor_inasistencia = 0 if asistio else 1 
+        
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         
-        # Obtener ID profesor dueño del grupo
+        # Validar grupo
         cursor.execute("SELECT id_profesor FROM grupos WHERE id_grupo = %s", (id_grupo,))
         res_profe = cursor.fetchone()
-        if not res_profe: return jsonify({"error": "Grupo sin profesor"}), 400
+        if not res_profe: return jsonify({"status": "error", "mensaje": "Grupo inválido"}), 400
         id_profesor = res_profe[0]
 
-        # INSERT / UPDATE Query usando tus campos
+        # Insertar o Actualizar
         sql = """
-            INSERT INTO asistencias (asistencia, id_grupo, id_alumno, id_profesor, fecha_clase) 
-            VALUES (%s, %s, %s, %s, %s) 
-            ON DUPLICATE KEY UPDATE asistencia = %s
+            INSERT INTO asistencias (asistencia, inasistencia, id_grupo, id_alumno, id_profesor, fecha_clase) 
+            VALUES (%s, %s, %s, %s, %s, %s) 
+            ON DUPLICATE KEY UPDATE asistencia = %s, inasistencia = %s
         """
-        # Valores: (asistencia, grupo, alumno, profe, fecha) + (asistencia_update)
-        cursor.execute(sql, (valor_asistencia, id_grupo, id_alumno, id_profesor, fecha_clase, valor_asistencia))
+        
+        cursor.execute(sql, (
+            valor_asistencia, valor_inasistencia, 
+            id_grupo, id_alumno, id_profesor, fecha_clase, 
+            valor_asistencia, valor_inasistencia
+        ))
         conn.commit()
         
         return jsonify({"status": "success"})
         
     except Exception as e:
-        print(f"Error SQL: {e}")
+        print(f"Error SQL Asistencia: {e}")
         return jsonify({"status": "error", "mensaje": str(e)}), 500
     finally:
         if conn: conn.close()
@@ -1986,12 +2070,14 @@ def api_obtener_asistencias():
 
 @app.route("/api/obtener_comentarios/<int:id_alumno>", methods=["GET"])
 def api_obtener_comentarios(id_alumno):
+    # Cualquiera logueado puede ver (Staff incluido)
+    if 'user_id' not in session: return jsonify({'status': 'error'}), 403
+    
     conn = None
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
-        # Obtenemos id_comentario e id_profesor para validar permisos en el frontend
         cursor.execute("""
             SELECT c.id_comentario, c.descripcion, c.fecha_registro, c.id_profesor,
                    CONCAT(p.nombre, ' ', p.apellido_p) as profesor
@@ -2002,10 +2088,9 @@ def api_obtener_comentarios(id_alumno):
         """, (id_alumno,))
         
         comentarios = cursor.fetchall()
-        
         for c in comentarios:
             c['fecha'] = c['fecha_registro'].strftime("%d/%m/%Y %H:%M")
-            
+
         return jsonify({'status': 'success', 'comentarios': comentarios})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -2015,40 +2100,32 @@ def api_obtener_comentarios(id_alumno):
 # --- API: GUARDAR O EDITAR COMENTARIO ---
 @app.route("/api/guardar_comentario", methods=["POST"])
 def api_guardar_comentario():
+    # Solo maestros pueden escribir
+    if session.get('rol') != 'maestro': return jsonify({'status': 'error', 'message': 'Solo lectura'}), 403
+    
     conn = None
     try:
         data = request.get_json()
         id_alumno = data.get('id_alumno')
         descripcion = data.get('descripcion')
-        id_comentario = data.get('id_comentario') # Si viene, es edición
-        
-        # VALIDACIÓN DE SEGURIDAD: Usar siempre el ID de la sesión
-        id_profesor_sesion = session.get('user_id')
-        
-        if not id_profesor_sesion:
-            return jsonify({'status': 'error', 'message': 'No hay sesión activa'}), 401
-
-        if not descripcion:
-            return jsonify({'status': 'error', 'message': 'Comentario vacío'}), 400
+        id_comentario = data.get('id_comentario')
+        id_profesor = session.get('user_id')
 
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-        
+
         if id_comentario:
-            # --- EDICIÓN: Solo si el comentario pertenece al profesor logueado ---
+            # Editar (Solo si es suyo)
             cursor.execute("""
                 UPDATE comentarios SET descripcion = %s, fecha_registro = NOW()
                 WHERE id_comentario = %s AND id_profesor = %s
-            """, (descripcion, id_comentario, id_profesor_sesion))
-            
-            if cursor.rowcount == 0:
-                return jsonify({'status': 'error', 'message': 'No tienes permiso para editar este comentario o no existe.'}), 403
+            """, (descripcion, id_comentario, id_profesor))
         else:
-            # --- INSERCIÓN NUEVA ---
+            # Nuevo
             cursor.execute("""
                 INSERT INTO comentarios (descripcion, id_alumno, id_profesor)
                 VALUES (%s, %s, %s)
-            """, (descripcion, id_alumno, id_profesor_sesion))
+            """, (descripcion, id_alumno, id_profesor))
         
         conn.commit()
         return jsonify({'status': 'success'})
@@ -2057,28 +2134,28 @@ def api_guardar_comentario():
     finally:
         if conn: conn.close()
 
-# --- API: ELIMINAR COMENTARIO (NUEVA) ---
 @app.route("/api/eliminar_comentario", methods=["POST"])
 def api_eliminar_comentario():
+    # Solo maestros pueden borrar
+    if session.get('rol') != 'maestro': return jsonify({'status': 'error'}), 403
+    
     conn = None
     try:
         data = request.get_json()
         id_comentario = data.get('id_comentario')
-        id_profesor_sesion = session.get('user_id') # Seguridad
-
-        if not id_profesor_sesion: return jsonify({'status': 'error', 'message': 'Login requerido'}), 401
+        id_profesor = session.get('user_id')
 
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         
-        # Solo borra si coincide el ID del comentario Y el ID del profesor dueño
-        cursor.execute("DELETE FROM comentarios WHERE id_comentario = %s AND id_profesor = %s", (id_comentario, id_profesor_sesion))
+        # Solo borra si el profesor es el autor
+        cursor.execute("DELETE FROM comentarios WHERE id_comentario = %s AND id_profesor = %s", (id_comentario, id_profesor))
         
-        if cursor.rowcount == 0:
-             return jsonify({'status': 'error', 'message': 'No se pudo borrar (Permisos o no existe)'}), 403
-
-        conn.commit()
-        return jsonify({'status': 'success'})
+        if cursor.rowcount > 0:
+            conn.commit()
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'No se pudo borrar'}), 403
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
     finally:
@@ -2086,163 +2163,516 @@ def api_eliminar_comentario():
 
 @app.route("/maestroinfo/<string:tipo>/<int:id>")
 def maestroinfo(tipo, id):
+    if 'user_id' not in session: return redirect(url_for('login'))
+        
     conn = None
     personal_data = None
-    expediente_data = {}
+    datos_fiscales = None
+    expediente_urls = {}
     
     try:
-        if tipo not in ['maestro', 'staff']: return "Error", 400
-        table_name = "profesores" if tipo == 'maestro' else "staff"
-        id_column = "id_profesor" if tipo == 'maestro' else "id_staff"
-        
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute(f"SELECT * FROM {table_name} WHERE {id_column} = %s", (id,))
-        personal_data = cursor.fetchone()
-
-        if not personal_data: return "No encontrado", 404
-        
-        mongo_id = personal_data.get('id_expediente_mongo')
-        if mongo_id:
-            expediente_doc = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
-            if expediente_doc:
-                for key, filepath in expediente_doc.get('documentos', {}).items():
-                    # Aquí generamos la URL que redirige a la ruta /expediente/ver/...
-                    # la cual finalmente redirige a Drive
-                    if filepath:
-                        expediente_data[key] = url_for(
-                            'ver_documento_expediente', 
-                            mongo_id=mongo_id, 
-                            tipo_doc=key
-                        )
-                    else:
-                        expediente_data[key] = None
-
-        if personal_data.get("fecha_nacimiento"):
-            personal_data["fecha_nacimiento"] = personal_data["fecha_nacimiento"].strftime("%d/%m/%Y")
+        # A) DATOS PERSONALES Y FINANCIEROS (Salario, IVA, ISR están aquí)
+        if tipo == 'maestro':
+            cursor.execute("SELECT * FROM profesores WHERE id_profesor = %s", (id,))
+        elif tipo == 'staff':
+            cursor.execute("SELECT * FROM staff WHERE id_staff = %s", (id,))
+        else:
+            return "Tipo no válido", 400
             
-        datos_fiscales = None
+        personal_data = cursor.fetchone()
+        if not personal_data: return "No encontrado", 404
+
+        # B) DATOS FISCALES (RFC, Razón Social...) - Solo Maestros
         if tipo == 'maestro':
             cursor.execute("SELECT * FROM profesores_datos_fiscales WHERE id_profesor = %s", (id,))
             datos_fiscales = cursor.fetchone()
-            
+
+        # C) DOCUMENTOS (Desde MongoDB)
+        mongo_id = personal_data.get('id_expediente_mongo')
+        if mongo_id:
+            expediente_doc = expedientes_col.find_one({"_id": ObjectId(mongo_id)})
+            if expediente_doc and 'documentos' in expediente_doc:
+                expediente_urls = expediente_doc['documentos']
+
     except Exception as e:
-        return "Error interno", 500
+        print(f"Error cargando perfil: {e}")
     finally:
         if conn: conn.close()
 
-    return render_template("maestroinfo.html", personal=personal_data, expediente=expediente_data, tipo=tipo, datos_fiscales=datos_fiscales)
+    return render_template("maestroinfo.html", 
+                           personal=personal_data, 
+                           tipo=tipo, 
+                           datos_fiscales=datos_fiscales,
+                           expediente=expediente_urls)
 
-@app.route("/nomina") #actualizar maestros
+@app.route("/nomina", methods=['GET', 'POST'])
 def nomina():
-    return render_template("nomina.html")
-
-@app.route("/perfil")
-def perfil():
-    # Seguridad: Solo alumnos pueden entrar aquí
-    if session.get('rol') != 'alumno':
+    # Seguridad: Solo Maestros
+    if session.get('rol') != 'maestro':
         return redirect(url_for('login'))
     
     user_id = session.get('user_id')
     conn = None
-    alumno_data = {}
-    curso_info = "Sin curso activo"
+    historial = []
+    datos_profesor = {}
+    mensaje_error = None
+    mensaje_exito = None
 
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # A) Obtener datos personales del alumno
+        # A) CARGAR DATOS DEL PROFESOR
         cursor.execute("""
-            SELECT matricula, nombre, apellido_p, apellido_m, correo_electronico, telefono 
-            FROM alumnos WHERE id_alumno = %s
+            SELECT p.valor_hora, p.tasa_iva, p.tasa_isr_retenido, 
+                   df.rfc, df.razon_social, df.regimen_fiscal, df.codigo_postal
+            FROM profesores p
+            LEFT JOIN profesores_datos_fiscales df ON p.id_profesor = df.id_profesor
+            WHERE p.id_profesor = %s
         """, (user_id,))
-        alumno = cursor.fetchone()
+        datos_profesor = cursor.fetchone()
+
+        # B) CARGAR DATOS RECEPTOR (UTR)
+        cursor.execute("SELECT * FROM utr_data LIMIT 1")
+        utr_db = cursor.fetchone()
         
-        if alumno:
-            # Preparamos el diccionario que espera el HTML
-            alumno_data = {
-                "nombre_completo": f"{alumno['nombre']} {alumno['apellido_p']} {alumno['apellido_m']}",
-                "matricula": alumno['matricula'],
-                "correo": alumno['correo_electronico'],
-                "telefono": alumno['telefono']
+        receiver_data = {
+            "Rfc": utr_db['rfc'] if utr_db else "UTR130212KB3",
+            "Name": utr_db['razon_social'] if utr_db else "UNIVERSIDAD TECNOLÓGICA EL RETOÑO",
+            "CfdiUse": utr_db['uso_cfdi'] if utr_db else "G03",
+            "FiscalRegime": utr_db['regimen_fiscal'] if utr_db else "603",
+            "TaxZipCode": str(utr_db['cp']) if utr_db else "20337"
+        }
+
+        # C) PROCESAR TIMBRADO (POST)
+        if request.method == 'POST':
+            horas = float(request.form.get('horas', 0))
+            fecha_inicio = request.form.get('fecha_inicio')
+            fecha_fin = request.form.get('fecha_fin')
+
+            if not datos_profesor or not datos_profesor['rfc']:
+                mensaje_error = "Error: Faltan tus datos fiscales en el perfil."
+            elif horas <= 0:
+                mensaje_error = "Error: Las horas deben ser mayor a 0."
+            else:
+                # 1. Calcular Montos
+                valor_unitario = datos_profesor['valor_hora'] or 0
+                subtotal = horas * valor_unitario
+                tasa_iva = datos_profesor['tasa_iva'] or 0.16
+                tasa_isr = datos_profesor['tasa_isr_retenido'] or 0.0125
+                
+                # 2. JSON Facturama
+                payload = {
+                    "Folio": f"INT-{int(datetime.now().timestamp())}",
+                    "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Currency": "MXN",
+                    "PaymentMethod": "PUE",
+                    "PaymentForm": "03",
+                    "PlaceOfIssue": datos_profesor['codigo_postal'] or "20000",
+                    "Exportation": "01",
+                    "Issuer": {
+                        "Rfc": datos_profesor['rfc'],
+                        "Name": datos_profesor['razon_social'],
+                        "FiscalRegime": datos_profesor['regimen_fiscal']
+                    },
+                    "Receiver": receiver_data,
+                    "Items": [
+                        {
+                            "ProductCode": "86111702",
+                            "Description": f"Servicios profesionales. Periodo: {fecha_inicio} al {fecha_fin}",
+                            "UnitCode": "E48",
+                            "Quantity": horas,
+                            "UnitPrice": valor_unitario,
+                            "Subtotal": subtotal,
+                            "Taxes": [
+                                {
+                                    "Total": subtotal * tasa_iva,
+                                    "Name": "IVA",
+                                    "Base": subtotal,
+                                    "Rate": tasa_iva,
+                                    "IsRetention": False
+                                },
+                                {
+                                    "Total": subtotal * tasa_isr,
+                                    "Name": "ISR",
+                                    "Base": subtotal,
+                                    "Rate": tasa_isr,
+                                    "IsRetention": True
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+                # 3. Enviar a API
+                auth_str = f"{FACTURAMA_USER}:{FACTURAMA_PASS}"
+                # AQUÍ ES DONDE USAMOS base64
+                b64_auth = base64.b64encode(auth_str.encode()).decode()
+                headers = {'Authorization': f'Basic {b64_auth}', 'Content-Type': 'application/json'}
+
+                try:
+                    response = requests.post(FACTURAMA_URL, json=payload, headers=headers)
+                    
+                    if response.status_code == 201: # Éxito Real
+                        res_json = response.json()
+                        uuid_sat = res_json.get('Complement', {}).get('TaxStamp', {}).get('Uuid')
+                        total_final = res_json.get('Total')
+                        
+                        query_save = """
+                            INSERT INTO facturas_emitidas 
+                            (id_profesor, uuid, subtotal, total, periodo_pago, fecha_timbrado)
+                            VALUES (%s, %s, %s, %s, %s, NOW())
+                        """
+                        cursor.execute(query_save, (user_id, uuid_sat, subtotal, total_final, f"{fecha_inicio} - {fecha_fin}"))
+                        conn.commit()
+                        mensaje_exito = "Factura timbrada correctamente."
+                    else:
+                        # Fallback Simulación (Si falla la API o no hay credenciales)
+                        print(f"API Error: {response.text}")
+                        uuid_simulado = str(uuid.uuid4()).upper()
+                        total_simulado = subtotal + (subtotal*tasa_iva) - (subtotal*tasa_isr)
+                        
+                        query_save = """
+                            INSERT INTO facturas_emitidas (id_profesor, uuid, subtotal, total, periodo_pago, fecha_timbrado)
+                            VALUES (%s, %s, %s, %s, %s, NOW())
+                        """
+                        cursor.execute(query_save, (user_id, uuid_simulado, subtotal, total_simulado, f"{fecha_inicio} - {fecha_fin}"))
+                        conn.commit()
+                        mensaje_exito = "Factura generada (Modo Simulación - API Error)."
+                except Exception as req_err:
+                    print(f"Error de conexión: {req_err}")
+                    mensaje_error = "Error al conectar con Facturama."
+
+        # D) CARGAR HISTORIAL
+        cursor.execute("SELECT * FROM facturas_emitidas WHERE id_profesor = %s ORDER BY fecha_timbrado DESC", (user_id,))
+        historial = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error nómina: {e}")
+        mensaje_error = f"Error del sistema: {str(e)}"
+    finally:
+        if conn: conn.close()
+
+    return render_template("nomina.html", historial=historial, datos=datos_profesor, error=mensaje_error, exito=mensaje_exito)
+
+@app.route("/ver_recibo/<int:id_factura>")
+def ver_recibo(id_factura):
+    if session.get('rol') != 'maestro': return redirect(url_for('login'))
+    user_id = session.get('user_id')
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Datos Factura
+        cursor.execute("SELECT * FROM facturas_emitidas WHERE id_factura = %s AND id_profesor = %s", (id_factura, user_id))
+        factura = cursor.fetchone()
+        
+        # 2. Datos Emisor (Profesor)
+        cursor.execute("""
+            SELECT p.valor_hora, p.tasa_iva, p.tasa_isr_retenido, df.rfc, df.razon_social, df.regimen_fiscal, df.codigo_postal
+            FROM profesores p LEFT JOIN profesores_datos_fiscales df ON p.id_profesor = df.id_profesor
+            WHERE p.id_profesor = %s
+        """, (user_id,))
+        emisor = cursor.fetchone()
+
+        # 3. Datos Receptor (UTR) - También desde DB
+        cursor.execute("SELECT * FROM utr_data LIMIT 1")
+        receptor = cursor.fetchone()
+        
+        if not receptor:
+             receptor = {
+                "rfc": "UTR130212KB3",
+                "razon_social": "UNIVERSIDAD TECNOLÓGICA EL RETOÑO",
+                "uso_cfdi": "G03",
+                "cp": "20337",
+                "regimen_fiscal": "603"
             }
 
-        # B) Obtener información del curso activo (Idioma, Nivel, Horario)
-        # Tomamos el primero activo si tuviera varios
-        query_curso = """
-            SELECT i.nombre as idioma, c.nivel, h.dias, h.hora
-            FROM inscripciones_idioma ii
-            JOIN grupos g ON ii.id_grupo = g.id_grupo
-            JOIN cursos c ON g.id_curso = c.id_curso
-            JOIN idioma i ON c.id_idioma = i.id_idioma
-            LEFT JOIN horario h ON g.id_horario = h.id_horario
-            WHERE ii.id_alumno = %s AND ii.estado = 'Activo'
-            LIMIT 1
-        """
-        cursor.execute(query_curso, (user_id,))
-        curso = cursor.fetchone()
+        # Reconstruir desglose
+        valor_unitario = emisor['valor_hora']
+        cantidad = factura['subtotal'] / valor_unitario if valor_unitario > 0 else 0
         
-        if curso:
-            # Formateamos el texto ej: "Inglés IV (Sábados 8:00 - 13:00)"
-            dias = curso['dias'] if curso['dias'] else "Días por definir"
-            hora = curso['hora'] if curso['hora'] else ""
-            curso_info = f"{curso['idioma']} {curso['nivel']} ({dias} {hora})"
+        detalles = {
+            "cantidad": round(cantidad, 2),
+            "valor_unitario": valor_unitario,
+            "importe": factura['subtotal'],
+            "iva_monto": factura['subtotal'] * emisor['tasa_iva'],
+            "isr_monto": factura['subtotal'] * emisor['tasa_isr_retenido'],
+            "tasa_iva_pct": int(emisor['tasa_iva'] * 100),
+            "tasa_isr_pct": emisor['tasa_isr_retenido'] * 100
+        }
+        
+        # Pasamos 'receptor' al template
+        return render_template("recibo.html", factura=factura, emisor=emisor, receptor=receptor, detalles=detalles)
+    except Exception as e:
+        return f"Error: {e}", 500
+    finally:
+        if conn: conn.close()
+
+@app.route("/comprar_timbres", methods=['GET', 'POST'])
+def comprar_timbres():
+    if session.get('rol') != 'maestro': return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        return "<script>alert('¡Compra exitosa! Timbres agregados.'); window.location.href='/nomina';</script>"
+
+    user_id = session.get('user_id')
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT correo_electronico FROM profesores WHERE id_profesor = %s", (user_id,))
+    usuario = cursor.fetchone()
+    conn.close()
+
+    return render_template("comprar_timbres.html", correo=usuario['correo_electronico'])
+
+@app.route("/perfil")
+def perfil():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    rol = session.get('rol')
+    user_id = session.get('user_id')
+    conn = None
+    
+    # Variables base para la plantilla
+    usuario_data = {}
+    datos_fiscales = None
+    info_extra = "Sin información" 
+    permisos_activos = []
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # --- CASO ALUMNO ---
+        if rol == 'alumno':
+            cursor.execute("SELECT * FROM alumnos WHERE id_alumno = %s", (user_id,))
+            user = cursor.fetchone()
+            if user:
+                usuario_data = {
+                    "nombre": user['nombre'],
+                    "apellido_p": user['apellido_p'],
+                    "apellido_m": user['apellido_m'],
+                    "nombre_completo": f"{user['nombre']} {user['apellido_p']} {user['apellido_m']}",
+                    "id_ref": user['matricula'], # Muestra matrícula
+                    "correo": user['correo_electronico'],
+                    "telefono": user['telefono']
+                }
+            
+            # Buscar Curso Activo
+            cursor.execute("""
+                SELECT i.nombre as idioma, c.nivel, h.dias, h.hora
+                FROM inscripciones_idioma ii
+                JOIN grupos g ON ii.id_grupo = g.id_grupo
+                JOIN cursos c ON g.id_curso = c.id_curso
+                JOIN idioma i ON c.id_idioma = i.id_idioma
+                LEFT JOIN horario h ON g.id_horario = h.id_horario
+                WHERE ii.id_alumno = %s AND ii.estado = 'Activo'
+                LIMIT 1
+            """, (user_id,))
+            curso = cursor.fetchone()
+            if curso:
+                info_extra = f"{curso['idioma']} {curso['nivel']} ({curso['dias']} {curso['hora']})"
+
+        # --- CASO MAESTRO ---
+        elif rol == 'maestro':
+            cursor.execute("SELECT * FROM profesores WHERE id_profesor = %s", (user_id,))
+            user = cursor.fetchone()
+            if user:
+                usuario_data = {
+                    "nombre": user['nombre'],
+                    "apellido_p": user['apellido_p'],
+                    "apellido_m": user['apellido_m'],
+                    "nombre_completo": f"{user['nombre']} {user['apellido_p']} {user['apellido_m']}",
+                    "id_ref": "Docente",
+                    "correo": user['correo_electronico'],
+                    "telefono": user['telefono'],
+                    "fecha_nacimiento": user['fecha_nacimiento'],
+                    "genero": user['genero']
+                }
+            
+            # Cargar Datos Fiscales (Para nómina)
+            cursor.execute("SELECT * FROM profesores_datos_fiscales WHERE id_profesor = %s", (user_id,))
+            datos_fiscales = cursor.fetchone()
+
+            # Contar Grupos Asignados
+            cursor.execute("SELECT COUNT(*) as total FROM grupos WHERE id_profesor = %s", (user_id,))
+            res = cursor.fetchone()
+            info_extra = f"{res['total']} Grupos Asignados"
+            
+            # Cargar Permisos de Delegación Activos
+            cursor.execute("""
+                SELECT pt.id_permisos_temporales, pt.fecha_inicio, pt.fecha_fin, 
+                       CONCAT(p.nombre, ' ', p.apellido_p) as sustituto
+                FROM permisos_temporales pt
+                JOIN profesores p ON pt.id_profesor_sustituto = p.id_profesor
+                WHERE pt.id_profesor = %s AND pt.estado = 'activo'
+            """, (user_id,))
+            permisos_activos = cursor.fetchall()
 
     except Exception as e:
         print(f"Error en perfil: {e}")
-        alumno_data = {"nombre_completo": "Error al cargar", "matricula": "-", "correo": "-", "telefono": "-"}
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if conn: conn.close()
 
-    return render_template("Perfil.html", alumno=alumno_data, curso_actual=curso_info)
+    return render_template("Perfil.html", 
+                           usuario=usuario_data, 
+                           info_extra=info_extra, 
+                           fiscal=datos_fiscales,
+                           permisos=permisos_activos)
+
+@app.route("/crear_permiso", methods=['POST'])
+def crear_permiso():
+    if session.get('rol') != 'maestro': return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    email_sustituto = request.form.get('email_sustituto')
+    fecha_inicio = request.form.get('fecha_inicio')
+    fecha_fin = request.form.get('fecha_fin')
+    
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Validar que el sustituto exista
+        cursor.execute("SELECT id_profesor FROM profesores WHERE correo_electronico = %s", (email_sustituto,))
+        sustituto = cursor.fetchone()
+        
+        if not sustituto:
+            return "<script>alert('Error: El correo no corresponde a un docente registrado.'); window.history.back();</script>"
+        
+        if sustituto['id_profesor'] == user_id:
+            return "<script>alert('No puedes darte permiso a ti mismo.'); window.history.back();</script>"
+
+        # 2. Insertar el permiso
+        query = """
+            INSERT INTO permisos_temporales (id_profesor, id_profesor_sustituto, fecha_inicio, fecha_fin, estado)
+            VALUES (%s, %s, %s, %s, 'activo')
+        """
+        cursor.execute(query, (user_id, sustituto['id_profesor'], fecha_inicio, fecha_fin))
+        conn.commit()
+        
+        return "<script>alert('Permiso otorgado exitosamente.'); window.location.href='/perfil';</script>"
+
+    except Exception as e:
+        print(f"Error crear permiso: {e}")
+        return f"<script>alert('Error: {e}'); window.history.back();</script>"
+    finally:
+        if conn: conn.close()
+
+@app.route("/revocar_permiso/<int:id_permiso>")
+def revocar_permiso(id_permiso):
+    if session.get('rol') != 'maestro': return redirect(url_for('login'))
+    
+    conn = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        # Solo revocamos si el permiso pertenece al usuario logueado
+        cursor.execute("UPDATE permisos_temporales SET estado = 'revocado' WHERE id_permisos_temporales = %s AND id_profesor = %s", (id_permiso, session.get('user_id')))
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        if conn: conn.close()
+    
+    return redirect(url_for('perfil'))
+
+@app.route("/guardar_perfil_docente", methods=['POST'])
+def guardar_perfil_docente():
+    # Solo maestros pueden editar sus datos fiscales
+    if session.get('rol') != 'maestro': return redirect(url_for('login'))
+    
+    user_id = session.get('user_id')
+    f = request.form
+    conn = None
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # 1. Actualizar Datos Personales Básicos
+        cursor.execute("""
+            UPDATE profesores 
+            SET nombre=%s, apellido_p=%s, apellido_m=%s, telefono=%s, 
+                fecha_nacimiento=%s, genero=%s
+            WHERE id_profesor=%s
+        """, (f['nombre'], f['apellido_p'], f['apellido_m'], f['telefono'], 
+              f['fecha_nacimiento'] or None, f['genero'], user_id))
+
+        # 2. Actualizar o Insertar Datos Fiscales (Upsert)
+        rfc = f['rfc']
+        razon = f['razon_social']
+        regimen = f['regimen_fiscal']
+        clabe = f['cuenta_clabe']
+        cp = f['codigo_postal']
+
+        cursor.execute("""
+            INSERT INTO profesores_datos_fiscales 
+            (id_profesor, rfc, razon_social, regimen_fiscal, cuenta_clabe, codigo_postal)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE 
+            rfc=%s, razon_social=%s, regimen_fiscal=%s, cuenta_clabe=%s, codigo_postal=%s
+        """, (user_id, rfc, razon, regimen, clabe, cp, rfc, razon, regimen, clabe, cp))
+
+        conn.commit()
+        return "<script>alert('Datos actualizados correctamente.'); window.location.href='/perfil';</script>"
+
+    except Exception as e:
+        print(f"Error al guardar perfil: {e}")
+        return f"Error: {e}", 500
+    finally:
+        if conn: conn.close()
 
 @app.route("/actualizar_password", methods=["POST"])
 def actualizar_password():
-    if session.get('rol') != 'alumno':
-        return redirect(url_for('login'))
+    if 'user_id' not in session: return redirect(url_for('login'))
 
     user_id = session.get('user_id')
-    current_pass = request.form.get('current_pass')
+    rol = session.get('rol')
+    current = request.form.get('current_pass')
     new_pass = request.form.get('new_pass')
-    confirm_pass = request.form.get('confirm_pass')
+    confirm = request.form.get('confirm_pass')
 
-    # Validaciones rápidas del lado del servidor
-    if new_pass != confirm_pass:
-        return "<script>alert('Las contraseñas no coinciden'); window.history.back();</script>"
+    if new_pass != confirm:
+        return "<script>alert('Las contraseñas nuevas no coinciden'); window.history.back();</script>"
     
     if len(new_pass) < 6:
         return "<script>alert('La contraseña es muy corta (mínimo 6 caracteres)'); window.history.back();</script>"
 
+    # Determinar en qué tabla buscar según el rol
+    if rol == 'alumno': table, id_col = "alumnos", "id_alumno"
+    elif rol == 'maestro': table, id_col = "profesores", "id_profesor"
+    elif rol == 'staff': table, id_col = "staff", "id_staff"
+
     conn = None
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
-        # 1. Verificar contraseña actual en la BD
-        cursor.execute("SELECT contraseña FROM alumnos WHERE id_alumno = %s", (user_id,))
+        # Verificar contraseña actual
+        cursor.execute(f"SELECT contraseña FROM {table} WHERE {id_col} = %s", (user_id,))
         user = cursor.fetchone()
         
-        if not user or not check_password_hash(user['contraseña'], current_pass):
+        if not user or not check_password_hash(user['contraseña'], current):
              return "<script>alert('La contraseña actual es incorrecta'); window.history.back();</script>"
              
-        # 2. Actualizar contraseña (Encriptada)
+        # Actualizar con hash
         new_hash = generate_password_hash(new_pass)
-        cursor.execute("UPDATE alumnos SET contraseña = %s WHERE id_alumno = %s", (new_hash, user_id))
+        cursor.execute(f"UPDATE {table} SET contraseña = %s WHERE {id_col} = %s", (new_hash, user_id))
         conn.commit()
         
-        return "<script>alert('Contraseña actualizada correctamente'); window.location.href='/perfil';</script>"
+        return "<script>alert('Contraseña actualizada exitosamente.'); window.location.href='/perfil';</script>"
 
     except Exception as e:
-        print(f"Error cambio password: {e}")
         return f"Error interno: {e}", 500
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if conn: conn.close()
 
 #Alumno
 

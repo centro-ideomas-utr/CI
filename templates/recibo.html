@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recibo de Honorarios - {{ factura.uuid }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/recibo.css') }}">
+    <style>
+        /* ESTILO PARA MARCA DE AGUA "SIN VALIDEZ FISCAL" */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(200, 0, 0, 0.15);
+            font-weight: bold;
+            z-index: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            border: 5px solid rgba(200, 0, 0, 0.15);
+            padding: 20px;
+            border-radius: 20px;
+        }
+        .invoice-box {
+            position: relative;
+            overflow: hidden; /* Para que la marca no se salga */
+        }
+        /* Asegurar que el contenido esté encima de la marca */
+        .header, .info-grid, .details-bar, .concepts-table, .totals-section, .footer-fiscal {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="invoice-box">
+        
+        <!-- MARCA DE AGUA (Quitar esto si conectas una API real) -->
+        <div class="watermark">COMPROBANTE INTERNO</div>
+
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <h2>RECIBO DE HONORARIOS</h2>
+                <p><strong>Folio Interno:</strong> {{ factura.id_factura }}</p>
+                <p><small>UUID Simulado: {{ factura.uuid }}</small></p>
+            </div>
+            <div class="header-right">
+                <img src="{{ url_for('static', filename='imagen/CI.png') }}" alt="Logo" class="logo">
+            </div>
+        </div>
+
+        <!-- DATOS EMISOR / RECEPTOR -->
+        <div class="info-grid">
+            <div class="info-col">
+                <h3>EMISOR (DOCENTE)</h3>
+                <p><strong>Nombre:</strong> {{ emisor.razon_social }}</p>
+                <p><strong>RFC:</strong> {{ emisor.rfc }}</p>
+                <p><strong>Régimen Fiscal:</strong> {{ emisor.regimen_fiscal }}</p>
+            </div>
+            <div class="info-col">
+                <h3>RECEPTOR (UTR)</h3>
+                <p><strong>Nombre:</strong> UNIVERSIDAD TECNOLÓGICA EL RETOÑO</p>
+                <p><strong>RFC:</strong> UTR130212KB3</p>
+                <p><strong>Uso CFDI:</strong> G03 - Gastos en general</p>
+                <p><strong>C.P.:</strong> 20337</p>
+            </div>
+        </div>
+
+        <!-- DETALLES GENERALES -->
+        <div class="details-bar">
+            <span><strong>Fecha de Emisión:</strong> {{ factura.fecha_timbrado }}</span>
+            <span><strong>Lugar de Expedición:</strong> 20000</span>
+            <span><strong>Tipo:</strong> I - Ingreso</span>
+        </div>
+
+        <!-- TABLA CONCEPTOS -->
+        <table class="concepts-table">
+            <thead>
+                <tr>
+                    <th>Clave SAT</th>
+                    <th>Cant.</th>
+                    <th>Unidad</th>
+                    <th>Descripción</th>
+                    <th>Valor Unitario</th>
+                    <th>Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>86111702</td>
+                    <td>{{ detalles.cantidad }}</td>
+                    <td>E48</td>
+                    <td class="desc-cell">
+                        Servicios profesionales por impartición de cursos de idiomas.
+                        <br><small style="color:#666;">Periodo: {{ factura.periodo_pago }}</small>
+                    </td>
+                    <td>${{ "{:,.2f}".format(detalles.valor_unitario) }}</td>
+                    <td>${{ "{:,.2f}".format(detalles.importe) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- TOTALES -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td>Subtotal:</td>
+                    <td>${{ "{:,.2f}".format(factura.subtotal) }}</td>
+                </tr>
+                <tr>
+                    <td>Impuestos Trasladados (IVA 16%):</td>
+                    <td>+ ${{ "{:,.2f}".format(detalles.iva_monto) }}</td>
+                </tr>
+                <tr>
+                    <td>Impuestos Retenidos (ISR):</td>
+                    <td>- ${{ "{:,.2f}".format(detalles.isr_monto) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td>TOTAL NETO:</td>
+                    <td>${{ "{:,.2f}".format(factura.total) }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- SELLOS Y QR (Indicando que es simulación) -->
+        <div class="footer-fiscal">
+            <div class="qr-code">
+                <!-- QR Generado con los datos reales -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=FacturaInterna_{{ factura.uuid }}" alt="QR">
+            </div>
+            <div class="stamps">
+                <p><strong>Nota Importante:</strong></p>
+                <p class="hash-text">Este documento es una representación impresa de un comprobante interno para efectos administrativos de la UTR. No sustituye al CFDI oficial que debe ser timbrado ante el SAT.</p>
+                
+                <p><strong>Cadena Original de Control:</strong></p>
+                <p class="hash-text">||1.1|{{ factura.uuid }}|{{ factura.fecha_timbrado }}|UTR-CONTROL-INTERNO||</p>
+            </div>
+        </div>
+        
+        <div class="print-action">
+            <button onclick="window.print()">🖨️ Imprimir Recibo Interno</button>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -106,6 +106,7 @@ alter table comentarios add constraint foreign key (id_profesor) references prof
 create table asistencias(
 	id_asistencias INT not null AUTO_INCREMENT PRIMARY KEY,
     asistencia BOOLEAN,
+    inasistencia BOOLEAN,
     id_grupo int,
 	id_alumno int,
 	id_profesor int,

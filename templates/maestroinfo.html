@@ -4,211 +4,279 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalles de {{ personal.nombre }}</title>
+    
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <!-- Estilos -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/añadiradmin.css') }}"> 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/maestroinfo.css') }}"> 
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
-    </head>
+</head>
 <body>
     
     <main>
         <div class="content-wrapper">
             
-            <h2 style="text-align: left;">Detalles del Personal ({{ 'Maestro' if tipo == 'maestro' else 'Staff' }})</h2>
+            <h2>Detalles del Personal ({{ 'Maestro' if tipo == 'maestro' else 'Staff' }})</h2>
             
+            <!-- 1. DATOS PERSONALES (Lectura) -->
             <div class="info-card">
                 <h3><i class="fas fa-user-circle"></i> Datos Personales</h3>
                 <div class="detail-grid">
-                    <div>
-                        <strong>Nombre Completo:</strong>
-                        <p>{{ personal.nombre }} {{ personal.apellido_p }} {{ personal.apellido_m }}</p>
-                    </div>
-                    <div>
-                        <strong>Correo Electrónico:</strong>
-                        <p>{{ personal.correo_electronico }}</p>
-                    </div>
-                    <div>
-                        <strong>Fecha de Nacimiento:</strong>
-                        <p>{{ personal.fecha_nacimiento if personal.fecha_nacimiento else 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <strong>Teléfono:</strong>
-                        <p>{{ personal.telefono if personal.telefono else 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <strong>Género:</strong>
-                        <p>{{ personal.genero if personal.genero else 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <strong>Registro desde:</strong>
-                        <p>{{ personal.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</p>
-                    </div>
-                    {% if tipo == 'staff' %}
-                    <div>
-                        <strong>ID Staff:</strong>
-                        <p>{{ personal.id_staff }}</p>
-                    </div>
-                    {% endif %}
+                    <div><strong>Nombre:</strong> <p>{{ personal.nombre }} {{ personal.apellido_p }} {{ personal.apellido_m }}</p></div>
+                    <div><strong>Correo:</strong> <p>{{ personal.correo_electronico }}</p></div>
+                    <div><strong>Teléfono:</strong> <p>{{ personal.telefono or 'N/A' }}</p></div>
+                    <div><strong>Fecha Nac.:</strong> <p>{{ personal.fecha_nacimiento or 'N/A' }}</p></div>
+                    <div><strong>Género:</strong> <p>{{ personal.genero or 'N/A' }}</p></div>
+                    <div><strong>Registro:</strong> <p>{{ personal.fecha_registro.strftime('%d/%m/%Y') }}</p></div>
                 </div>
             </div>
 
+            <!-- 2. DATOS FINANCIEROS (Nómina) - Lectura -->
+            <div class="info-card" style="border-top-color: #27ae60;">
+                <h3><i class="fas fa-money-bill-wave"></i> Configuración de Nómina</h3>
+                <div class="detail-grid">
+                    <div><strong>Salario por Hora:</strong> <p>${{ "{:,.2f}".format(personal.valor_hora or 0) }}</p></div>
+                    <div><strong>Tasa IVA:</strong> <p>{{ ((personal.tasa_iva or 0) * 100)|round|int }}%</p></div>
+                    <div><strong>Tasa ISR:</strong> <p>{{ (personal.tasa_isr_retenido or 0) * 100 }}%</p></div>
+                </div>
+            </div>
+
+            <!-- 3. DATOS FISCALES (Solo Maestros - Lectura) -->
             {% if tipo == 'maestro' and datos_fiscales %}
-            <div class="info-card fiscal-card">
+            <div class="info-card" style="border-top-color: #8e44ad;">
                 <h3><i class="fas fa-file-invoice-dollar"></i> Datos Fiscales</h3>
                 <div class="detail-grid">
-                    <div>
-                        <strong>RFC:</strong>
-                        <p>{{ datos_fiscales.rfc }}</p>
-                    </div>
-                    <div>
-                        <strong>Razón Social:</strong>
-                        <p>{{ datos_fiscales.razon_social }}</p>
-                    </div>
-                    <div>
-                        <strong>Régimen Fiscal:</strong>
-                        <p>{{ datos_fiscales.regimen_fiscal }}</p>
-                    </div>
-                    <div>
-                        <strong>Cuenta CLABE:</strong>
-                        <p>{{ datos_fiscales.cuenta_clabe }}</p>
-                    </div>
+                    <div><strong>RFC:</strong> <p>{{ datos_fiscales.rfc }}</p></div>
+                    <div><strong>Razón Social:</strong> <p>{{ datos_fiscales.razon_social }}</p></div>
+                    <div><strong>Régimen:</strong> <p>{{ datos_fiscales.regimen_fiscal }}</p></div>
+                    <div><strong>CLABE:</strong> <p>{{ datos_fiscales.cuenta_clabe }}</p></div>
                 </div>
             </div>
             {% endif %}
 
-            <div class="info-card documents-card">
-                <h3><i class="fas fa-folder-open"></i> Documentos del Expediente</h3>
+            <!-- 4. EXPEDIENTE DIGITAL -->
+            <div class="info-card" style="border-top-color: #f39c12;">
+                <h3><i class="fas fa-folder-open"></i> Expediente Digital</h3>
                 
                 <ul class="document-list">
-                    {% for doc_key, doc_url in expediente.items() %}
-                    <li>
-                        <strong>{{ doc_key.replace('_', ' ').replace('doc', '').strip().title() }}:</strong>
-                        {% if doc_url %}
-                            <a href="{{ doc_url }}" target="_blank" class="doc-link">
-                                <i class="fas fa-eye"></i> Ver Documento
-                            </a>
-                        {% else %}
-                            <span class="status-missing"><i class="fas fa-times-circle"></i> Pendiente</span>
-                        {% endif %}
-                    </li>
+                    {% set docs_config = [
+                        ('acta_nacimiento', 'Acta de Nacimiento'),
+                        ('identificacion', 'Identificación Oficial'),
+                        ('estado_de_cuenta', 'Estado de Cuenta'),
+                        ('cv', 'Curriculum Vitae'),
+                        ('comprobante_domicilio', 'Comprobante de Domicilio'),
+                        ('carta_recomendacion1', 'Carta Recomendación 1'),
+                        ('carta_recomendacion2', 'Carta Recomendación 2'),
+                        ('titulo', 'Título Profesional'),
+                        ('cedula', 'Cédula Profesional'),
+                        ('constancia_situacion_fiscal', 'Constancia Fiscal')
+                    ] %}
+
+                    {% for key, label in docs_config %}
+                        {% set url = expediente.get(key) %}
+                        <li class="doc-item">
+                            <span class="doc-name">{{ label }}</span>
+                            <div class="doc-actions">
+                                {% if url %}
+                                    <a href="{{ url }}" target="_blank" class="btn-icon btn-view" title="Ver"><i class="fas fa-eye"></i></a>
+                                    <button onclick="openUploadModal('{{ key }}', '{{ label }}')" class="btn-icon btn-upload" title="Reemplazar"><i class="fas fa-sync-alt"></i></button>
+                                    <button onclick="deleteDocument('{{ key }}')" class="btn-icon btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                {% else %}
+                                    <span class="doc-status missing">Pendiente</span>
+                                    <button onclick="openUploadModal('{{ key }}', '{{ label }}')" class="btn-icon btn-upload" title="Subir"><i class="fas fa-upload"></i></button>
+                                {% endif %}
+                            </div>
+                        </li>
                     {% endfor %}
-                    
-                    {% if not expediente %}
-                    <p class="status-missing">No se encontró el expediente asociado o está vacío.</p>
-                    {% endif %}
                 </ul>
             </div>
             
+            <!-- BARRA DE ACCIONES -->
             <div class="action-bar-back">
-                <button class="btn view-btn" id="edit-personal-btn"><i class="fas fa-edit"></i> Editar Datos</button>
-                
-                <a href="{{ url_for('gestion_personal') }}" class="btn back-btn"><i class="fas fa-arrow-left"></i> Volver a Gestión</a>
+                <button class="btn view-btn" onclick="openPersonalModal()"><i class="fas fa-edit"></i> Editar Información</button>
+                <a href="{{ url_for('gestion_personal') }}" class="btn btn-back"><i class="fas fa-arrow-left"></i> Volver a la Lista</a>
             </div>
             
         </div>
     </main>
-    
-    <div class="modal-overlay" id="edit-personal-modal-overlay">
-        <div class="modal" id="edit-personal-modal">
-            <div class="modal-header">
-                <h2>Editar Datos de {{ personal.nombre }}</h2>
-                <button class="modal-close-btn" id="edit-modal-close-btn" aria-label="Cerrar formulario">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="edit-personal-form" method="post" action="{{ url_for('editar_personal', tipo=tipo, id=personal.id_profesor if tipo == 'maestro' else personal.id_staff) }}">
-                    
-                    <fieldset class="form-section">
-                        <legend>Datos Personales y de Contacto</legend>
-                        
-                        <div class="form-group-inline">
-                            <div class="input-half">
-                                <label for="edit_nombre">Nombre(s)</label>
-                                <input type="text" id="edit_nombre" name="nombre" value="{{ personal.nombre }}" required>
-                            </div>
-                            <div class="input-half">
-                                <label for="edit_apellido_p">Apellido Paterno</label>
-                                <input type="text" id="edit_apellido_p" name="apellido_p" value="{{ personal.apellido_p }}" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group-inline">
-                            <div class="input-half">
-                                <label for="edit_apellido_m">Apellido Materno</label>
-                                <input type="text" id="edit_apellido_m" name="apellido_m" value="{{ personal.apellido_m }}" required>
-                            </div>
-                            <div class="input-half">
-                                <label for="edit_email">Correo Electrónico</label>
-                                <input type="email" id="edit_email" name="correo_electronico" value="{{ personal.correo_electronico }}" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group-inline">
-                            <div class="input-half">
-                                <label for="edit_fecha_n">Fecha de Nacimiento</label>
-                                <input type="date" id="edit_fecha_n" name="fecha_nacimiento" value="{{ personal.fecha_nacimiento | default('', true) }}">
-                            </div>
-                            <div class="input-half">
-                                <label for="edit_telefono">Teléfono</label>
-                                <input type="tel" id="edit_telefono" name="telefono" value="{{ personal.telefono | default('', true) }}">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="edit_genero">Género</label>
-                            <select id="edit_genero" name="genero">
-                                <option value="H" {% if personal.genero == 'H' %}selected{% endif %}>Hombre</option>
-                                <option value="M" {% if personal.genero == 'M' %}selected{% endif %}>Mujer</option>
-                                <option value="" {% if personal.genero is none or personal.genero == '' %}selected{% endif %}>N/A</option>
-                            </select>
-                        </div>
-                        
-                    </fieldset>
-                    
-                    {% if tipo == 'maestro' %}
-                    <fieldset class="form-section">
-                        <legend>Datos Fiscales</legend>
-                        
-                        <div class="form-group">
-                            <label for="edit_rfc">RFC</label>
-                            <input type="text" id="edit_rfc" name="rfc" value="{{ datos_fiscales.rfc | default('', true) }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit_razon_social">Razón Social</label>
-                            <input type="text" id="edit_razon_social" name="razon_social" value="{{ datos_fiscales.razon_social | default('', true) }}" required>
-                        </div>
-                        <div class="form-group-inline">
-                            <div class="input-half">
-                                <label for="edit_regimen">Régimen Fiscal</label>
-                                <input type="text" id="edit_regimen" name="regimen_fiscal" value="{{ datos_fiscales.regimen_fiscal | default('', true) }}" required>
-                            </div>
-                            <div class="input-half">
-                                <label for="edit_clabe">Cuenta CLABE</label>
-                                <input type="text" id="edit_clabe" name="cuenta_clabe" value="{{ datos_fiscales.cuenta_clabe | default('', true) }}" required>
-                            </div>
-                        </div>
-                    </fieldset>
-                    {% endif %}
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-save">Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
+    <!-- MODAL 1: SUBIR DOCUMENTO -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeUploadModal()">&times;</span>
+            <h3>Subir Documento</h3>
+            <p id="modal-doc-label" style="color:#666; margin-bottom: 20px;"></p>
+            <form id="form-upload-doc">
+                <input type="hidden" name="mongo_id" value="{{ personal.id_expediente_mongo }}">
+                <input type="hidden" name="tipo_doc" id="modal-doc-key">
+                <input type="hidden" name="accion" value="subir">
+                <input type="file" name="archivo" accept=".pdf,.jpg,.png" required style="margin-bottom: 15px;">
+                <button type="submit" class="btn-main" id="btn-submit-upload">Guardar Archivo</button>
+            </form>
         </div>
     </div>
+
+    <!-- MODAL 2: EDITAR INFORMACIÓN (PERSONAL + FINANCIERA) -->
+    <div id="personal-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePersonalModal()">&times;</span>
+            <h3>Editar Información</h3>
+            
+            <form action="{{ url_for('editar_personal', tipo=tipo, id=personal.id_profesor if tipo == 'maestro' else personal.id_staff) }}" method="POST">
+                
+                <!-- Sección 1: Datos Personales -->
+                <fieldset class="fs-group">
+                    <legend>Datos Personales</legend>
+                    <div class="form-group">
+                        <label>Nombre:</label>
+                        <input type="text" name="nombre" value="{{ personal.nombre }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Paterno:</label>
+                            <input type="text" name="apellido_p" value="{{ personal.apellido_p }}" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Materno:</label>
+                            <input type="text" name="apellido_m" value="{{ personal.apellido_m }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Correo:</label>
+                        <input type="email" name="correo_electronico" value="{{ personal.correo_electronico }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Teléfono:</label>
+                            <input type="text" name="telefono" value="{{ personal.telefono }}">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Fecha Nac.:</label>
+                            <input type="date" name="fecha_nacimiento" value="{{ personal.fecha_nacimiento }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Género:</label>
+                        <select name="genero">
+                            <option value="H" {% if personal.genero == 'H' %}selected{% endif %}>Hombre</option>
+                            <option value="M" {% if personal.genero == 'M' %}selected{% endif %}>Mujer</option>
+                        </select>
+                    </div>
+                </fieldset>
+
+                <!-- Sección 2: Datos Financieros (AHORA EDITABLE) -->
+                <fieldset class="fs-group" style="border-color: #27ae60;">
+                    <legend style="color: #27ae60;">Datos de Nómina</legend>
+                    <div class="row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Salario/Hora ($):</label>
+                            <input type="number" name="valor_hora" value="{{ personal.valor_hora or 0 }}" step="0.01" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>IVA (0.16):</label>
+                            <input type="number" name="tasa_iva" value="{{ personal.tasa_iva or 0.16 }}" step="0.01" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>ISR (0.0125):</label>
+                            <input type="number" name="tasa_isr" value="{{ personal.tasa_isr_retenido or 0.0125 }}" step="0.0001" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Sección 3: Datos Fiscales (Solo Maestros) -->
+                <!-- Necesario incluirlo para que el backend reciba los datos y no los borre -->
+                {% if tipo == 'maestro' %}
+                <fieldset class="fs-group" style="border-color: #8e44ad;">
+                    <legend style="color: #8e44ad;">Datos Fiscales</legend>
+                    <div class="form-group">
+                        <label>RFC:</label>
+                        <input type="text" name="rfc" value="{{ datos_fiscales.rfc if datos_fiscales else '' }}" placeholder="RFC">
+                    </div>
+                    <div class="form-group">
+                        <label>Razón Social:</label>
+                        <input type="text" name="razon_social" value="{{ datos_fiscales.razon_social if datos_fiscales else '' }}" placeholder="Nombre Completo">
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Régimen:</label>
+                            <input type="text" name="regimen_fiscal" value="{{ datos_fiscales.regimen_fiscal if datos_fiscales else '' }}" placeholder="626">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>C.P.:</label>
+                            <input type="text" name="codigo_postal" value="{{ datos_fiscales.codigo_postal if datos_fiscales else '' }}" placeholder="20000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>CLABE:</label>
+                        <input type="text" name="cuenta_clabe" value="{{ datos_fiscales.cuenta_clabe if datos_fiscales else '' }}" placeholder="18 dígitos">
+                    </div>
+                </fieldset>
+                {% endif %}
+
+                <div class="modal-footer-actions">
+                    <button type="button" class="btn-cancel-modal" onclick="closePersonalModal()">Cancelar</button>
+                    <button type="submit" class="btn-save-modal">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Lógica para abrir/cerrar el modal de edición
-        document.getElementById('edit-personal-btn').onclick = function() {
-            document.getElementById('edit-personal-modal-overlay').style.display = 'flex';
-        };
-        document.getElementById('edit-modal-close-btn').onclick = function() {
-            document.getElementById('edit-personal-modal-overlay').style.display = 'none';
-        };
-        document.getElementById('edit-personal-modal-overlay').onclick = function(e) {
-            if (e.target === this) {
-                this.style.display = 'none';
-            }
-        };
+        // Variables
+        const MONGO_ID = "{{ personal.id_expediente_mongo }}";
+        const uploadModal = document.getElementById('upload-modal');
+        const personalModal = document.getElementById('personal-modal');
+        const formUpload = document.getElementById('form-upload-doc');
+
+        // Funciones Modal
+        function openUploadModal(key, label) {
+            document.getElementById('modal-doc-key').value = key;
+            document.getElementById('modal-doc-label').textContent = label;
+            uploadModal.style.display = 'flex';
+        }
+        function closeUploadModal() { uploadModal.style.display = 'none'; formUpload.reset(); }
+
+        function openPersonalModal() { personalModal.style.display = 'flex'; }
+        function closePersonalModal() { personalModal.style.display = 'none'; }
+
+        // Subir Archivo
+        formUpload.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-upload');
+            const originalText = btn.innerText;
+            btn.disabled = true; btn.innerText = "Subiendo...";
+            
+            const formData = new FormData(formUpload);
+            try {
+                const res = await fetch('/gestionar_documento', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success') { alert("Guardado."); location.reload(); }
+                else { alert("Error: " + data.message); }
+            } catch (err) { alert("Error conexión."); } 
+            finally { btn.disabled = false; btn.innerText = originalText; }
+        });
+
+        // Eliminar Archivo
+        async function deleteDocument(key) {
+            if (!confirm("¿Eliminar documento?")) return;
+            const formData = new FormData();
+            formData.append('accion', 'eliminar');
+            formData.append('tipo_doc', key);
+            formData.append('mongo_id', MONGO_ID);
+            
+            try {
+                const res = await fetch('/gestionar_documento', { method: 'POST', body: formData });
+                if ((await res.json()).status === 'success') { alert("Eliminado."); location.reload(); }
+                else { alert("Error al eliminar."); }
+            } catch (err) { alert("Error conexión."); }
+        }
+
+        // Clic fuera cierra modal
+        window.onclick = (e) => {
+            if (e.target == uploadModal) closeUploadModal();
+            if (e.target == personalModal) closePersonalModal();
+        }
     </script>
 </body>
 </html>

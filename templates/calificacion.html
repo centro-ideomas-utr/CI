@@ -3,972 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Calificaciones</title>
-    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <title>Calificaciones</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='imagen/CI.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/claseprofe.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <style>
-        /* --- Estilos Generales --- */
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f6f8;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        /* Estilos específicos para la tabla de calificaciones */
+        .grading-container {
+            background: white; padding: 25px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto;
         }
-
-        main {
-            flex: 1;
-            padding: 20px;
+        .header-controls {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f4f6f8;
         }
-        /* --- Barra de Navegación Superior --- */
-        .navbar {
-            background-color: #566a93;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1001;
-        }
-
-        .menu-icon {
-            cursor: pointer;
-            z-index: 1002;
-        }
-
-        .menu-icon span {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background-color: white;
-            margin: 5px 0;
-            transition: 0.4s;
-        }
-
-        .navbar h1 {
-            font-size: 1.5em;
-            margin: 0;
-        }
-
-        .profile {
-            width: 40px;
-            height: 40px;
-            background-color: #f4f6f8;
-            border-radius: 50%;
-            display: flex; /* Asegura que el ícono interno se centre */
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* --- Menú Lateral (Sidebar) --- */
-        .sidebar {
-            height: 100%;
-            width: 250px;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: -250px; /* Oculto por defecto */
-            background-color: #48597a;
-            overflow-x: hidden;
-            transition: 0.3s;
-            padding-top: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .sidebar.active {
-            left: 0;
-        }
-
-        .sidebar ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar ul li a {
-            padding: 15px 20px;
-            text-decoration: none;
-            font-size: 18px;
-            color: #f4f6f8;
-            display: flex; /* Para alinear ícono y texto */
-            align-items: center;
-            transition: 0.2s;
-            border-left: 4px solid transparent; /* Estilo de enlace activo/hover */
-        }
-
-        .sidebar ul li a:hover {
-            background-color: #566a93;
-            border-left-color: #7678ED;
-        }
+        .course-info h2 { margin: 0; font-size: 1.5rem; color: #566a93; }
+        .course-info p { margin: 5px 0 0; color: #666; }
         
-        .sidebar ul li a i {
-            width: 30px; /* Da un ancho fijo al contenedor del icono */
-            text-align: center; /* Centra el icono dentro de ese ancho */
-            margin-right: 10px; /* Añade un espacio entre el icono y el texto */
-        }
+        .control-group label { font-weight: bold; margin-right: 10px; }
+        .control-group select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
 
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-            margin-top: auto;
-        }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #eee; }
+        th { background-color: #566a93; color: white; font-size: 0.9rem; white-space: nowrap; }
         
-        .logout-btn:hover {
-            background-color: #c0392b !important;
+        /* Columna fija (Sticky) para el nombre */
+        th:first-child, td:first-child {
+            text-align: left; position: sticky; left: 0; background-color: white; z-index: 2; border-right: 1px solid #eee;
         }
+        th:first-child { background-color: #566a93; z-index: 3; }
 
-        /* --- Contenedor Principal (Main Content) --- */
-        .main-content {
-            margin-left: 0; 
-            padding: 30px; 
-            transition: 0.3s;
-        }
-        .sidebar.active ~ .main-content {
-            margin-left: 250px;
-        }
-        
-        .content-wrapper { 
-            max-width: 1600px; margin: 0 auto; background: white; border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 30px; overflow: hidden; 
-        }
+        .student-name { font-weight: 600; color: #333; }
+        .student-matricula { font-size: 0.8em; color: #888; display: block; }
 
-        /* --- ENCABEZADO Y CONTROLES --- */
-        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eef2f6; }
-        .course-info h2 { margin: 0; color: #2c3e50; font-size: 1.8rem; font-weight: 700; }
-        .course-info p { margin: 8px 0 0; color: #7f8c8d; font-size: 0.95rem; }
-        .control-group { display: flex; align-items: center; gap: 15px; background: #f8f9fa; padding: 8px 15px; border-radius: 8px; border: 1px solid #eee; }
-        .form-select { padding: 8px; border: none; background: transparent; font-weight: 600; color: #333; outline: none; cursor: pointer; font-size: 1rem; }
-
-        /* --- TABLA DE CALIFICACIONES (Estilos funcionales combinados) --- */
-        .table-responsive { width: 100%; overflow-x: auto; }
-        
-        table {
-            width: 100%;
-            border-collapse: separate; 
-            border-spacing: 0; 
-            min-width: 100%;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-
-        th { 
-            background-color: #7678ED; /* Base color for headers */
-            color: white; text-align: center; padding: 18px 10px; 
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; 
-            position: sticky; top: 0; z-index: 10; 
-        }
-        th:first-child { border-top-left-radius: 10px; text-align: left; padding-left: 25px; }
-        th:last-child { border-top-right-radius: 10px; background-color: #3D348B; }
-
-        td { 
-            padding: 12px 8px; 
-            border-bottom: 1px solid #f1f5f9; 
-            text-align: center; 
-            vertical-align: middle; 
-        }
-        tbody tr:hover { background-color: #f8faff; }
-        
-        .student-name { 
-            text-align: left; 
-            font-weight: 600; 
-            color: #2c3e50; 
-            padding-left: 25px; 
-            min-width: 220px; 
-        }
-
-        /* --- ESTILO DE SELECTS (Cajas de Opciones) --- */
         .grade-select {
-            width: 100%; max-width: 75px; text-align: center; text-align-last: center;
-            padding: 8px 4px; border: 1px solid #e2e8f0; border-radius: 8px;
-            font-weight: 600; color: #4a5568; font-size: 0.95rem; background-color: #fff;
-            cursor: pointer; outline: none; transition: all 0.2s ease;
-            -webkit-appearance: none; appearance: none;
+            padding: 5px; border-radius: 4px; border: 1px solid #ddd; width: 60px; text-align: center;
         }
-        .grade-select:focus { border-color: #3D348B; box-shadow: 0 0 0 3px rgba(61, 52, 139, 0.1); }
-        .grade-input { /* Usado para mapear el estilo del input en la tabla */
-            width: 60px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 1em;
+        /* Estilo para selects deshabilitados (Staff) */
+        .grade-select:disabled {
+            background-color: #f9f9f9; color: #555; border: none; font-weight: bold; appearance: none;
         }
 
-        /* Promedio */
-        .avg-cell { 
-            font-weight: 800; 
-            font-size: 1.1rem; 
-            color: #3D348B; 
-            background-color: #f8f7ff; 
-        }
-        .final-grade { /* Mapeado al estilo del promedio */
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #3D348B;
-        }
+        .avg-cell { font-weight: 800; font-size: 1.1em; color: #333; background-color: #f9f9f9; }
+        .action-bar { margin-top: 20px; display: flex; justify-content: flex-end; }
 
-        /* Botón Guardar */
-        .action-bar { margin-top: 30px; display: flex; justify-content: flex-end; }
-        .btn-save { 
-            background-color: #2ecc71; color: white; border: none; padding: 14px 40px; 
-            border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; 
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3); transition: transform 0.2s, box-shadow 0.2s; 
-            display: flex; align-items: center; gap: 10px;
+        .btn-save {
+            background-color: #2ecc71; color: white; border: none; padding: 12px 30px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.3s;
         }
-        .btn-save:hover { background-color: #27ae60; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4); }
-        .btn-save:disabled { background-color: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        /* Botón Comentarios */
-        .btn-comment {
-            background-color: #f39c12; color: white; padding: 6px 10px; border-radius: 6px;
-            font-size: 0.8rem; cursor: pointer; transition: background-color 0.2s;
-        }
-        .btn-comment:hover { background-color: #e67e22; }
-
-        /* --- MODAL DE COMENTARIOS --- */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 700px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .modal-header h3 { margin: 0; color: #3D348B; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
-
-        .comment-item { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; background: #fafafa; }
-        .comment-meta { font-size: 0.85rem; color: #7f8c8d; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .comment-text { color: #2c3e50; white-space: pre-wrap; }
-        .comment-actions button { margin-left: 8px; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; }
-
-        .new-comment textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: vertical; min-height: 100px; }
-
-
-        /* --- FOOTER --- */
-        .main-footer {
-          background-color: #566a93;
-          color: white;
-          padding: 20px 0;
-          text-align: center;
-          margin-top: auto;
-        }
-
-        .footer-content {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 20px;
-        }
-
-        .footer-content p {
-          margin: 0;
-          font-size: 0.9em;
-        }
-
-        /* --- Social Icons --- */
-        .social-login-icons {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          -webkit-box-reflect: below 5px linear-gradient(transparent, #00000055);
-        }
-        .social-login-icons svg {
-          width: 30px;
-        }
-        .social-login-icons a {
-            text-decoration: none;
-        }
-
-        .social-icon-2,
-        .social-icon-2-2,
-        .social-icon-3,
-        .social-icon-3-3,
-        .social-icon-5,
-        .social-icon-5-5,
-        .social-icon-6,
-        .social-icon-6-6 {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50px;
-          margin: 0;
-        }
-
-        .icon svg {
-          fill: #111;
-        }
-
-        .socialcontainer {
-          height: 40px;
-          overflow: hidden;
-        }
-        
-        .social-icon-2 svg,
-        .social-icon-3 svg,
-        .social-icon-5 svg,
-        .social-icon-6 svg {
-          opacity: 0;
-          transition-duration: 0.5s;
-          transition-delay: 0.2s;
-        }
-        .social-icon-2-2, .social-icon-3-3, .social-icon-5-5, .social-icon-6-6 {
-          transition-duration: 0.4s;
-          background-color: rgba(0, 0, 0, 0);
-        }
-        .socialcontainer:hover .social-icon-2,
-        .socialcontainer:hover .social-icon-3,
-        .socialcontainer:hover .social-icon-5,
-        .socialcontainer:hover .social-icon-6 {
-          transform: translateY(-40px);
-        }
-        .socialcontainer:hover svg {
-          opacity: 1;
-        }
-        .social-icon-2 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: linear-gradient(
-            72.44deg,
-            #ff7a00 11.92%,
-            #ff0169 51.56%,
-            #d300c5 85.69%
-          );
-        }
-        .social-icon-3 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #316ff6;
-        }
-        .social-icon-5 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #000000;
-        }
-        .social-icon-6 {
-          transition-duration: 0.4s;
-          transition-timing-function: cubic-bezier(0.46, -0.78, 0.5, 1.56);
-          background: #25D366;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 1000px) {
-            .main-content { margin-left: 0; padding: 15px; }
-            table { min-width: 800px; } 
-            .header-controls { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .sidebar.active ~ .main-content { margin-left: 0; }
-        }
+        .btn-save:hover { background-color: #27ae60; }
+        .btn-save:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
+<!-- Navbar -->
 <div class="navbar">
-    <div class="menu-icon" id="menu-icon" onclick="document.getElementById('sidebar').classList.toggle('active')">
-        <span></span><span></span><span></span>
-    </div>
-    <h1>Sistema de Calificaciones</h1>
-    <div class="profile"><i class="fas fa-user-circle" style="font-size: 32px;"></i></div>
+    <div class="menu-icon" id="menu-icon"><span></span><span></span><span></span></div>
+    <h1>
+        {% if session.rol == 'staff' %}Consulta de Calificaciones{% else %}Portal Docente{% endif %}
+    </h1>
+    <div class="profile">{{ session.get('nombre', 'U')[0] }}</div>
 </div>
 
+<!-- Sidebar -->
 <nav class="sidebar" id="sidebar">
     <ul>
-        <li><a href="{{ url_for('gestion_horarios_base') }}"><i class="fas fa-arrow-left"></i><span>Volver a Grupos</span></a></li>
-        <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
-        <li><a href="{{ url_for('clasesprofe') }}"><i class="fas fa-chalkboard-teacher"></i><span>Mis Clases</span></a></li>
-        <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-upload"></i><span>Evidencias</span></a></li>
-        <li><a href="{{ url_for('gestion_asistencia', id_grupo=id_grupo) }}"><i class="fas fa-clipboard-list"></i><span>Asistencia</span></a></li>
-        <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
-        <li><a href="{{ url_for('login') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
+        {% if session.rol == 'staff' %}
+            <!-- Menú Staff -->
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+        {% else %}
+            <!-- Menú Maestro -->
+            <li><a href="{{ url_for('clasesprofe') }}" class="active"><i class="fas fa-chalkboard-teacher"></i><span>Mis Clases</span></a></li>
+            <li><a href="{{ url_for('evidencias') }}"><i class="fas fa-file-alt"></i><span>Evidencias</span></a></li>
+            <li><a href="{{ url_for('nomina') }}"><i class="fas fa-file-invoice-dollar"></i><span>Nómina</span></a></li>
+            <li><a href="{{ url_for('avisos') }}"><i class="fas fa-bell"></i><span>Avisos</span></a></li>
+            <li><a href="{{ url_for('perfil') }}"><i class="fas fa-user-cog"></i><span>Mi Perfil</span></a></li>
+        {% endif %}
+        
+        <li><a href="{{ url_for('cerrar') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
     </ul>
 </nav>
 
-<main class="main-content">
+<main class="page-content">
     <div class="content-wrapper">
-        
-        <div class="header-controls">
-            <div class="course-info">
-                <h2>{{ grupo.idioma }} <span style="font-weight:300;">| Nivel {{ grupo.nivel }}</span></h2>
-                <p><i class="fas fa-users"></i> Grupo: <strong>{{ grupo.grupo }}</strong> &nbsp;|&nbsp; <i class="fas fa-user-tie"></i> Docente: {{ grupo.profe_nombre }}</p>
-            </div>
+        <div class="grading-container">
             
-            <div class="control-group">
-                <label for="select-parcial">Periodo:</label>
-                <select id="select-parcial" class="form-select">
-                    <option value="1">Parcial 1</option>
-                    <option value="2">Parcial 2</option>
-                    <option value="3">Parcial 3</option>
-                </select>
+            <!-- Encabezado -->
+            <div class="header-controls">
+                <div class="course-info">
+                    <h2>{{ grupo.idioma }} - {{ grupo.nivel }}</h2>
+                    <p><strong>Grupo:</strong> {{ grupo.grupo }} | <strong>Salón:</strong> {{ grupo.numero_salon }}</p>
+                    {% if session.rol == 'staff' %}
+                        <p style="color: #e74c3c; font-weight: bold; margin-top: 5px; font-size: 0.9em;">
+                            <i class="fas fa-lock"></i> Modo Vista (Staff)
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="control-group">
+                    <label for="select-parcial">Evaluación:</label>
+                    <select id="select-parcial">
+                        <option value="1">Parcial 1</option>
+                        <option value="2">Parcial 2</option>
+                        <option value="3">Parcial 3</option>
+                    </select>
+                </div>
             </div>
+
+            <!-- Tabla -->
+            <form id="form-calificaciones">
+                <div class="table-responsive">
+                    <table id="grades-table">
+                        <thead>
+                            <tr id="table-headers">
+                                <th>Alumno</th>
+                                <!-- Columnas dinámicas por JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr><td colspan="100%" style="text-align:center; padding:30px;">Cargando alumnos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Botón Guardar (SOLO MAESTROS) -->
+                {% if session.rol == 'maestro' %}
+                <div class="action-bar">
+                    <button type="submit" class="btn-save" id="btn-guardar">
+                        <i class="fas fa-save"></i> Guardar Calificaciones
+                    </button>
+                </div>
+                {% endif %}
+            </form>
         </div>
-
-        <form id="form-calificaciones">
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr id="table-headers">
-                            <th>Alumno</th>
-                            <th>Cargando...</th>
-                            <!-- El JS llenará el resto de THs -->
-                            <th>Acciones</th> <!-- Nueva columna -->
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <tr><td colspan="15" style="padding:50px; color:#888; text-align:center;">Cargando lista de alumnos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="action-bar">
-                <button type="submit" class="btn-save" id="btn-guardar">
-                    <i class="fas fa-save"></i> Guardar Todo
-                </button>
-            </div>
-        </form>
-
     </div>
 </main>
 
-<!-- Modal de Comentarios -->
-<div id="commentModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="comment-title">Comentarios para [Alumno]</h3>
-            <span class="close" onclick="closeCommentModal()">&times;</span>
-        </div>
-        
-        <div id="comment-list" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
-            <p id="loading-comments" style="text-align: center; color: #888;">Cargando comentarios...</p>
-            <!-- Aquí se cargarán los comentarios existentes -->
-        </div>
-
-        <div class="new-comment">
-            <h4>Añadir/Editar Comentario</h4>
-            <textarea id="comment-text" maxlength="500" placeholder="Escribe tu comentario (máx. 500 caracteres)..."></textarea>
-            <div style="display: flex; justify-content: flex-end; margin-top: 10px; gap: 10px;">
-                <button type="button" class="btn-save" id="btn-cancel-edit" style="background-color: #95a5a6; display: none;">Cancelar Edición</button>
-                <button type="button" class="btn-save" id="btn-save-comment" onclick="saveComment()">Guardar Comentario</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <footer class="main-footer">
-    <div class="footer-content">
-        <p>Centro de Idiomas UTR © 2024</p>
-        <div class="social-login-icons">
-            <a href="https://www.instagram.com/cdi_utr?igsh=N2Jub2libmNyOXUw" target="_blank" rel="noopener noreferrer">
-              <div class="socialcontainer">
-                <div class="icon social-icon-2-2">
-                  <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
-                  </svg>
-                </div>
-                <div class="social-icon-2">
-                  <svg fill="white" viewBox="0 0 448 512" height="1.2em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
-                  </svg>
-                </div>
-              </div>
-            </a>
-            <a href="https://www.facebook.com/share/1Cf7KRJFKm/" target="_blank" rel="noopener noreferrer">
-              <div class="socialcontainer">
-                <div class="icon social-icon-3-3">
-                  <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
-                  </svg>
-                </div>
-                <div class="social-icon-3">
-                  <svg viewBox="0 0 384 512" fill="white" height="1.3em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"></path>
-                  </svg>
-                </div>
-              </div>
-            </a>
-            <a href="https://www.tiktok.com/@centrodeidiomasutr?_t=ZS-8zg1HTdLcZM&_r=1" target="_blank" rel="noopener noreferrer">
-                <div class="socialcontainer">
-                  <div class="icon social-icon-5-5">
-                    <svg viewBox="0 0 448 512" fill="white" height="1.4em">
-                      <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
-                    </svg>
-                  </div>
-                  <div class="social-icon-5">
-                    <svg viewBox="0 0 448 512" fill="white" height="1.4em">
-                      <path d="M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.7a162.6 162.6 0 1 1-162.6-162.6v99.9a74.6 74.6 0 1 0 74.6 74.6V0h88a121.2 121.2 0 0 0 121.2 121.2v88.7z"/>
-                    </svg>
-                  </div>
-                </div>
-            </a>
-            <a href="https://whatsapp.com" target="_blank" rel="noopener noreferrer">
-                <div class="socialcontainer">
-                  <div class="icon social-icon-6-6">
-                    <svg fill="white" viewBox="0 0 16 16" height="1.4em">
-                      <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
-                    </svg>
-                  </div>
-                  <div class="social-icon-6">
-                    <svg fill="white" viewBox="0 0 16 16" height="1.4em">
-                      <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"></path>
-                    </svg>
-                  </div>
-                </div>
-            </a>
-        </div>
-    </div>
+    <div class="footer-content"><p>Centro de Idiomas UTR &copy; 2025</p></div>
 </footer>
 
 <script>
-const ID_GRUPO = {{ id_grupo | tojson }};
-const TIPO_CURSO = {{ ('lsm' if 'LSM' in grupo.idioma else 'ninos' if 'Niños' in grupo.grupo else 'adults') | tojson }};
-const PROFESOR_SESION_ID = {{ session.get('user_id') | default(1) | tojson }}; 
+    const ID_GRUPO = {{ id_grupo | tojson }};
+    const NOMBRE_GRUPO = "{{ grupo.grupo }}";
+    const IDIOMA = "{{ grupo.idioma }}";
+    const USER_ROLE = "{{ session.rol }}"; // Variable clave para JS
 
-let currentAlumnoId = null;
-let currentCommentId = null;
+    let TIPO_CURSO = 'adults';
+    if (NOMBRE_GRUPO.includes('Niños')) TIPO_CURSO = 'ninos';
+    else if (IDIOMA.includes('LSM')) TIPO_CURSO = 'lsm';
 
-const CRITERIOS = {
-    'adults': {
-        max: 5, // Escala de 1 a 5
-        cols: [
-            {key: 'pronunciation', label: 'Pronunciation'}, {key: 'fluency', label: 'Fluency'},
-            {key: 'grammar_vocabulary', label: 'Grammar'}, {key: 'performance_skill', label: 'Performance'},
-            {key: 'comprenhension', label: 'Comprehension'}, {key: 'main_ideas', label: 'Main Ideas'},
-            {key: 'grammar_word_choice', label: 'Word Choice'}, {key: 'punctuation_capitalization', label: 'Punctuation'}
-        ]
-    },
-    'ninos': {
-        max: 3, // Escala de 1 a 3
-        cols: [
-            {key: 'pronunciacion', label: 'Pronunciación'}, {key: 'fluidez', label: 'Fluidez'},
-            {key: 'gramatica_vocabulario', label: 'Vocabulario'}, {key: 'habilidades_pronunciacion', label: 'Habilidades'},
-            {key: 'comprension', label: 'Comprensión'}, {key: 'contenido', label: 'Contenido'},
-            {key: 'organizacion', label: 'Org.'}, {key: 'lenguaje', label: 'Lenguaje'},
-            {key: 'gramatica', label: 'Gramática'}, {key: 'ortografia', label: 'Ortografía'}
-        ]
-    },
-    'lsm': {
-        max: 3, // Escala de 1 a 3
-        cols: [
-            {key: 'expresiones_faciales', label: 'Expresiones'}, {key: 'movimientos_corporales', label: 'Movimiento'},
-            {key: 'movimiento_manos', label: 'Manos'}, {key: 'identifica_ideograma', label: 'Ideograma'},
-            {key: 'uos_mano_dominante', label: 'Mano Dom.'}, {key: 'realiza_dactilogía', label: 'Dactilología'},
-            {key: 'transmite_mensaje', label: 'Mensaje'}, {key: 'detalles_coordinada', label: 'Coord.'},
-            {key: 'orden_secuencial', label: 'Secuencia'}, {key: 'percibir_detalles', label: 'Detalles'},
-            {key: 'comprende_mensaje', label: 'Comprensión'}, {key: 'recuerda_senas', label: 'Memoria'}
-        ]
-    }
-};
-
-const CONFIG = CRITERIOS[TIPO_CURSO] || CRITERIOS['adults'];
-
-document.addEventListener('DOMContentLoaded', () => {
-    const selectParcial = document.getElementById('select-parcial');
-    renderHeaders();
-    loadData(selectParcial.value);
-    selectParcial.addEventListener('change', (e) => loadData(e.target.value));
-});
-
-function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('active');
-    const mainContent = document.querySelector('.main-content');
-    if (window.innerWidth > 1000) {
-        if (document.getElementById('sidebar').classList.contains('active')) {
-            mainContent.style.marginLeft = '250px';
-        } else {
-            mainContent.style.marginLeft = '0';
+    const CRITERIOS = {
+        'adults': {
+            max: 5,
+            cols: [
+                {key: 'pronunciation', label: 'Pronunciation'}, {key: 'fluency', label: 'Fluency'},
+                {key: 'grammar_vocabulary', label: 'Grammar'}, {key: 'performance_skill', label: 'Performance'},
+                {key: 'comprenhension', label: 'Comprehension'}, {key: 'main_ideas', label: 'Main Ideas'},
+                {key: 'grammar_word_choice', label: 'Word Choice'}, {key: 'punctuation_capitalization', label: 'Punctuation'}
+            ]
+        },
+        'ninos': {
+            max: 3,
+            cols: [
+                {key: 'pronunciacion', label: 'Pronunciación'}, {key: 'fluidez', label: 'Fluidez'},
+                {key: 'gramatica_vocabulario', label: 'Vocabulario'}, {key: 'habilidades_pronunciacion', label: 'Habilidades'},
+                {key: 'comprension', label: 'Comprensión'}, {key: 'contenido', label: 'Contenido'},
+                {key: 'organizacion', label: 'Org.'}, {key: 'lenguaje', label: 'Lenguaje'},
+                {key: 'gramatica', label: 'Gramática'}, {key: 'ortografia', label: 'Ortografía'}
+            ]
+        },
+        'lsm': {
+            max: 3,
+            cols: [
+                {key: 'expresiones_faciales', label: 'Expresiones'}, {key: 'movimientos_corporales', label: 'Movimientos'},
+                {key: 'movimiento_manos', label: 'Manos'}, {key: 'identifica_ideograma', label: 'Ideogramas'},
+                {key: 'uos_mano_dominante', label: 'Mano Dom.'}, {key: 'realiza_dactilogía', label: 'Dactilología'},
+                {key: 'transmite_mensaje', label: 'Mensaje'}, {key: 'detalles_coordinada', label: 'Coord.'},
+                {key: 'orden_secuencial', label: 'Secuencia'}, {key: 'percibir_detalles', label: 'Detalles'},
+                {key: 'comprende_mensaje', label: 'Comprensión'}, {key: 'recuerda_senas', label: 'Memoria'}
+            ]
         }
-    }
-}
+    };
 
-// Renderiza el encabezado de la tabla según el tipo de curso
-function renderHeaders() {
-    const tr = document.getElementById('table-headers');
-    // Empezamos con el TH fijo
-    tr.innerHTML = '<th>Alumno</th>'; 
-    
-    // Añadir columnas de criterios dinámicamente
-    CONFIG.cols.forEach(col => {
-        const th = document.createElement('th');
-        th.innerText = col.label;
-        tr.appendChild(th);
+    const CONFIG = CRITERIOS[TIPO_CURSO];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const menuIcon = document.getElementById('menu-icon');
+        const sidebar = document.getElementById('sidebar');
+        if(menuIcon) menuIcon.addEventListener('click', () => sidebar.classList.toggle('active'));
+
+        renderHeaders();
+        const selectParcial = document.getElementById('select-parcial');
+        loadData(selectParcial.value);
+        selectParcial.addEventListener('change', (e) => loadData(e.target.value));
     });
-    
-    // Columna de Promedio
-    const thAvg = document.createElement('th');
-    thAvg.innerText = "Promedio";
-    tr.appendChild(thAvg);
 
-    // Columna de Acciones/Comentarios
-    const thActions = document.createElement('th');
-    thActions.innerText = "Comentarios";
-    thActions.style.backgroundColor = '#566a93';
-    tr.appendChild(thActions);
-}
-
-// --- FUNCIÓN CRÍTICA DE CARGA DE CALIFICACIONES ---
-async function loadData(parcial) {
-    const tbody = document.getElementById('table-body');
-    tbody.innerHTML = '<tr><td colspan="15" style="padding:40px; text-align:center; color:#666;"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</td></tr>';
-
-    try {
-        const res = await fetch('/api/obtener_calificaciones', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ id_grupo: ID_GRUPO, parcial: parcial })
+    function renderHeaders() {
+        const tr = document.getElementById('table-headers');
+        tr.innerHTML = '<th>Alumno</th>';
+        CONFIG.cols.forEach(col => {
+            const th = document.createElement('th');
+            th.innerText = col.label;
+            tr.appendChild(th);
         });
-        
-        if (!res.ok) {
-            // Si hay un error HTTP, intentamos leer el mensaje de error del backend
-            const errorText = await res.text();
-            throw new Error(`Error HTTP ${res.status}: ${errorText.substring(0, 100)}...`);
-        }
-        
-        const response = await res.json();
-        
-        if(response.status === 'success') {
-            tbody.innerHTML = '';
-            const lista = response.data;
+        // Columna Promedio
+        const thAvg = document.createElement('th');
+        thAvg.innerText = "Promedio";
+        thAvg.style.backgroundColor = "#4a5b82";
+        tr.appendChild(thAvg);
+    }
 
-            if(!lista || lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="15" style="padding:40px; text-align:center;">No hay alumnos inscritos.</td></tr>';
-                return;
-            }
+    async function loadData(parcial) {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding:30px; color:#666;">Cargando datos...</td></tr>';
 
-            lista.forEach(alumno => {
-                const tr = document.createElement('tr');
-                
-                const alumnoID = alumno.id_alumno || alumno.ID_ALUMNO || alumno.id || alumno.ID;
-                const nombre = alumno.nombre || alumno.NOMBRE || "";
-                const apellido = alumno.apellido_p || alumno.APELLIDO_P || "";
-                const matricula = alumno.matricula || alumno.MATRICULA || "";
-                
-                if(!alumnoID) { 
-                    console.error("Error: Alumno sin ID en los datos recibidos", alumno); 
-                    return; 
-                } 
-
-                tr.setAttribute('data-id-alumno', alumnoID);
-                tr.innerHTML = `<td class="student-name">${nombre} ${apellido} <br><span style="font-size:0.8em; color:#999;">${matricula}</span></td>`;
-                
-                // --- GENERAR SELECTS (CAJAS DE OPCIONES) ---
-                CONFIG.cols.forEach(col => {
-                    const td = document.createElement('td');
-                    const select = document.createElement('select');
-                    select.className = 'grade-select';
-                    select.dataset.key = col.key;
-
-                    const defaultOpt = document.createElement('option');
-                    defaultOpt.value = ""; defaultOpt.text = "-";
-                    select.appendChild(defaultOpt);
-
-                    for (let i = 1; i <= CONFIG.max; i++) {
-                        const opt = document.createElement('option');
-                        opt.value = i; opt.text = i;
-                        select.appendChild(opt);
-                    }
-
-                    // Valor existente
-                    if (alumno[col.key] !== null && alumno[col.key] !== undefined) {
-                        select.value = Math.floor(parseFloat(alumno[col.key])); 
-                    }
-
-                    select.addEventListener('change', () => calculateRowAverage(tr));
-                    td.appendChild(select);
-                    tr.appendChild(td);
-                });
-                
-                const tdAvg = document.createElement('td');
-                tdAvg.className = 'avg-cell';
-                tdAvg.innerText = '-';
-                tr.appendChild(tdAvg);
-
-                // Botón de Comentarios
-                const tdComment = document.createElement('td');
-                const btnComment = document.createElement('button');
-                btnComment.className = 'btn-comment';
-                btnComment.innerHTML = '<i class="fas fa-comment-dots"></i> Comentarios';
-                // La función usa event.target.closest para encontrar el TR y obtener el nombre
-                btnComment.onclick = () => openCommentModal(alumnoID, `${nombre} ${apellido}`);
-                tdComment.appendChild(btnComment);
-                tr.appendChild(tdComment);
-
-                tbody.appendChild(tr);
-                calculateRowAverage(tr);
+        try {
+            const res = await fetch('/api/obtener_calificaciones', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id_grupo: ID_GRUPO, parcial: parcial })
             });
-        } else {
-            tbody.innerHTML = `<tr><td colspan="15" style="color:red; text-align:center;">Error al cargar datos: ${response.message}</td></tr>`;
-        }
-    } catch(e) {
-        console.error("Error cargando la tabla:", e);
-        tbody.innerHTML = `<tr><td colspan="15" style="color:red; text-align:center;">Error de conexión: ${e.message}</td></tr>`;
+            const response = await res.json();
+            
+            if(response.status === 'success') {
+                tbody.innerHTML = '';
+                const lista = response.data;
+
+                if(!lista || lista.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding:30px;">No hay alumnos inscritos.</td></tr>';
+                    return;
+                }
+
+                lista.forEach(alumno => {
+                    const idReal = alumno.id_alumno_safe || alumno.id_alumno;
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id-alumno', idReal);
+                    
+                    tr.innerHTML = `
+                        <td style="text-align:left;">
+                            <span class="student-name">${alumno.nombre} ${alumno.apellido_p}</span>
+                            <span class="student-matricula">${alumno.matricula}</span>
+                        </td>
+                    `;
+                    
+                    CONFIG.cols.forEach(col => {
+                        const td = document.createElement('td');
+                        const select = document.createElement('select');
+                        select.className = 'grade-select';
+                        select.dataset.key = col.key;
+
+                        // Si es STAFF, deshabilitar edición
+                        if (USER_ROLE === 'staff') {
+                            select.disabled = true;
+                        }
+
+                        const defaultOpt = document.createElement('option');
+                        defaultOpt.value = ""; defaultOpt.text = "-";
+                        select.appendChild(defaultOpt);
+
+                        for (let i = 1; i <= CONFIG.max; i++) {
+                            const opt = document.createElement('option');
+                            opt.value = i; opt.text = i;
+                            select.appendChild(opt);
+                        }
+
+                        if (alumno[col.key]) select.value = Math.floor(parseFloat(alumno[col.key]));
+                        
+                        select.addEventListener('change', () => calculateRowAverage(tr));
+                        td.appendChild(select);
+                        tr.appendChild(td);
+                    });
+
+                    // Celda Promedio
+                    const tdAvg = document.createElement('td');
+                    tdAvg.className = "avg-cell";
+                    tdAvg.innerText = "-";
+                    tr.appendChild(tdAvg);
+
+                    tbody.appendChild(tr);
+                    calculateRowAverage(tr);
+                });
+            } else { alert("Error: " + response.message); }
+        } catch(e) { tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; color:red;">Error de conexión.</td></tr>'; }
     }
-}
 
-function calculateRowAverage(tr) {
-    const selects = tr.querySelectorAll('.grade-select');
-    let sum = 0; let count = 0;
-    
-    selects.forEach(sel => {
-        const val = parseFloat(sel.value);
-        if(!isNaN(val)) { sum += val; count++; }
-    });
-    
-    const avgCell = tr.querySelector('.avg-cell');
-    if(count > 0) {
-        const avg = (sum / count).toFixed(1);
-        avgCell.innerText = avg;
-        const ratio = avg / CONFIG.max;
-        if(ratio >= 0.8) avgCell.style.color = "#2ecc71";
-        else if (ratio >= 0.6) avgCell.style.color = "#f39c12";
-        else avgCell.style.color = "#e74c3c";
-    } else {
-        avgCell.innerText = '-';
-        avgCell.style.color = "#3D348B";
-    }
-}
-
-// --- GUARDAR DATOS DE CALIFICACIONES ---
-document.getElementById('form-calificaciones').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-guardar');
-    const originalText = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-    
-    const parcial = document.getElementById('select-parcial').value;
-    const calificaciones = [];
-    
-    const rows = document.querySelectorAll('#table-body tr');
-    rows.forEach(tr => {
-        const idAlumno = tr.getAttribute('data-id-alumno');
-        if (!idAlumno || idAlumno === "null" || idAlumno === "undefined") return;
-
+    function calculateRowAverage(tr) {
         const selects = tr.querySelectorAll('.grade-select');
-        let alumnoData = { id_alumno: idAlumno };
-        let hasData = false;
-        
+        let sum = 0; let count = 0;
         selects.forEach(sel => {
-            if(sel.value !== "") {
-                alumnoData[sel.dataset.key] = sel.value;
-                hasData = true;
-            } else {
-                // Si la celda es vacía, aseguramos que la clave exista con valor vacío (para que Flask lo trate como NULL)
-                alumnoData[sel.dataset.key] = ""; 
-            }
+            const val = parseFloat(sel.value);
+            if(!isNaN(val)) { sum += val; count++; }
         });
-        
-        // Enviamos todos los alumnos, ya que el backend maneja el INSERT/UPDATE basado en la clave única.
-        calificaciones.push(alumnoData); 
-    });
-    
-    if(calificaciones.length === 0) {
-        alert("No hay alumnos en la lista para procesar.");
-        btn.disabled = false; btn.innerHTML = originalText;
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/guardar_calificaciones', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                id_grupo: ID_GRUPO, parcial: parcial,
-                tipo_curso: TIPO_CURSO, calificaciones: calificaciones
-            })
-        });
-        const data = await res.json();
-        if(data.status === 'success') {
-            alert("✅ Calificaciones guardadas correctamente. " + data.message);
-            // Recargar datos para mostrar cualquier cambio después de guardar
-            loadData(parcial); 
-        }
-        else alert("❌ Error: " + data.message);
-    } catch(err) { alert("❌ Error de conexión al guardar."); } 
-    finally { btn.disabled = false; btn.innerHTML = originalText; }
-});
-
-// =========================================================
-// === FUNCIONES DE COMENTARIOS ===
-// =========================================================
-
-function openCommentModal(alumnoId, alumnoName) {
-    currentAlumnoId = alumnoId;
-    currentCommentId = null; // Siempre empezamos en modo 'nuevo'
-    document.getElementById('comment-title').innerText = `Comentarios para ${alumnoName}`;
-    document.getElementById('comment-text').value = '';
-    document.getElementById('btn-cancel-edit').style.display = 'none';
-
-    loadComments(alumnoId);
-    document.getElementById('commentModal').style.display = 'block';
-}
-
-function closeCommentModal() {
-    document.getElementById('commentModal').style.display = 'none';
-    currentAlumnoId = null;
-    currentCommentId = null;
-}
-
-/**
- * Escapa las comillas simples y dobles en una cadena de texto para
- * ser usada de forma segura dentro de un atributo onclick.
- * @param {string} str - La cadena a escapar.
- * @returns {string} La cadena escapada.
- */
-function escapeForHtmlAttribute(str) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
-}
-
-
-// Cargar lista de comentarios por alumno
-async function loadComments(alumnoId) {
-    const listDiv = document.getElementById('comment-list');
-    listDiv.innerHTML = '<p id="loading-comments" style="text-align: center; color: #888;"><i class="fas fa-spinner fa-spin"></i> Cargando comentarios...</p>';
-
-    try {
-        const res = await fetch(`/api/obtener_comentarios/${alumnoId}`);
-        const data = await res.json();
-
-        if (data.status !== 'success') throw new Error(data.message);
-
-        listDiv.innerHTML = ''; // Limpiar loader
-
-        if (data.comentarios.length === 0) {
-            listDiv.innerHTML = '<p style="text-align: center; color: #aaa;">No hay comentarios registrados para este alumno.</p>';
-            return;
-        }
-
-        data.comentarios.forEach(c => {
-            // Convertimos a número para asegurar la comparación estricta
-            const isOwner = parseInt(c.id_profesor) === parseInt(PROFESOR_SESION_ID); 
-            
-            // Usamos la función de escape para evitar el error de sintaxis en el onclick
-            const safeDescription = escapeForHtmlAttribute(c.descripcion);
-            
-            const item = document.createElement('div');
-            item.className = 'comment-item';
-            item.setAttribute('data-id-comentario', c.id_comentario);
-            
-            item.innerHTML = `
-                <div class="comment-meta">
-                    <span><i class="fas fa-user-tie"></i> ${c.profesor}</span>
-                    <span>${c.fecha}</span>
-                </div>
-                <p class="comment-text">${c.descripcion}</p>
-                <div class="comment-actions" style="text-align: right; margin-top: 10px;">
-                    ${isOwner ? `
-                        <button type="button" class="btn-comment" style="background-color: #3498db;" onclick="editComment(${c.id_comentario}, '${safeDescription}')"><i class="fas fa-edit"></i> Editar</button>
-                        <button type="button" class="btn-comment" style="background-color: #e74c3c;" onclick="deleteComment(${c.id_comentario})"><i class="fas fa-trash"></i> Eliminar</button>
-                    ` : ''}
-                </div>
-            `;
-            listDiv.appendChild(item);
-        });
-
-    } catch (e) {
-        listDiv.innerHTML = `<p style="text-align: center; color: red;">Error al cargar comentarios: ${e.message}</p>`;
-        console.error("Error al cargar comentarios:", e);
-    }
-}
-
-// Guardar Comentario (Nuevo o Edición)
-async function saveComment() {
-    const descripcion = document.getElementById('comment-text').value.trim();
-    const btn = document.getElementById('btn-save-comment');
-    const originalText = btn.innerHTML;
-
-    if (!descripcion) {
-        alert("El comentario no puede estar vacío.");
-        return;
-    }
-
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-
-    try {
-        const payload = {
-            id_alumno: currentAlumnoId,
-            descripcion: descripcion,
-            id_comentario: currentCommentId // Será null si es nuevo
-        };
-
-        const res = await fetch('/api/guardar_comentario', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (data.status === 'success') {
-            document.getElementById('comment-text').value = '';
-            currentCommentId = null;
-            document.getElementById('btn-cancel-edit').style.display = 'none';
-            loadComments(currentAlumnoId); // Recargar la lista
-            alert("✅ Comentario guardado.");
+        const avgCell = tr.querySelector('.avg-cell');
+        if(count > 0) {
+            const avg = (sum / count).toFixed(1);
+            avgCell.innerText = avg;
+            const ratio = avg / CONFIG.max;
+            if(ratio >= 0.8) avgCell.style.color = "#2ecc71";
+            else if (ratio >= 0.6) avgCell.style.color = "#f39c12";
+            else avgCell.style.color = "#e74c3c";
         } else {
-            alert("❌ Error al guardar el comentario: " + data.message);
+            avgCell.innerText = "-"; avgCell.style.color = "#333";
         }
-    } catch (e) {
-        alert("❌ Error de conexión al guardar el comentario.");
-        console.error("Error guardando comentario:", e);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
     }
-}
 
-// Poner comentario en el editor para editar
-function editComment(id, text) {
-    currentCommentId = id;
-    document.getElementById('comment-text').value = text;
-    document.getElementById('btn-cancel-edit').style.display = 'inline-block';
-    
-    // Mover foco y scroll al área de edición
-    const editor = document.getElementById('comment-text');
-    editor.scrollIntoView({ behavior: 'smooth' });
-    editor.focus();
-}
+    // Solo agregar listener si el formulario existe (Maestros)
+    const form = document.getElementById('form-calificaciones');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-guardar');
+            const originalText = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            const parcial = document.getElementById('select-parcial').value;
+            const calificaciones = [];
+            
+            document.querySelectorAll('#table-body tr').forEach(tr => {
+                const idAlumno = tr.getAttribute('data-id-alumno');
+                if (!idAlumno) return;
+                let alumnoData = { id_alumno: idAlumno };
+                tr.querySelectorAll('.grade-select').forEach(sel => { alumnoData[sel.dataset.key] = sel.value; });
+                calificaciones.push(alumnoData);
+            });
 
-// Cancelar modo edición
-document.getElementById('btn-cancel-edit').addEventListener('click', () => {
-    currentCommentId = null;
-    document.getElementById('comment-text').value = '';
-    document.getElementById('btn-cancel-edit').style.display = 'none';
-});
-
-// Eliminar Comentario
-async function deleteComment(id_comentario) {
-    if (!confirm("¿Seguro que deseas eliminar este comentario?")) return;
-
-    try {
-        const res = await fetch('/api/eliminar_comentario', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ id_comentario: id_comentario })
+            try {
+                const res = await fetch('/api/guardar_calificaciones', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id_grupo: ID_GRUPO, parcial: parcial, tipo_curso: TIPO_CURSO, calificaciones: calificaciones })
+                });
+                const data = await res.json();
+                if(data.status === 'success') alert("Calificaciones guardadas.");
+                else alert("❌ Error: " + data.message);
+            } catch(err) { alert("❌ Error de conexión."); }
+            finally { btn.disabled = false; btn.innerHTML = originalText; }
         });
-
-        const data = await res.json();
-
-        if (data.status === 'success') {
-            loadComments(currentAlumnoId);
-            alert("✅ Comentario eliminado.");
-        } else {
-            alert("❌ Error al eliminar: " + data.message);
-        }
-    } catch (e) {
-        alert("❌ Error de conexión.");
-        console.error("Error eliminando comentario:", e);
     }
-}
-
 </script>
 
 </body>
