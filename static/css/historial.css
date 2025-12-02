@@ -222,12 +222,13 @@
             background-color: #2980b9;
         }
 
-        /* --- FOOTER --- */
+       /* --- FOOTER --- */
         .main-footer {
           background-color: #566a93;
           color: white;
           padding: 20px 0;
           text-align: center;
+          margin-top: auto;
         }
 
         .footer-content {
