@@ -1,7 +1,0 @@
-venv/
-env/
-.env
-token.json
-client_secret.json
-app2.py
-db/
