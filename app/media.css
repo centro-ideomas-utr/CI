@@ -1,0 +1,19 @@
+@media (max-width: 600px) {
+    /* Botones más grandes para dedos */
+    .btn, .sidebar ul li a {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Evitar que el zoom automático dañe la UI en formularios */
+    input[type="text"], input[type="email"], select {
+        font-size: 16px !important;
+    }
+
+    /* Ocultar elementos no críticos para ahorrar RAM */
+    .social-login-icons {
+        display: none;
+    }
+}

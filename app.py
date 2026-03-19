@@ -105,10 +105,6 @@ def crear_carpeta_drive(nombre_carpeta):
         return None
 
 def subir_a_drive(file_stream, filename, mimetype, folder_id=None):
-    """
-    Sube archivo a Google Drive.
-    AHORA ACEPTA 'folder_id' para guardarlo en la carpeta específica de la persona.
-    """
     try:
         if os.path.exists(TOKEN_FILE):
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, ['https://www.googleapis.com/auth/drive'])
@@ -370,8 +366,6 @@ def guardar_personal():
         'tipo_personal': request.form.get('tipo_personal'),
         'fecha_nacimiento': request.form.get('fecha_n') if request.form.get('fecha_n') else None,
         'genero': request.form.get('genero'),
-        
-        # --- NUEVOS CAMPOS FINANCIEROS ---
         'valor_hora': request.form.get('valor_hora', 0.0),
         'tasa_iva': request.form.get('tasa_iva'),
         'tasa_isr': request.form.get('tasa_isr')
@@ -482,9 +476,7 @@ def guardar_personal():
 @app.route("/gestionar_documento", methods=['POST'])
 def gestionar_documento():
     if session.get('rol') != 'staff': # Asumimos que solo Admin/Staff gestiona esto
-        # Si quieres que el maestro edite sus propios docs, ajusta aquí
         pass 
-        # return jsonify({'status': 'error', 'message': 'No autorizado'}), 403
 
     try:
         accion = request.form.get('accion') # 'subir' o 'eliminar'
@@ -3290,7 +3282,6 @@ def reinscripciones():
         grupos = cursor.fetchall()
 
         # 4. OBTENER INSCRIPCIONES (QUERY PRINCIPAL)
-        # AGREGAMOS: ii.cobro_enviado
         query = """
              SELECT 
                 ii.id_inscripcion, ii.estado, ii.id_grupo, ii.id_curso, 
@@ -3399,7 +3390,6 @@ def api_alumnos_por_grupo(id_grupo):
         """, (id_grupo,))
         info_grupo = cursor.fetchone()
         
-        # AGREGAMOS: ii.cobro_enviado
         cursor.execute("""
             SELECT 
                 ii.id_inscripcion, ii.estado, ii.id_grupo, ii.id_curso, 

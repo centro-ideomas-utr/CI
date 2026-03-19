@@ -1,0 +1,20 @@
+{
+  "name": "Centro de Idiomas UTR",
+  "short_name": "CI UTR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#566a93",
+  "icons": [
+    {
+      "src": "/static/imagen/CI.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/imagen/CI.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
